@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/*
+ * Single fixed dark theme — no light mode, no toggle. --background is a soft
+ * near-black (Spotify's own tone) rather than true #000, which read as flat
+ * and harsh. --surface is a distinct, slightly-elevated panel color for
+ * dropdowns/popovers/the mobile nav sheet — everything else that's a
+ * translucent overlay (cards, chip backgrounds, hairline borders) uses
+ * bg-foreground/N or border-foreground/N instead of its own token.
+ */
+:root {
+  --background: #121212;
+  --foreground: #f5f5f5;
+  --surface: #1c1830;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Site-wide scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #8e2de2 var(--surface);
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #0a0a0a;
+  border-radius: 9999px;
+  background-color: #8e2de2;
+  background-image: linear-gradient(180deg, #4a00e0, #8e2de2);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #5c14ff, #a13ff5);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Infinite marquee rows (trending movies / series on the homepage) */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 80s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 80s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+  }
+}
+
+/* Circular TMDB-rating ring (hero, movie/series details, cast) */
+.rating-ring {
+  --size: 48px;
+  --thickness: 4px;
+  --pct: 0%;
+  --ring-color: #ffffff;
+  width: var(--size);
+  height: var(--size);
+}
+
+.rating-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(var(--ring-color) var(--pct), rgba(255, 255, 255, 0.12) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
+}
+
+.rating-ring > span {
+  width: calc(var(--size) - var(--thickness) * 2);
+  height: calc(var(--size) - var(--thickness) * 2);
+}
+
+/* Slow blurred zoom/rotate drift for the movies & series list backdrop */
+@keyframes zoom-rotate {
+  from {
+    transform: scale(1) rotate(0deg);
+  }
+  to {
+    transform: scale(1.15) rotate(2deg);
+  }
+}
+
+.animate-zoom-rotate {
+  animation: zoom-rotate 10s infinite alternate ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-zoom-rotate {
+    animation: none;
+  }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Staggered entrance for movie/series grid cards (see CinemaRecordGrid) */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-in {
+  animation: card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-in {
+    animation: none;
+  }
+}
