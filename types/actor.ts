@@ -1,4 +1,3 @@
-// Actor Type:
 export type Actor = {
   id: string;
   imageURL?: string | null;
