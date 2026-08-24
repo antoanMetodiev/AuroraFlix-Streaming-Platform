@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { bgBG, enUS } from "@clerk/localizations";
 import { useLocale } from "@/lib/i18n/locale-context";
+import { ClerkLoadKick } from "@/components/providers/clerk-load-kick";
 
 // Clerk's own UI (SignIn/SignUp/UserButton) follows the site's EN/BG toggle,
 // and is themed to match the app's dark, purple-gradient look instead of Clerk's defaults.
@@ -30,6 +31,7 @@ export function ClerkLocalizedProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
+      <ClerkLoadKick />
       {children}
     </ClerkProvider>
   );
