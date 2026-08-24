@@ -50,7 +50,11 @@ export function Navigation() {
   }, [isOpen]);
 
   return (
-    <nav className="relative flex flex-1 items-center gap-2 sm:gap-3">
+    // min-w-0 overrides flexbox's default min-width:auto — without it, this
+    // flex-1 item refuses to shrink below its own content's natural width on
+    // narrow screens, forcing the whole sticky header (and the page) wider
+    // than the viewport instead of letting its children wrap/truncate.
+    <nav className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
       {/* Desktop: plain row of links, left-aligned right after the logo */}
       <div className="hidden items-center gap-1 md:flex">
         {NAV_LINKS.map(({ href, labelKey, icon: Icon }) => {

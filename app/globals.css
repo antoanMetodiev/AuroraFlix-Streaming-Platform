@@ -18,6 +18,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Belt-and-suspenders against horizontal scroll on narrow screens — any
+   descendant that overflows its container (a flex/grid child refusing to
+   shrink below its content's intrinsic width, a marquee row, etc.) gets
+   clipped here instead of widening the whole page and dragging the sticky
+   header/nav along with it. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
