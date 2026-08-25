@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, Inbox, Users } from "lucide-react";
+import { Check, Clock, Inbox, Search, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader, Spinner } from "@/components/ui/loader";
+import { UserProfileModal } from "@/components/friends/user-profile-modal";
 import { useFriends } from "@/lib/use-friends";
 import { searchUsers, type FriendRequestItem, type FriendSearchResult } from "@/lib/friends";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 type Tab = "requests" | "friends" | "search";
+
+type ProfileTarget = { clerkId: string; displayName: string | null; profileImageURL: string | null };
 
 // The actual friends UI — three separate tabs (received/sent requests,
 // friends list, search) instead of everything stacked in one scroll. No
@@ -18,6 +21,7 @@ export function FriendsPanel() {
   const { t } = useTranslation();
   const { friends, incoming, outgoing, isLoading, accept, cancelOrDecline, send, remove } = useFriends();
   const [tab, setTab] = useState<Tab>("search");
+  const [profile, setProfile] = useState<ProfileTarget | null>(null);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FriendSearchResult[]>([]);
@@ -130,6 +134,7 @@ export function FriendsPanel() {
                 busy={busyId === result.clerkId}
                 onAdd={() => handleSend(result.clerkId)}
                 onRemove={() => handleRemoveFromSearch(result.clerkId)}
+                onOpenProfile={setProfile}
               />
             ))}
           </ul>
@@ -145,22 +150,11 @@ export function FriendsPanel() {
               title={t("friends.incomingTitle")}
               items={incoming}
               emptyLabel={t("friends.noPending")}
+              onOpenProfile={setProfile}
               renderActions={(req) => (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => accept(req.id)}
-                    className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900"
-                  >
-                    {t("friends.accept")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => cancelOrDecline(req.id)}
-                    className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/70"
-                  >
-                    {t("friends.decline")}
-                  </button>
+                  <ActionIcon icon={Check} label={t("friends.accept")} variant="primary" onClick={() => accept(req.id)} />
+                  <ActionIcon icon={X} label={t("friends.decline")} onClick={() => cancelOrDecline(req.id)} />
                 </>
               )}
             />
@@ -169,15 +163,8 @@ export function FriendsPanel() {
               <RequestsList
                 title={t("friends.outgoingTitle")}
                 items={outgoing}
-                renderActions={(req) => (
-                  <button
-                    type="button"
-                    onClick={() => cancelOrDecline(req.id)}
-                    className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/70"
-                  >
-                    {t("friends.cancel")}
-                  </button>
-                )}
+                onOpenProfile={setProfile}
+                renderActions={(req) => <ActionIcon icon={X} label={t("friends.cancel")} onClick={() => cancelOrDecline(req.id)} />}
               />
             )}
           </div>
@@ -192,20 +179,45 @@ export function FriendsPanel() {
           <ul className="flex max-h-96 flex-col gap-1 overflow-y-auto">
             {friends.map((friend) => (
               <li key={friend.clerkId} className="flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors duration-150 hover:bg-foreground/5">
-                <Avatar src={friend.profileImageURL} name={friend.displayName} size={36} />
-                <p className="min-w-0 flex-1 truncate text-sm text-foreground/85">{friend.displayName || "?"}</p>
-                <button
-                  type="button"
-                  onClick={() => remove(friend.clerkId)}
-                  className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/70"
-                >
-                  {t("friends.remove")}
-                </button>
+                <IdentityButton clerkId={friend.clerkId} name={friend.displayName} imageURL={friend.profileImageURL} onOpen={setProfile} />
+                <ActionIcon icon={UserMinus} label={t("friends.remove")} onClick={() => remove(friend.clerkId)} />
               </li>
             ))}
           </ul>
         ))}
+
+      {profile && (
+        <UserProfileModal
+          clerkId={profile.clerkId}
+          displayName={profile.displayName}
+          profileImageURL={profile.profileImageURL}
+          onClose={() => setProfile(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function IdentityButton({
+  clerkId,
+  name,
+  imageURL,
+  onOpen,
+}: {
+  clerkId: string;
+  name: string | null;
+  imageURL: string | null;
+  onOpen: (target: ProfileTarget) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen({ clerkId, displayName: name, profileImageURL: imageURL })}
+      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+    >
+      <Avatar src={imageURL} name={name} size={36} />
+      <p className="min-w-0 flex-1 truncate text-sm text-foreground/85">{name || "?"}</p>
+    </button>
   );
 }
 
@@ -213,11 +225,13 @@ function RequestsList({
   title,
   items,
   emptyLabel,
+  onOpenProfile,
   renderActions,
 }: {
   title: string;
   items: FriendRequestItem[];
   emptyLabel?: string;
+  onOpenProfile: (target: ProfileTarget) => void;
   renderActions: (item: FriendRequestItem) => React.ReactNode;
 }) {
   if (items.length === 0 && !emptyLabel) return null;
@@ -231,8 +245,7 @@ function RequestsList({
         <ul className="flex flex-col gap-1">
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors duration-150 hover:bg-foreground/5">
-              <Avatar src={item.profileImageURL} name={item.displayName} size={36} />
-              <p className="min-w-0 flex-1 truncate text-sm text-foreground/85">{item.displayName || "?"}</p>
+              <IdentityButton clerkId={item.clerkId} name={item.displayName} imageURL={item.profileImageURL} onOpen={onOpenProfile} />
               {renderActions(item)}
             </li>
           ))}
@@ -252,49 +265,75 @@ function SearchResultRow({
   busy,
   onAdd,
   onRemove,
+  onOpenProfile,
 }: {
   result: FriendSearchResult;
   busy: boolean;
   onAdd: () => void;
   onRemove: () => void;
+  onOpenProfile: (target: ProfileTarget) => void;
 }) {
   const { t } = useTranslation();
 
   return (
     <li className="flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors duration-150 hover:bg-foreground/5">
-      <Avatar src={result.profileImageURL} name={result.displayName} size={36} />
-      <p className="min-w-0 flex-1 truncate text-sm text-foreground/85">{result.displayName || "?"}</p>
+      <IdentityButton clerkId={result.clerkId} name={result.displayName} imageURL={result.profileImageURL} onOpen={onOpenProfile} />
 
       {result.relationship === "NONE" && (
-        <button
-          type="button"
-          onClick={onAdd}
-          disabled={busy}
-          className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 disabled:opacity-50"
-        >
-          {t("friends.addFriend")}
-        </button>
+        <ActionIcon icon={UserPlus} label={t("friends.addFriend")} variant="primary" busy={busy} onClick={onAdd} />
       )}
-      {result.relationship === "PENDING_SENT" && (
-        <span className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/50">
-          {t("friends.pendingSent")}
-        </span>
-      )}
-      {result.relationship === "PENDING_RECEIVED" && (
-        <span className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/50">
-          {t("friends.incomingTitle")}
-        </span>
-      )}
-      {result.relationship === "FRIENDS" && (
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={busy}
-          className="rounded-full border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground/70 disabled:opacity-50"
-        >
-          {t("friends.remove")}
-        </button>
-      )}
+      {result.relationship === "PENDING_SENT" && <StatusPill icon={Clock} label={t("friends.pendingSent")} />}
+      {result.relationship === "PENDING_RECEIVED" && <StatusPill icon={Inbox} label={t("friends.incomingTitle")} />}
+      {result.relationship === "FRIENDS" && <ActionIcon icon={UserMinus} label={t("friends.remove")} busy={busy} onClick={onRemove} />}
     </li>
+  );
+}
+
+// Icon-only, tooltip via title/aria-label — keeps rows compact regardless of
+// name length or how many actions a row has (e.g. Accept + Decline side by
+// side), and reads as more "app-like" than text pills.
+function ActionIcon({
+  icon: Icon,
+  label,
+  onClick,
+  variant = "secondary",
+  busy = false,
+}: {
+  icon: typeof Search;
+  label: string;
+  onClick: () => void;
+  variant?: "primary" | "secondary";
+  busy?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      aria-label={label}
+      title={label}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 disabled:pointer-events-none disabled:opacity-40 ${
+        variant === "primary"
+          ? "bg-white text-neutral-900 hover:scale-105"
+          : "border border-foreground/15 text-foreground/60 hover:scale-105 hover:bg-foreground/10 hover:text-foreground"
+      }`}
+    >
+      {busy ? <Spinner size={13} /> : <Icon size={15} />}
+    </button>
+  );
+}
+
+// Passive (non-clickable) state label — PENDING_SENT/PENDING_RECEIVED rows
+// have nothing to act on from the search tab (see note above), just a
+// same-sized icon+pill to keep row heights visually consistent.
+function StatusPill({ icon: Icon, label }: { icon: typeof Search; label: string }) {
+  return (
+    <span
+      title={label}
+      className="flex h-9 items-center gap-1.5 rounded-full border border-foreground/10 px-3 text-xs font-semibold text-foreground/45"
+    >
+      <Icon size={13} />
+      <span className="hidden sm:inline">{label}</span>
+    </span>
   );
 }

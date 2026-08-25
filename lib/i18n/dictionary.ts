@@ -300,6 +300,13 @@ export const dictionary = {
   "watchlistButton.add": { en: "Add to Watchlist", bg: "Добави в списъка" },
   "watchlistButton.added": { en: "Added to Watchlist!", bg: "Добавено в списъка!" },
 
+  "likeButton.like": { en: "Like", bg: "Харесай" },
+  "likeButton.liked": { en: "Liked", bg: "Харесано" },
+
+  "profile.likes": { en: "Liked titles", bg: "Харесани заглавия" },
+  "profile.likesCount": { en: "{count} liked titles", bg: "{count} харесани заглавия" },
+  "profile.likesEmpty": { en: "Nothing liked yet.", bg: "Все още няма харесани заглавия." },
+
   "common.noResults": { en: "No results found", bg: "Няма намерени резултати" },
   "common.noResultsDesc": { en: "Try a different search or pick another genre.", bg: "Пробвай друго търсене или избери друг жанр." },
   "common.pagination": { en: "Pagination", bg: "Странициране" },

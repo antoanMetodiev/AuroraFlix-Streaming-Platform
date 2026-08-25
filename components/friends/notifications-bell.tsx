@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Bell } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { UserProfileModal } from "@/components/friends/user-profile-modal";
 import { consumeNotifications, getNotificationCount, type FriendNotification } from "@/lib/friends";
 import { subscribeFriendsEvent } from "@/lib/friends-events";
 import { useTranslation } from "@/lib/i18n/locale-context";
+
+type ProfileTarget = { clerkId: string; displayName: string | null; profileImageURL: string | null };
 
 // Reconciliation fallback in case a WS push was missed (dropped connection,
 // tab was backgrounded, etc.) — the badge is primarily driven by
@@ -24,6 +27,7 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<FriendNotification[] | null>(null);
+  const [profile, setProfile] = useState<ProfileTarget | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -107,21 +111,36 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
         ) : (
           <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
             {items.map((n) => (
-              <li key={n.id} className="flex items-center gap-2.5 rounded-xl px-2 py-2">
-                <Avatar src={n.actorProfileImageURL} name={n.actorDisplayName} size={28} />
-                <p className="min-w-0 flex-1 text-sm text-foreground/85">
-                  <span className="font-semibold">{n.actorDisplayName || "?"}</span>{" "}
-                  {n.type === "FRIEND_REQUEST"
-                    ? t("friends.notifSentRequest")
-                    : n.type === "FRIEND_REQUEST_ACCEPTED"
-                      ? t("friends.notifAcceptedRequest")
-                      : t("friends.notifDeclinedRequest")}
-                </p>
+              <li key={n.id}>
+                <button
+                  type="button"
+                  onClick={() => setProfile({ clerkId: n.actorId, displayName: n.actorDisplayName, profileImageURL: n.actorProfileImageURL })}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-150 hover:bg-foreground/10"
+                >
+                  <Avatar src={n.actorProfileImageURL} name={n.actorDisplayName} size={28} />
+                  <p className="min-w-0 flex-1 text-sm text-foreground/85">
+                    <span className="font-semibold">{n.actorDisplayName || "?"}</span>{" "}
+                    {n.type === "FRIEND_REQUEST"
+                      ? t("friends.notifSentRequest")
+                      : n.type === "FRIEND_REQUEST_ACCEPTED"
+                        ? t("friends.notifAcceptedRequest")
+                        : t("friends.notifDeclinedRequest")}
+                  </p>
+                </button>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {profile && (
+        <UserProfileModal
+          clerkId={profile.clerkId}
+          displayName={profile.displayName}
+          profileImageURL={profile.profileImageURL}
+          onClose={() => setProfile(null)}
+        />
+      )}
     </div>
   );
 }
