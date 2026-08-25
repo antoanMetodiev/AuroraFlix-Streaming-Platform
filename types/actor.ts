@@ -20,7 +20,9 @@ export type ActorLatestWork = {
   tmdbId?: string | null;
   videoURL?: string | null;
   title?: string | null;
-  type: "MOVIE" | "SERIES" | string;
+  // Backend mirrors the Java DTO's all-caps "TYPE" Jackson property (see
+  // lumo-movies-svc/series-svc models.go), not "type".
+  TYPE: "MOVIE" | "SERIES" | string;
   name_in_real_life: string;
   posterURL: string;
   tmdbRating: string;

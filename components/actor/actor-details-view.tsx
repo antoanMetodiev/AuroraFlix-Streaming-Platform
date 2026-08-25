@@ -49,7 +49,7 @@ export function ActorDetailsView({ id }: { id: string }) {
           title: work.title ?? work.name_in_real_life,
           posterURL: work.posterURL,
           tmdbRating: work.tmdbRating,
-          type: work.type,
+          type: work.TYPE,
           videoURL: work.videoURL,
           tmdbId: work.tmdbId,
         }))
