@@ -68,7 +68,7 @@ export function NavSearch() {
               type="button"
               onClick={() => setType(value)}
               className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-                type === value ? "bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white" : "text-foreground/60 hover:text-foreground"
+                type === value ? "bg-white text-neutral-900" : "text-foreground/60 hover:text-foreground"
               }`}
             >
               {t(labelKey)}

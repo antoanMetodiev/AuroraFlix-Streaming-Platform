@@ -104,7 +104,7 @@ export function WorkCarousel({
                 type="button"
                 onClick={handleRequestMoreMovies}
                 disabled={isRequesting}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_-4px_rgba(142,45,226,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-4px_rgba(142,45,226,0.65)] disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_-4px_rgba(255,255,255,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.5)] disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
               >
                 {isRequesting && <Spinner size={14} />}
                 {actorName ? `${t("carousel.checkForMoreWith")} ${actorName}` : t("carousel.checkForMoreGeneric")}

@@ -55,7 +55,7 @@ function PageButton({
       aria-current={isActive ? "page" : undefined}
       className={`${base} ${className} ${
         isActive
-          ? "border-transparent bg-linear-to-br from-[#4a00e0] to-[#8e2de2] font-bold text-white shadow-[0_0_15px_rgba(142,45,226,0.55)]"
+          ? "border-transparent bg-white font-bold text-neutral-900 shadow-[0_0_15px_rgba(255,255,255,0.4)]"
           : "border-foreground/12 bg-foreground/8 text-foreground/85 hover:-translate-y-0.5 hover:scale-105 hover:bg-foreground/18 hover:text-foreground"
       }`}
     >

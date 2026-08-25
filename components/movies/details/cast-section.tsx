@@ -50,7 +50,7 @@ export function CastSection({ cast, backgroundImgUrl }: { cast: Actor[]; backgro
                 }}
                 className="group flex w-[9.5em] shrink-0 snap-start flex-col items-start gap-2 text-left sm:w-[10.8em]"
               >
-                <div className="relative aspect-[10.8/14.7] w-full overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 group-hover:ring-white/30 group-hover:shadow-[0_12px_30px_-8px_rgba(142,45,226,0.55)]">
+                <div className="relative aspect-[10.8/14.7] w-full overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 group-hover:ring-white/30 group-hover:shadow-[0_12px_30px_-8px_rgba(255,255,255,0.4)]">
                   {image && (
                     <FadeInImage
                       src={image}

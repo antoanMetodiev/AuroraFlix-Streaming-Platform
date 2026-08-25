@@ -108,7 +108,7 @@ export function CommentReactionsBar({
           aria-pressed={iLiked}
           className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
             iLiked
-              ? "border-transparent bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white shadow-[0_4px_18px_-4px_rgba(142,45,226,0.7)]"
+              ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_18px_-4px_rgba(255,255,255,0.5)]"
               : "border-foreground/10 bg-foreground/[0.03] text-foreground/60 enabled:hover:border-foreground/20 enabled:hover:bg-foreground/10 enabled:hover:text-foreground"
           }`}
         >

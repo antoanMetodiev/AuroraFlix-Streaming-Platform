@@ -86,8 +86,8 @@ export function AdblockPrompt() {
   return (
     <div className="relative mt-4 flex w-full max-w-[80rem] flex-col items-start gap-4 rounded-2xl border border-foreground/10 bg-surface p-5 shadow-[0_15px_30px_rgba(0,0,0,0.2)] sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3 pr-6 sm:pr-0">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#6c5ce7] to-[#8e44ad]">
-          <ShieldCheck className="h-5 w-5 text-white" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+          <ShieldCheck className="h-5 w-5 text-neutral-900" />
         </span>
         <p className="text-sm leading-relaxed text-foreground/80">{t(MESSAGE_KEY[target.store])}</p>
       </div>
@@ -96,7 +96,7 @@ export function AdblockPrompt() {
         type="button"
         onClick={handleInstallClick}
         disabled={isOpening}
-        className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] px-5 py-2.5 text-center text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-80 sm:w-auto"
+        className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-center text-sm font-semibold text-neutral-900 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-80 sm:w-auto"
       >
         {isOpening && <Spinner size={16} />}
         {isOpening ? t(OPENING_KEY[target.store]) : t(CTA_KEY[target.store])}

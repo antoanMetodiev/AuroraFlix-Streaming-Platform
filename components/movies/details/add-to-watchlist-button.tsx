@@ -26,10 +26,10 @@ export function AddToWatchlistButton({ record, type }: { record: Movie | Series;
           videoId: type === "movie" ? videoId : "",
         });
       }}
-      className={`mt-2 inline-flex w-fit items-center justify-center gap-2 self-end rounded-xl px-5 py-3 text-sm font-semibold tracking-wide whitespace-nowrap shadow-[0_8px_20px_rgba(108,92,231,0.35)] transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0 ${
+      className={`mt-2 inline-flex w-fit items-center justify-center gap-2 self-end rounded-xl px-5 py-3 text-sm font-semibold tracking-wide whitespace-nowrap shadow-[0_8px_20px_rgba(255,255,255,0.3)] transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0 ${
         added
           ? "cursor-default border border-foreground/15 bg-foreground/10 text-foreground/70"
-          : "bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] text-white hover:shadow-[0_12px_28px_rgba(108,92,231,0.45)]"
+          : "bg-white text-neutral-900 hover:shadow-[0_12px_28px_rgba(255,255,255,0.4)]"
       }`}
     >
       {added ? t("watchlistButton.added") : t("watchlistButton.add")}

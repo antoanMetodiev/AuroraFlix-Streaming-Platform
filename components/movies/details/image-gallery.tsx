@@ -53,7 +53,7 @@ export function ImageGallery({ images }: { images: MediaImage[] }) {
               type="button"
               onClick={() => switchTab(imageType)}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-300 sm:px-5 sm:text-sm ${
-                activeType === imageType ? "bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white" : "text-foreground/60 hover:text-foreground"
+                activeType === imageType ? "bg-white text-neutral-900" : "text-foreground/60 hover:text-foreground"
               }`}
             >
               {imageType === "BACKDROP" ? t("sections.backdrops") : t("sections.posters")}
@@ -95,7 +95,7 @@ export function ImageGallery({ images }: { images: MediaImage[] }) {
         <button
           type="button"
           onClick={() => setVisibleCount(isExpanded ? PAGE_SIZE : visibleCount + LOAD_MORE_STEP)}
-          className="mx-auto mt-12 block w-[160px] rounded-full border border-foreground/25 py-3 text-center text-xs font-bold tracking-wider text-white uppercase transition-all duration-300 hover:border-transparent hover:bg-linear-to-br hover:from-[#4a00e0] hover:to-[#8e2de2] sm:mt-16"
+          className="mx-auto mt-12 block w-[160px] rounded-full border border-foreground/25 py-3 text-center text-xs font-bold tracking-wider text-white uppercase transition-all duration-300 hover:border-transparent hover:bg-white hover:text-neutral-900 sm:mt-16"
         >
           {isExpanded ? t("sections.showLess") : t("sections.loadMore")}
         </button>

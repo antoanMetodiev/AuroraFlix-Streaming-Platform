@@ -34,7 +34,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
         {/* Always-on vignette for text legibility, deepened a touch on hover. */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent transition-opacity duration-500 group-hover:from-black/98" />
-        <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-[#8e2de2]/50 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
 
         {rating !== null && (
           <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full border border-white/15 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
@@ -57,7 +57,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
             {record.title}
           </h2>
           <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-white/60 sm:text-xs">
-            <TypeIcon size={11} className="shrink-0 text-[#b794f6]" />
+            <TypeIcon size={11} className="shrink-0 text-white/80" />
             {type === "movie" ? t("watchlist.movie") : t("watchlist.series")}
             {year && (
               <>

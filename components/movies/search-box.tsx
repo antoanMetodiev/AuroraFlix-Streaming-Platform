@@ -92,7 +92,7 @@ export function SearchBox({ type, onNavigate }: { type: "movie" | "series"; onNa
           type="search"
           name="search"
           placeholder={type === "movie" ? t("search.placeholderMovies") : t("search.placeholderSeries")}
-          className="w-full min-w-0 rounded-full border border-foreground/15 bg-foreground/[0.06] py-2.5 pr-4 pl-11 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#8e2de2,0_8px_28px_-6px_rgba(142,45,226,0.55)] [&::-webkit-search-cancel-button]:appearance-none"
+          className="w-full min-w-0 rounded-full border border-foreground/15 bg-foreground/[0.06] py-2.5 pr-4 pl-11 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#ffffff,0_8px_28px_-6px_rgba(255,255,255,0.35)] [&::-webkit-search-cancel-button]:appearance-none"
         />
       </form>
 

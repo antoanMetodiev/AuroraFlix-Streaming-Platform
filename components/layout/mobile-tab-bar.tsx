@@ -29,7 +29,7 @@ export function MobileTabBar() {
             <span
               className={`flex h-8 w-9 items-center justify-center rounded-full transition-all duration-300 ${
                 isActive
-                  ? "bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white shadow-[0_4px_14px_-3px_rgba(142,45,226,0.85)]"
+                  ? "bg-white text-neutral-900 shadow-[0_4px_14px_-3px_rgba(255,255,255,0.6)]"
                   : "text-foreground/50"
               }`}
             >

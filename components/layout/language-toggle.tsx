@@ -22,7 +22,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
           aria-pressed={locale === option}
           className={`rounded-full px-2.5 py-1 text-xs font-bold tracking-wide uppercase transition-all duration-300 ${
             locale === option
-              ? "bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white shadow-[0_2px_10px_-2px_rgba(142,45,226,0.7)]"
+              ? "bg-white text-neutral-900 shadow-[0_2px_10px_-2px_rgba(255,255,255,0.55)]"
               : "text-foreground/50 hover:text-foreground"
           }`}
         >

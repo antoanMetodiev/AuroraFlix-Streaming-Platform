@@ -39,7 +39,7 @@ export function AuthNav({ className = "" }: { className?: string }) {
       <SignUpButton mode="modal">
         <button
           type="button"
-          className="rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-white shadow-[0_4px_16px_-4px_rgba(142,45,226,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
+          className="rounded-full bg-white px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.55)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {t("nav.signUp")}
         </button>

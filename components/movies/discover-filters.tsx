@@ -160,7 +160,7 @@ export function DiscoverFilters({
             }}
             onFocus={() => suggestions.length > 0 && setIsSuggestOpen(true)}
             placeholder={t("filters.actorPlaceholder")}
-            className="w-full rounded-full border border-foreground/10 bg-foreground/5 py-2.5 pr-4 pl-10 text-sm text-foreground placeholder:text-foreground/35 backdrop-blur-md transition-all duration-300 outline-none focus-visible:border-transparent focus-visible:bg-foreground/10 focus-visible:shadow-[0_0_0_2px_#8e2de2]"
+            className="w-full rounded-full border border-foreground/10 bg-foreground/5 py-2.5 pr-4 pl-10 text-sm text-foreground placeholder:text-foreground/35 backdrop-blur-md transition-all duration-300 outline-none focus-visible:border-transparent focus-visible:bg-foreground/10 focus-visible:shadow-[0_0_0_2px_#ffffff]"
           />
           {isSuggesting && <Spinner size={13} className="absolute right-4 border-foreground/25 border-t-foreground/70" />}
         </div>
@@ -188,7 +188,7 @@ export function DiscoverFilters({
                     type="button"
                     onClick={openActor}
                     aria-label={suggestedActor.nameInRealLife}
-                    className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-foreground/10 ring-1 ring-foreground/15 transition-all duration-200 group-hover:scale-105 group-hover:ring-[#8e2de2]/70"
+                    className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-foreground/10 ring-1 ring-foreground/15 transition-all duration-200 group-hover:scale-105 group-hover:ring-white/70"
                   >
                     {image && <FadeInImage src={image} alt={suggestedActor.nameInRealLife} sizes="36px" className="object-cover" />}
                   </button>
@@ -246,7 +246,7 @@ export function DiscoverFilters({
           aria-expanded={mobileOpen}
           className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold backdrop-blur-md transition-all duration-300 ${
             mobileOpen
-              ? "border-transparent bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white"
+              ? "border-transparent bg-white text-neutral-900"
               : "border-foreground/10 bg-foreground/5 text-foreground/80 hover:border-foreground/25 hover:bg-foreground/10"
           }`}
         >

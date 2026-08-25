@@ -65,7 +65,7 @@ export function Navigation() {
               href={href}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
                 isActive
-                  ? "bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white shadow-[0_4px_16px_-4px_rgba(142,45,226,0.7)]"
+                  ? "bg-white text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.5)]"
                   : "text-foreground/65 hover:bg-foreground/10 hover:text-foreground"
               }`}
             >

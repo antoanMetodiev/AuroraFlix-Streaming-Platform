@@ -16,7 +16,7 @@ export function EpisodeCard({ episode, onSelect }: { episode: Episode; onSelect:
     <button
       type="button"
       onClick={onSelect}
-      className="group flex w-full flex-col overflow-hidden rounded-2xl bg-foreground/5 text-left ring-1 ring-foreground/10 transition-all duration-300 hover:-translate-y-1 hover:bg-foreground/10 hover:ring-foreground/30 hover:shadow-[0_20px_40px_-15px_rgba(142,45,226,0.5)]"
+      className="group flex w-full flex-col overflow-hidden rounded-2xl bg-foreground/5 text-left ring-1 ring-foreground/10 transition-all duration-300 hover:-translate-y-1 hover:bg-foreground/10 hover:ring-foreground/30 hover:shadow-[0_20px_40px_-15px_rgba(255,255,255,0.35)]"
     >
       <div className="relative aspect-video w-full overflow-hidden">
         {poster && (

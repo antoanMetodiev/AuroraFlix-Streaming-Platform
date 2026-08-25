@@ -56,7 +56,7 @@ export function ModernSelect({
         aria-expanded={open}
         className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold tracking-wide backdrop-blur-md transition-all duration-300 sm:px-5 sm:text-sm ${
           open
-            ? "border-transparent bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] text-white shadow-[0_4px_24px_-4px_rgba(142,69,231,0.7)]"
+            ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.5)]"
             : "border-foreground/10 bg-foreground/5 text-foreground/85 hover:border-foreground/25 hover:bg-foreground/10 hover:text-foreground"
         }`}
       >
@@ -84,12 +84,12 @@ export function ModernSelect({
               }}
               className={`flex w-full items-center justify-between gap-4 rounded-xl px-3.5 py-2.5 text-left text-xs font-medium whitespace-nowrap transition-colors duration-150 sm:text-sm ${
                 isActive
-                  ? "bg-linear-to-br from-[#6c5ce7]/25 to-[#8e44ad]/25 text-white"
+                  ? "bg-white/15 text-white"
                   : "text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
               }`}
             >
               {option.label}
-              {isActive && <Check className="h-3.5 w-3.5 shrink-0 text-[#b794f6]" />}
+              {isActive && <Check className="h-3.5 w-3.5 shrink-0 text-white" />}
             </button>
           );
         })}

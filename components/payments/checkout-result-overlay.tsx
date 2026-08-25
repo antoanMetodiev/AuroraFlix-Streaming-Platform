@@ -117,7 +117,7 @@ export function CheckoutResultOverlay() {
             <button
               type="button"
               onClick={dismiss}
-              className="mt-6 w-full rounded-xl bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+              className="mt-6 w-full rounded-xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 transition-all duration-200 hover:-translate-y-0.5"
             >
               {t("checkout.continue")}
             </button>
@@ -131,7 +131,7 @@ export function CheckoutResultOverlay() {
             <button
               type="button"
               onClick={dismiss}
-              className="mt-6 w-full rounded-xl bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+              className="mt-6 w-full rounded-xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 transition-all duration-200 hover:-translate-y-0.5"
             >
               {t("checkout.continue")}
             </button>

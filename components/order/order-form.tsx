@@ -73,14 +73,14 @@ export function OrderForm({ type }: { type: "movie" | "series" }) {
           type="text"
           name="orderTitle"
           placeholder={type === "movie" ? t("order.placeholderMovie") : t("order.placeholderSeries")}
-          className="w-full min-w-0 rounded-full border border-foreground/15 bg-foreground/[0.06] py-3.5 pr-14 pl-6 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#8e2de2,0_8px_28px_-6px_rgba(142,45,226,0.55)] disabled:opacity-50 sm:py-4 sm:text-base"
+          className="w-full min-w-0 rounded-full border border-foreground/15 bg-foreground/[0.06] py-3.5 pr-14 pl-6 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#ffffff,0_8px_28px_-6px_rgba(255,255,255,0.35)] disabled:opacity-50 sm:py-4 sm:text-base"
         />
 
         <button
           type="submit"
           disabled={!canSubmit || !value.trim()}
           aria-label={t("order.submitAria")}
-          className="absolute right-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white transition-transform duration-200 enabled:hover:scale-108 disabled:opacity-40 sm:h-10 sm:w-10"
+          className="absolute right-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 transition-transform duration-200 enabled:hover:scale-108 disabled:opacity-40 sm:h-10 sm:w-10"
         >
           {isSubmitting ? <Spinner size={16} /> : <Send size={16} />}
         </button>

@@ -9,7 +9,7 @@ export function Spinner({ size = 32, className = "" }: { size?: number; classNam
     <span
       role="status"
       aria-label={t("common.loading")}
-      className={`inline-block shrink-0 animate-[spin_0.7s_linear_infinite] rounded-full border-[3px] border-foreground/20 border-t-foreground ${className}`}
+      className={`inline-block shrink-0 animate-[spin_0.7s_linear_infinite] rounded-full border-[3px] border-current/20 border-t-current ${className}`}
       style={{ width: size, height: size }}
     />
   );

@@ -100,7 +100,7 @@ export function SubscriptionView() {
                 type="button"
                 disabled={isOpeningPortal}
                 onClick={openPortal}
-                className="inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(108,92,231,0.35)] transition-all duration-200 hover:-translate-y-0.5 disabled:cursor-default disabled:opacity-70 disabled:hover:translate-y-0"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_rgba(255,255,255,0.3)] transition-all duration-200 hover:-translate-y-0.5 disabled:cursor-default disabled:opacity-70 disabled:hover:translate-y-0"
               >
                 <CreditCard size={16} />
                 {isOpeningPortal ? t("pricing.redirecting") : t("subscription.manage")}
@@ -108,7 +108,7 @@ export function SubscriptionView() {
             ) : (
               <Link
                 href="/#pricing"
-                className="rounded-xl bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_-4px_rgba(142,45,226,0.5)] transition-transform duration-200 hover:-translate-y-0.5"
+                className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_-4px_rgba(255,255,255,0.4)] transition-transform duration-200 hover:-translate-y-0.5"
               >
                 {t("pricing.proCta")}
               </Link>

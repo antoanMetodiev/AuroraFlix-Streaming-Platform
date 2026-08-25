@@ -54,7 +54,7 @@ const PLANS: Plan[] = [
 const CTA_CLASSNAME =
   "mt-8 w-full rounded-xl px-5 py-3 text-sm font-semibold tracking-wide transition-all duration-200 disabled:cursor-default disabled:opacity-70";
 const CTA_HIGHLIGHTED_CLASSNAME =
-  "bg-linear-to-br from-[#6c5ce7] to-[#8e44ad] text-white shadow-[0_8px_20px_rgba(108,92,231,0.35)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(108,92,231,0.45)] disabled:hover:translate-y-0";
+  "bg-white text-neutral-900 shadow-[0_8px_20px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(255,255,255,0.4)] disabled:hover:translate-y-0";
 const CTA_INERT_CLASSNAME = "cursor-default border border-foreground/15 bg-foreground/5 text-foreground/50";
 
 export function PricingSection() {
@@ -94,12 +94,12 @@ export function PricingSection() {
               key={plan.id}
               className={`relative flex flex-col rounded-2xl border p-6 sm:p-8 ${
                 plan.highlighted
-                  ? "border-[#8e2de2]/50 bg-surface shadow-[0_0_40px_rgba(142,45,226,0.15)]"
+                  ? "border-white/40 bg-surface shadow-[0_0_40px_rgba(255,255,255,0.12)]"
                   : "border-foreground/10 bg-foreground/5"
               }`}
             >
               {plan.highlighted && (
-                <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-3 py-1 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(142,45,226,0.5)]">
+                <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-neutral-900 shadow-[0_4px_14px_rgba(255,255,255,0.4)]">
                   <Sparkles size={12} />
                   {t("pricing.mostPopular")}
                 </span>
@@ -116,7 +116,7 @@ export function PricingSection() {
               <ul className="mt-6 flex flex-1 flex-col gap-3">
                 {plan.featureKeys.map((key) => (
                   <li key={key} className="flex items-start gap-2 text-sm text-foreground/75">
-                    <Check size={16} className={`mt-0.5 shrink-0 ${plan.highlighted ? "text-[#a13ff5]" : "text-foreground/40"}`} />
+                    <Check size={16} className={`mt-0.5 shrink-0 ${plan.highlighted ? "text-white" : "text-foreground/40"}`} />
                     <span>{t(key)}</span>
                   </li>
                 ))}

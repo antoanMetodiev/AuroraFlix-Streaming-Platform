@@ -44,7 +44,7 @@ export function WatchlistView() {
             <p className="text-sm text-foreground/50">{t("watchlist.emptyDesc")}</p>
             <Link
               href="/movies"
-              className="mt-3 rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_-4px_rgba(142,45,226,0.5)] transition-transform duration-200 hover:-translate-y-0.5"
+              className="mt-3 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_-4px_rgba(255,255,255,0.4)] transition-transform duration-200 hover:-translate-y-0.5"
             >
               {t("watchlist.browseMovies")}
             </Link>
@@ -62,7 +62,7 @@ export function WatchlistView() {
                 <Link
                   key={item.id}
                   href={href}
-                  className="group relative block w-full overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1 hover:ring-white/30 hover:shadow-[0_20px_45px_-15px_rgba(142,45,226,0.5)]"
+                  className="group relative block w-full overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1 hover:ring-white/30 hover:shadow-[0_20px_45px_-15px_rgba(255,255,255,0.35)]"
                 >
                   <div className="relative aspect-2/3 w-full overflow-hidden">
                     {poster && (

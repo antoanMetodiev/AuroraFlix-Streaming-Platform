@@ -256,13 +256,13 @@ export function CommentsSection({ recordId, type }: { recordId: string; type: "m
                   disabled={isPosting}
                   placeholder={t("comments.placeholder")}
                   rows={3}
-                  className="w-full resize-none rounded-2xl border border-foreground/15 bg-foreground/[0.06] p-4 pr-14 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#8e2de2,0_8px_28px_-6px_rgba(142,45,226,0.55)] disabled:opacity-50"
+                  className="w-full resize-none rounded-2xl border border-foreground/15 bg-foreground/[0.06] p-4 pr-14 text-sm text-foreground placeholder:text-foreground/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl transition-all duration-300 outline-none focus:border-transparent focus:bg-foreground/[0.1] focus:shadow-[0_0_0_1.5px_#ffffff,0_8px_28px_-6px_rgba(255,255,255,0.35)] disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={isPosting || !draft.trim()}
                   aria-label={t("comments.submitAria")}
-                  className="absolute right-3 bottom-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] text-white transition-transform duration-200 enabled:hover:scale-108 disabled:opacity-40"
+                  className="absolute right-3 bottom-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 transition-transform duration-200 enabled:hover:scale-108 disabled:opacity-40"
                 >
                   {isPosting ? <Spinner size={16} /> : <Send size={16} />}
                 </button>
@@ -351,14 +351,14 @@ export function CommentsSection({ recordId, type }: { recordId: string; type: "m
                           onChange={(event) => setEditDraft(event.target.value)}
                           disabled={isSavingEdit}
                           rows={2}
-                          className="w-full resize-none rounded-xl border border-foreground/15 bg-foreground/[0.06] p-3 text-sm text-foreground outline-none focus:border-transparent focus:shadow-[0_0_0_1.5px_#8e2de2]"
+                          className="w-full resize-none rounded-xl border border-foreground/15 bg-foreground/[0.06] p-3 text-sm text-foreground outline-none focus:border-transparent focus:shadow-[0_0_0_1.5px_#ffffff]"
                         />
                         <div className="mt-2 flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => saveEdit(comment.id)}
                             disabled={isSavingEdit || !editDraft.trim()}
-                            className="rounded-full bg-linear-to-br from-[#4a00e0] to-[#8e2de2] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                            className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-neutral-900 disabled:opacity-40"
                           >
                             {isSavingEdit ? <Spinner size={12} /> : t("comments.save")}
                           </button>
