@@ -8,6 +8,9 @@ import { FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
+import { FriendsNavButton } from "@/components/friends/friends-nav-button";
+import { NotificationsBell } from "@/components/friends/notifications-bell";
+import { FriendsSocketManager } from "@/components/friends/friends-socket-manager";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
@@ -103,6 +106,10 @@ export function Navigation() {
       <span className="hidden h-5 w-px bg-foreground/15 md:block" />
 
       <NavSearch />
+
+      <FriendsSocketManager />
+      <FriendsNavButton />
+      <NotificationsBell />
 
       <LanguageToggle />
 

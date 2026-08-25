@@ -8,3 +8,8 @@
 export const API_BASE_URL =
   process.env.API_BASE_URL ??
   (process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://lumo-api-gateway.onrender.com");
+
+// Same gateway, ws(s):// scheme — for the one thing that's a genuine direct
+// browser-to-gateway connection instead of going through our own same-origin
+// proxy (see lib/use-friend-request-socket.ts for why).
+export const WS_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
