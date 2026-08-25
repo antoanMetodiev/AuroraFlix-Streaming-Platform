@@ -66,7 +66,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang={initialLocale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background pb-24 text-foreground md:pb-0">
+      <body className="min-h-full flex flex-col bg-background pt-16 pb-24 text-foreground md:pb-0">
         <LocaleProvider initialLocale={initialLocale}>
           <ClerkLocalizedProvider>
             <ScrollToTopOnNavigate />

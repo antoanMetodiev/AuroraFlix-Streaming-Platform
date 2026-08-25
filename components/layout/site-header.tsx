@@ -8,7 +8,7 @@ import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 export function SiteHeader() {
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-foreground/10 bg-background/40 backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-40 w-full border-b border-foreground/10 bg-background/40 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-[100rem] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center" aria-label="AuroraFlix">
             <Image src="/logo.webp" alt="AuroraFlix" width={40} height={40} priority className="h-10 w-10 object-contain" />
