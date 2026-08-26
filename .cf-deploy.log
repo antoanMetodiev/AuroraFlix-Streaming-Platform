@@ -1,0 +1,177 @@
+
+> my-app@0.1.0 cf:deploy
+> opennextjs-cloudflare build && opennextjs-cloudflare deploy
+
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+App directory: D:\Programming\Personal Projects\AuroraStream\my-app
+Next.js version : 16.3.1
+@opennextjs/cloudflare version: 1.20.2
+@opennextjs/aws version: 4.1.0
+WARN workerd compatibility_date: 2024-09-23, consider updating your wrangler config to a more recent date to benefit from the latest features and fixes.
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└─────────────────────────────────┘
+
+
+> my-app@0.1.0 build
+> next build
+
+▲ Next.js 16.3.1 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 83ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 34.6s
+  Running TypeScript ...
+  Finished TypeScript in 33.1s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/32) ...
+  Generating static pages using 7 workers (8/32) 
+  Generating static pages using 7 workers (16/32) 
+  Generating static pages using 7 workers (24/32) 
+✓ Generating static pages using 7 workers (32/32) in 869ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account/subscription
+├ ƒ /actors/[id]
+├ ƒ /api/backend/[...path]
+├ ƒ /api/comments
+├ ƒ /api/comments/[commentId]
+├ ƒ /api/comments/[commentId]/react
+├ ƒ /api/friends
+├ ƒ /api/friends/[clerkId]
+├ ƒ /api/friends/notifications
+├ ƒ /api/friends/notifications/count
+├ ƒ /api/friends/requests
+├ ƒ /api/friends/requests/[id]
+├ ƒ /api/friends/requests/[id]/accept
+├ ƒ /api/friends/requests/outgoing
+├ ƒ /api/friends/search
+├ ƒ /api/last-viewed
+├ ƒ /api/likes
+├ ƒ /api/likes/[recordId]
+├ ƒ /api/likes/user/[clerkId]
+├ ƒ /api/payments/checkout-result
+├ ƒ /api/payments/checkout-session
+├ ƒ /api/payments/portal-session
+├ ƒ /api/payments/subscription
+├ ƒ /api/playlists
+├ ƒ /api/playlists/[id]
+├ ƒ /api/playlists/[id]/items
+├ ƒ /api/playlists/[id]/items/[recordId]
+├ ƒ /api/playlists/user/[clerkId]
+├ ƒ /api/user/me
+├ ƒ /api/watching
+├ ƒ /api/watching/friends
+├ ƒ /api/watchlist
+├ ƒ /api/watchlist/[recordId]
+├ ○ /apple-icon.png
+├ ƒ /friends
+├ ○ /icon.png
+├ ƒ /movies
+├ ƒ /movies/[slug]
+├ ƒ /movies/genres/[genre]
+├ ƒ /movies/search/[title]
+├ ƒ /order
+├ ƒ /order/[type]
+├ ƒ /playlists
+├ ƒ /series
+├ ƒ /series/[id]
+├ ƒ /series/genres/[genre]
+├ ƒ /series/search/[title]
+├ ƒ /sign-in/[[...sign-in]]
+├ ƒ /sign-up/[[...sign-up]]
+└ ƒ /watchlist
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+┌──────────────────────────────┐
+│ OpenNext — Generating bundle │
+└──────────────────────────────┘
+
+Bundling middleware function...
+Bundling static assets...
+Bundling cache assets...
+Building server function: default...
+Applying code patches: 26.079s
+# copyPackageTemplateFiles
+[35m⚙️ Bundling the OpenNext server...
+[0m
+[35mWorker saved in `.open-next\worker.js` 🚀
+[0m
+OpenNext build complete.
+
+┌──────────────────────────────┐
+│ OpenNext — Cloudflare deploy │
+└──────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+Incremental cache does not need populating
+Tag cache does not need populating
+
+ ⛅️ wrangler 4.125.0 (update available 4.126.0)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 111 files from the assets directory D:\Programming\Personal Projects\AuroraStream\my-app\.open-next\assets
+🌀 Starting asset upload...
+🌀 Found 5 new or modified static assets to upload. Proceeding with upload...
++ /BUILD_ID
++ /_next/static/chunks/3tadsg7_ud13u.css
++ /_next/static/chunks/2f0xb7cqmog5p.js
++ /_next/static/chunks/421t2gv79t4hr.js
++ /_next/static/chunks/2_myz7gyevc3-.js
+Uploaded 1 of 5 assets
+Uploaded 3 of 5 assets
+Uploaded 5 of 5 assets
+✨ Success! Uploaded 5 files (96 already uploaded) (2.06 sec)
+
+Total Upload: 8029.37 KiB / gzip: 1561.27 KiB
+Worker Startup Time: 37 ms
+Your Worker has access to the following bindings:
+Binding                                                                                Resource                  
+env.ASSETS                                                                             Assets                    
+env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ("pk_live_Y2xlcmsuYXVyb3JhZmxpeC5jbG91ZCQ")      Environment Variable      
+env.NEXT_PUBLIC_CLERK_SIGN_IN_URL ("/sign-in")                                         Environment Variable      
+env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ("/sign-up")                                         Environment Variable      
+env.NEXT_PUBLIC_SITE_URL ("https://auroraflix.cloud")                                  Environment Variable      
+
+Uploaded lumoflix (22.70 sec)
+Deployed lumoflix triggers (4.68 sec)
+  https://lumoflix.auroracloud.workers.dev
+Current Version ID: 1c80e8a3-7b0c-4711-a057-025d6b12e44b
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe local configuration being used (generated from your local configuration file) differs from the remote configuration of your Worker set via the Cloudflare Dashboard:[0m
+
+   {
+     routes: [
+  [31m-    {[39m
+  [31m-      pattern: "auroraflix.cloud"[39m
+  [31m-      zone_name: "auroraflix.cloud"[39m
+  [31m-      custom_domain: true[39m
+  [31m-      enabled: true[39m
+  [31m-      previews_enabled: false[39m
+  [31m-    }[39m
+     ]
+   }
+  
+  
+  Uploading the Worker will override the remote configuration with your local one.
+
+
+(node:10408) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)

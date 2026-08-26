@@ -73,3 +73,68 @@ See more: https://nextjs.org/docs/app/guides/local-development
     at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:8891:186)
     at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10085:9)
     at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64) 
+ GET /playlists 200 in 255ms (next.js: 57ms, application-code: 198ms)
+ GET / 200 in 505ms (next.js: 130ms, application-code: 375ms)
+ GET / 200 in 331ms (next.js: 39ms, application-code: 292ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] ⨯ unhandledRejection: ClerkRuntimeError: Clerk: Failed to load Clerk JS, failed to load script: https://clerk.auroraflix.cloud/npm/@clerk/clerk-js@6/dist/clerk.browser.js
+
+(code="failed_to_load_clerk_js")
+
+
+[browser] ⨯ unhandledRejection: ClerkRuntimeError: Clerk: Failed to load Clerk JS, failed to load script: https://clerk.auroraflix.cloud/npm/@clerk/clerk-js@6/dist/clerk.browser.js
+
+(code="failed_to_load_clerk_js")
+
+
+[browser] ClerkRuntimeError: Clerk: Failed to load Clerk JS
+
+(code="failed_to_load_clerk_js")
+
+
+    at rejectWith (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_shared_dist_1ac5-1a._.js:3143:33)
+    at loadClerkJSScript (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_shared_dist_1ac5-1a._.js:3161:85)
+    at IsomorphicClerk.getClerkJsEntryChunk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1484:294)
+    at IsomorphicClerk.getEntryChunks (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1463:38)
+    at new IsomorphicClerk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1410:45)
+    at IsomorphicClerk.getOrCreateInstance (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:699:343)
+    at useLoadedIsomorphicClerk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1652:224)
+    at ClerkProviderBase (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1629:46)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:14894:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4425:24)
+    at updateFunctionComponent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:5892:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6518:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:761:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9385:97)
+    at workLoopConcurrentByScheduler (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9381:58)
+    at renderRootConcurrent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9364:71)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:8891:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10085:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64) 
+[browser] ClerkRuntimeError: Clerk: Failed to load Clerk JS
+
+(code="failed_to_load_clerk_js")
+
+
+    at rejectWith (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_shared_dist_1ac5-1a._.js:3143:33)
+    at loadClerkJSScript (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_shared_dist_1ac5-1a._.js:3161:85)
+    at IsomorphicClerk.getClerkJsEntryChunk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1484:294)
+    at IsomorphicClerk.getEntryChunks (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1463:38)
+    at new IsomorphicClerk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1410:45)
+    at IsomorphicClerk.getOrCreateInstance (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:699:343)
+    at useLoadedIsomorphicClerk (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1652:224)
+    at ClerkProviderBase (http://localhost:3000/_next/static/chunks/node_modules_%40clerk_react_dist_1hyuzmm._.js:1629:46)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:14894:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4425:24)
+    at updateFunctionComponent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:5892:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6518:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:761:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9385:97)
+    at workLoopConcurrentByScheduler (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9381:58)
+    at renderRootConcurrent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9364:71)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:8891:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10085:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64) 
+ GET / 200 in 713ms (next.js: 20ms, application-code: 693ms)
+✓ Compiled in 10.7s
+[?25h
