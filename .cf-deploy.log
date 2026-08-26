@@ -26,18 +26,18 @@ WARN workerd compatibility_date: 2024-09-23, consider updating your wrangler con
 
 ▲ Next.js 16.3.1 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 86ms
+✓ Running next.config.ts took 73ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 9.8s
+✓ Compiled successfully in 5.3s
   Running TypeScript ...
-  Finished TypeScript in 24.4s ...
+  Finished TypeScript in 12.9s ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/33) ...
   Generating static pages using 7 workers (8/33) 
   Generating static pages using 7 workers (16/33) 
   Generating static pages using 7 workers (24/33) 
-✓ Generating static pages using 7 workers (33/33) in 956ms
+✓ Generating static pages using 7 workers (33/33) in 945ms
   Finalizing page optimization ...
 
 Route (app)
@@ -108,7 +108,7 @@ Bundling middleware function...
 Bundling static assets...
 Bundling cache assets...
 Building server function: default...
-Applying code patches: 17.272s
+Applying code patches: 16.203s
 # copyPackageTemplateFiles
 [35m⚙️ Bundling the OpenNext server...
 [0m
@@ -126,23 +126,20 @@ WARN While OpenNext may function on Windows, it could encounter unpredictable fa
 Incremental cache does not need populating
 Tag cache does not need populating
 
- ⛅️ wrangler 4.125.0 (update available 4.126.0)
-───────────────────────────────────────────────
+ ⛅️ wrangler 4.125.0
+────────────────────
 🌀 Building list of assets...
 ✨ Read 112 files from the assets directory D:\Programming\Personal Projects\AuroraStream\my-app\.open-next\assets
 🌀 Starting asset upload...
-🌀 Found 4 new or modified static assets to upload. Proceeding with upload...
+🌀 Found 2 new or modified static assets to upload. Proceeding with upload...
 + /BUILD_ID
-+ /_next/static/chunks/3fqv5krtl_t2d.js
-+ /_next/static/chunks/3vflqjcoj0fqv.js
-+ /_next/static/chunks/0x_sk8pfaho7n.css
-Uploaded 1 of 4 assets
-Uploaded 2 of 4 assets
-Uploaded 4 of 4 assets
-✨ Success! Uploaded 4 files (98 already uploaded) (3.36 sec)
++ /_next/static/chunks/1agve2nf9hpi-.js
+Uploaded 1 of 2 assets
+Uploaded 2 of 2 assets
+✨ Success! Uploaded 2 files (100 already uploaded) (2.09 sec)
 
-Total Upload: 8080.48 KiB / gzip: 1568.22 KiB
-Worker Startup Time: 22 ms
+Total Upload: 8080.82 KiB / gzip: 1568.35 KiB
+Worker Startup Time: 25 ms
 Your Worker has access to the following bindings:
 Binding                                                                                Resource                  
 env.ASSETS                                                                             Assets                    
@@ -151,9 +148,9 @@ env.NEXT_PUBLIC_CLERK_SIGN_IN_URL ("/sign-in")                                  
 env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ("/sign-up")                                         Environment Variable      
 env.NEXT_PUBLIC_SITE_URL ("https://auroraflix.cloud")                                  Environment Variable      
 
-Uploaded lumoflix (21.51 sec)
-Deployed lumoflix triggers (4.42 sec)
+Uploaded lumoflix (19.42 sec)
+Deployed lumoflix triggers (4.41 sec)
   https://lumoflix.auroracloud.workers.dev
-Current Version ID: 82ce9296-7772-4d23-9cf8-7ecf8c1ae48c
-(node:8552) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+Current Version ID: e0341e9f-aa7d-4535-b1fc-c0185aed750c
+(node:3392) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
 (Use `node --trace-deprecation ...` to show where the warning was created)
