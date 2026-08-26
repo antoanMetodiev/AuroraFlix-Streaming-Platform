@@ -17,7 +17,7 @@ type ProfileTarget = { clerkId: string; displayName: string | null; profileImage
 // friends list, search) instead of everything stacked in one scroll. No
 // page/modal chrome of its own, so both /friends (full page) and
 // FriendsModal (compact popup) can render the same logic.
-export function FriendsPanel() {
+export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { t } = useTranslation();
   const { friends, incoming, outgoing, isLoading, accept, cancelOrDecline, send, remove } = useFriends();
   const [tab, setTab] = useState<Tab>("search");
@@ -192,6 +192,7 @@ export function FriendsPanel() {
           displayName={profile.displayName}
           profileImageURL={profile.profileImageURL}
           onClose={() => setProfile(null)}
+          onNavigate={onNavigate}
         />
       )}
     </div>

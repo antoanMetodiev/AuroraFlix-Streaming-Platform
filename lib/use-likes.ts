@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { type LikedItem, getLikes, addLike, removeLike } from "@/lib/likes";
+import { type AddLikeResult, type LikedItem, getLikes, addLike, removeLike } from "@/lib/likes";
 
 /**
  * Single likes API for the whole app — signed-in only (see lib/likes.ts),
@@ -24,10 +24,11 @@ export function useLikes() {
   }, [refresh]);
 
   const add = useCallback(
-    async (item: LikedItem) => {
-      if (!isSignedIn) return;
-      await addLike(item);
-      await refresh();
+    async (item: LikedItem): Promise<AddLikeResult> => {
+      if (!isSignedIn) return "error";
+      const result = await addLike(item);
+      if (result === "ok") await refresh();
+      return result;
     },
     [isSignedIn, refresh]
   );

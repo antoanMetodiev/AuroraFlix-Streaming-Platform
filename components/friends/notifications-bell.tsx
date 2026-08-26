@@ -139,6 +139,7 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
           displayName={profile.displayName}
           profileImageURL={profile.profileImageURL}
           onClose={() => setProfile(null)}
+          onNavigate={handleClose}
         />
       )}
     </div>

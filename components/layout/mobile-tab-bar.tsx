@@ -40,7 +40,7 @@ export function MobileTabBar() {
                 isActive ? "text-foreground" : "text-foreground/45"
               }`}
             >
-              {labelKey === "nav.watchlist" ? t("nav.watchlistShort") : t(labelKey)}
+              {labelKey === "nav.watchlist" ? t("nav.watchlistShort") : labelKey === "nav.playlists" ? t("nav.playlistsShort") : t(labelKey)}
             </span>
           </Link>
         );

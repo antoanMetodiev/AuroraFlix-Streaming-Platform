@@ -11,16 +11,23 @@ import type { Actor, ActorLatestWork } from "@/types/actor";
  */
 const PROXY_BASE_URL = "/api/backend";
 
-export async function searchMatchingMovies(title: string, signal?: AbortSignal): Promise<Movie[]> {
+// limit/offset let a caller page through more than one screenful of matches
+// (see components/playlists/playlist-card.tsx's "Load more") instead of
+// being stuck with the backend's default page size.
+export async function searchMatchingMovies(title: string, signal?: AbortSignal, limit = 10, offset = 0): Promise<Movie[]> {
   if (!title.trim()) return [];
-  const response = await fetch(`${PROXY_BASE_URL}/search-movies-matching-results/${encodeURIComponent(title)}`, { signal });
+  const response = await fetch(`${PROXY_BASE_URL}/search-movies-matching-results/${encodeURIComponent(title)}?limit=${limit}&offset=${offset}`, {
+    signal,
+  });
   if (!response.ok) return [];
   return (await response.json()) as Movie[];
 }
 
-export async function searchMatchingSeries(title: string, signal?: AbortSignal): Promise<Series[]> {
+export async function searchMatchingSeries(title: string, signal?: AbortSignal, limit = 10, offset = 0): Promise<Series[]> {
   if (!title.trim()) return [];
-  const response = await fetch(`${PROXY_BASE_URL}/search-series-matching-results/${encodeURIComponent(title)}`, { signal });
+  const response = await fetch(`${PROXY_BASE_URL}/search-series-matching-results/${encodeURIComponent(title)}?limit=${limit}&offset=${offset}`, {
+    signal,
+  });
   if (!response.ok) return [];
   return (await response.json()) as Series[];
 }

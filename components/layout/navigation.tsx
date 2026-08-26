@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bookmark, Clapperboard, Crown, Home, Menu, PlusCircle, Tv, X } from "lucide-react";
+import { Bookmark, Clapperboard, Crown, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
@@ -21,6 +21,7 @@ export const NAV_LINKS = [
   { href: "/movies", labelKey: "nav.movies", icon: Clapperboard },
   { href: "/series", labelKey: "nav.series", icon: Tv },
   { href: "/watchlist", labelKey: "nav.watchlist", icon: Bookmark },
+  { href: "/playlists", labelKey: "nav.playlists", icon: ListVideo },
   { href: "/order", labelKey: "nav.order", icon: PlusCircle },
 ] as const satisfies { href: string; labelKey: TranslationKey; icon: unknown }[];
 
@@ -96,7 +97,7 @@ export function Navigation() {
           rel="noopener noreferrer"
           className="font-medium text-foreground/60 underline-offset-2 transition-colors hover:text-foreground hover:underline"
         >
-          Antoan Metodiev
+          A.M
         </a>
       </span>
 
@@ -188,7 +189,7 @@ export function Navigation() {
             onClick={() => setIsOpen(false)}
             className="font-medium text-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
           >
-            Antoan Metodiev
+            A.M
           </a>
         </span>
       </div>

@@ -33,31 +33,31 @@ export function FriendsModal({ onClose }: { onClose: () => void }) {
       <div className="animate-modal-backdrop-in absolute inset-0 bg-black/75 backdrop-blur-md" />
       <div
         onClick={(event) => event.stopPropagation()}
-        className="animate-modal-card-in relative flex max-h-[78vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-surface shadow-[0_30px_90px_-15px_rgba(0,0,0,0.7)]"
+        className="animate-modal-card-in relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-surface shadow-[0_30px_90px_-15px_rgba(0,0,0,0.7)]"
       >
         {/* Soft top glow — purely decorative, gives the panel a bit of depth
             instead of a flat single-tone card. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.06] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-white/[0.06] to-transparent" />
 
-        <div className="relative flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white">
-              <Users size={18} />
+        <div className="relative flex shrink-0 items-center justify-between border-b border-white/10 px-7 py-7">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+              <Users size={20} />
             </span>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">{t("friends.title")}</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("friends.title")}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("nav.closeMenu")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/5 text-foreground/60 transition-all duration-200 hover:scale-105 hover:bg-foreground/10 hover:text-foreground"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground/5 text-foreground/60 transition-all duration-200 hover:scale-105 hover:bg-foreground/10 hover:text-foreground"
           >
-            <X size={17} />
+            <X size={19} />
           </button>
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          <FriendsPanel />
+        <div className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+          <FriendsPanel onNavigate={onClose} />
         </div>
       </div>
     </div>,

@@ -55,7 +55,12 @@ export async function getLikesForUser(clerkId: string): Promise<LikedItem[]> {
   }
 }
 
-export async function addLike(item: LikedItem): Promise<boolean> {
+// "limit" means the caller already has the max number of liked titles (see
+// lumo-user-svc's likes package — 409, distinct from a generic failure) —
+// the cap itself is never advertised upfront, only surfaced when actually hit.
+export type AddLikeResult = "ok" | "limit" | "error";
+
+export async function addLike(item: LikedItem): Promise<AddLikeResult> {
   try {
     const response = await fetch("/api/likes", {
       method: "POST",
@@ -70,9 +75,11 @@ export async function addLike(item: LikedItem): Promise<boolean> {
         videoId: item.videoId,
       }),
     });
-    return response.ok;
+    if (response.ok) return "ok";
+    if (response.status === 409) return "limit";
+    return "error";
   } catch {
-    return false;
+    return "error";
   }
 }
 
