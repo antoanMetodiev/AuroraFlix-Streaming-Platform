@@ -3,39 +3,26 @@
 import type { ReactNode } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { bgBG, enUS } from "@clerk/localizations";
-import { useLocale } from "@/lib/i18n/locale-context";
+import { enUS } from "@clerk/localizations";
 import { ClerkLoadKick } from "@/components/providers/clerk-load-kick";
 
-// bgBG's own delete-account confirmation phrase ("Изтриване на акаунта") never
-// unblocks the confirm button — confirmed the localization string itself has
-// no hidden characters, so this looks like Clerk's own confirmation-match
-// logic only accepting Latin/word-character input (e.g. a `\w`-based check,
-// which is ASCII-only unless explicitly Unicode-aware) and never matching
-// Cyrillic. Overriding just this one phrase to a Latin string works around it
-// without touching any other Bulgarian text in the rest of Clerk's UI.
-const bgBGUserProfile = bgBG.userProfile ?? {};
-const bgBGWithLatinDeleteConfirm = {
-  ...bgBG,
-  userProfile: {
-    ...bgBGUserProfile,
-    deletePage: {
-      ...bgBGUserProfile.deletePage,
-      actionDescription: 'Напишете "Delete account" по-долу, за да продължите.',
-      confirm: "Delete account",
-    },
-  },
-};
-
-// Clerk's own UI (SignIn/SignUp/UserButton) follows the site's EN/BG toggle,
-// and is themed to match the app's dark, white-accent look instead of Clerk's defaults.
+// Always English, regardless of the site's own EN/BG toggle — bgBG's
+// delete-account confirmation step never unblocks its confirm button no
+// matter what the confirmation phrase itself says (confirmed by testing:
+// overriding just that one string to a Latin phrase, while leaving the rest
+// of the UI on bg-BG, still didn't work; only switching entirely to enUS
+// does). That points to the bug being tied to Clerk's overall detected
+// locale, not just displayed text — and there's no per-component/per-page
+// localization override in Clerk's API (`<UserButton userProfileProps>` only
+// accepts additionalOAuthScopes/appearance/customPages/apiKeysProps, no
+// localization) to scope a fix to just that one panel. A working delete
+// flow matters more than Clerk's own chrome matching the site's language, so
+// this is deliberately hardcoded rather than following `useLocale()`.
 export function ClerkLocalizedProvider({ children, publishableKey }: { children: ReactNode; publishableKey?: string }) {
-  const { locale } = useLocale();
-
   return (
     <ClerkProvider
       publishableKey={publishableKey}
-      localization={locale === "bg" ? bgBGWithLatinDeleteConfirm : enUS}
+      localization={enUS}
       appearance={{
         theme: dark,
         variables: {
