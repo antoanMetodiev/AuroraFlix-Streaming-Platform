@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { PlayerSection } from "@/components/movies/details/player-section";
 import { Loader } from "@/components/ui/loader";
 import { orderEpisodes } from "@/lib/episodes";
+import { tmdbImage } from "@/lib/tmdb";
 import type { Episode } from "@/types/episode";
 import type { Series } from "@/types/series";
 
@@ -32,7 +33,12 @@ export function SeriesWatchSection({ record }: { record: Series }) {
 
   return (
     <>
-      <PlayerSection ref={playerWrapperRef} videoUrl={currentVideo} />
+      <PlayerSection
+        ref={playerWrapperRef}
+        videoUrl={currentVideo}
+        title={record.title}
+        poster={tmdbImage(record.backgroundImg_URL ?? record.posterImgURL, "w1280")}
+      />
       <EpisodesSection episodes={episodes} recordId={record.id} recordTitle={record.title} onSelectEpisode={handleSelectEpisode} />
     </>
   );

@@ -32,6 +32,37 @@ export async function searchMatchingSeries(title: string, signal?: AbortSignal, 
   return (await response.json()) as Series[];
 }
 
+// Session-lifetime cache for the hover-preview card (see
+// components/movies/cinema-record-card.tsx) — the same title gets hovered
+// repeatedly as someone scans a grid, and this data doesn't change while
+// browsing, so there's no reason to re-fetch it every time.
+const moviePreviewCache = new Map<string, Promise<Movie | null>>();
+const seriesPreviewCache = new Map<string, Promise<Series | null>>();
+
+export function getMoviePreview(movieId: string): Promise<Movie | null> {
+  if (!movieId) return Promise.resolve(null);
+  let cached = moviePreviewCache.get(movieId);
+  if (!cached) {
+    cached = fetch(`${PROXY_BASE_URL}/get-movie-details?movieId=${encodeURIComponent(movieId)}`)
+      .then((response) => (response.ok ? (response.json() as Promise<Movie>) : null))
+      .catch(() => null);
+    moviePreviewCache.set(movieId, cached);
+  }
+  return cached;
+}
+
+export function getSeriesPreview(id: string): Promise<Series | null> {
+  if (!id) return Promise.resolve(null);
+  let cached = seriesPreviewCache.get(id);
+  if (!cached) {
+    cached = fetch(`${PROXY_BASE_URL}/get-series-details?id=${encodeURIComponent(id)}`)
+      .then((response) => (response.ok ? (response.json() as Promise<Series>) : null))
+      .catch(() => null);
+    seriesPreviewCache.set(id, cached);
+  }
+  return cached;
+}
+
 export async function suggestActors(type: "movie" | "series", query: string, signal?: AbortSignal): Promise<Actor[]> {
   if (!query.trim()) return [];
   const path = type === "movie" ? "suggest-movie-actors" : "suggest-series-actors";

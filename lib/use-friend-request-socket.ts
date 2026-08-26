@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { WS_BASE_URL } from "@/lib/config";
 import type { FriendsEventType } from "@/lib/friends-events";
+import type { FriendWatchingPush } from "@/lib/watching-events";
+import type { WatchingTarget } from "@/lib/watching";
 
 // Exponential backoff instead of a flat delay — the first retry after a
 // drop is near-instant, later ones back off in case the gateway is
@@ -12,7 +14,21 @@ import type { FriendsEventType } from "@/lib/friends-events";
 const RECONNECT_START_MS = 300;
 const RECONNECT_MAX_MS = 8000;
 
-type WSMessage = { type: FriendsEventType };
+// "friend_watching" is payload-bearing (who, watching what or null to mean
+// "stopped") unlike the bare FriendsEventType messages — see
+// lumo-user-svc's internal/watching for the push's origin. actorDisplayName/
+// actorProfileImageURL travel with every push (not just looked up from a
+// separately-fetched friends list) so a UI reacting to this live push never
+// has to race that list's own fetch just to render a name/avatar.
+type WSMessage =
+  | { type: FriendsEventType }
+  | {
+      type: "friend_watching";
+      clerkId: string;
+      actorDisplayName: string | null;
+      actorProfileImageURL: string | null;
+      watching: WatchingTarget | null;
+    };
 
 /**
  * Direct browser-to-gateway WebSocket for instant friend-request pushes
@@ -30,12 +46,20 @@ type WSMessage = { type: FriendsEventType };
  * FriendsSocketManager) — the gateway's Hub keeps only one live connection
  * per clerkId, so a second one from the same tab would evict the first.
  * Everything else that cares about these events subscribes to
- * lib/friends-events instead of calling this hook again.
+ * lib/friends-events (or lib/watching-events, for "friend_watching")
+ * instead of calling this hook again.
  */
-export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void) {
+export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void, onWatching: (push: FriendWatchingPush) => void) {
   const { isSignedIn, getToken } = useAuth();
   const callbackRef = useRef(onEvent);
-  callbackRef.current = onEvent;
+  const watchingRef = useRef(onWatching);
+
+  // Kept in sync via an effect (not a plain assignment in the render body)
+  // so the "latest callback" ref write happens after render, not during it.
+  useEffect(() => {
+    callbackRef.current = onEvent;
+    watchingRef.current = onWatching;
+  });
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -62,7 +86,16 @@ export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data as string) as WSMessage;
-          callbackRef.current(data.type);
+          if (data.type === "friend_watching") {
+            watchingRef.current({
+              clerkId: data.clerkId,
+              actorDisplayName: data.actorDisplayName,
+              actorProfileImageURL: data.actorProfileImageURL,
+              watching: data.watching,
+            });
+          } else {
+            callbackRef.current(data.type);
+          }
         } catch {
           // malformed payload — ignore
         }

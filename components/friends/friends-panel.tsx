@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Clock, Inbox, Search, UserMinus, UserPlus, Users, X } from "lucide-react";
+import Link from "next/link";
+import { Check, Clock, Film, Inbox, Search, Tv, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader, Spinner } from "@/components/ui/loader";
+import { FadeInImage } from "@/components/ui/fade-in-image";
 import { UserProfileModal } from "@/components/friends/user-profile-modal";
 import { useFriends } from "@/lib/use-friends";
 import { searchUsers, type FriendRequestItem, type FriendSearchResult } from "@/lib/friends";
+import type { WatchingTarget } from "@/lib/watching";
+import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
+import { tmdbImage, getMovieSlug } from "@/lib/tmdb";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import type { Movie } from "@/types/movie";
+import type { Series } from "@/types/series";
 
 type Tab = "requests" | "friends" | "search";
 
@@ -19,7 +26,7 @@ type ProfileTarget = { clerkId: string; displayName: string | null; profileImage
 // FriendsModal (compact popup) can render the same logic.
 export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { t } = useTranslation();
-  const { friends, incoming, outgoing, isLoading, accept, cancelOrDecline, send, remove } = useFriends();
+  const { friends, incoming, outgoing, watching, isLoading, accept, cancelOrDecline, send, remove } = useFriends();
   const [tab, setTab] = useState<Tab>("search");
   const [profile, setProfile] = useState<ProfileTarget | null>(null);
 
@@ -178,9 +185,12 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
         ) : (
           <ul className="flex max-h-96 flex-col gap-1 overflow-y-auto">
             {friends.map((friend) => (
-              <li key={friend.clerkId} className="flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors duration-150 hover:bg-foreground/5">
-                <IdentityButton clerkId={friend.clerkId} name={friend.displayName} imageURL={friend.profileImageURL} onOpen={setProfile} />
-                <ActionIcon icon={UserMinus} label={t("friends.remove")} onClick={() => remove(friend.clerkId)} />
+              <li key={friend.clerkId} className="flex flex-col rounded-2xl px-2.5 py-2.5 transition-colors duration-150 hover:bg-foreground/5">
+                <div className="flex items-center gap-3">
+                  <IdentityButton clerkId={friend.clerkId} name={friend.displayName} imageURL={friend.profileImageURL} onOpen={setProfile} />
+                  <ActionIcon icon={UserMinus} label={t("friends.remove")} onClick={() => remove(friend.clerkId)} />
+                </div>
+                {watching[friend.clerkId] && <FriendWatchingCard watching={watching[friend.clerkId]} />}
               </li>
             ))}
           </ul>
@@ -219,6 +229,84 @@ function IdentityButton({
       <Avatar src={imageURL} name={name} size={36} />
       <p className="min-w-0 flex-1 truncate text-sm text-foreground/85">{name || "?"}</p>
     </button>
+  );
+}
+
+function watchingHref(watching: WatchingTarget) {
+  return watching.type === "movie"
+    ? `/movies/${getMovieSlug({ title: watching.title, movieId: watching.tmdbId })}`
+    : `/series/${watching.tmdbId}`;
+}
+
+// The persistent, always-visible counterpart to WatchingToastManager's
+// transient push — this renders for as long as `watching` stays truthy
+// (backed by useFriends' merged snapshot+live-push state), so it's still
+// here to check even long after the one-time toast for "started watching"
+// has already fired and disappeared.
+function FriendWatchingCard({ watching }: { watching: WatchingTarget }) {
+  const { t } = useTranslation();
+  // Keyed so a stale in-flight fetch for a previous title (switched episode,
+  // or the friend started something else) can't clobber the current one —
+  // `loaded` is derived from whether the resolved key still matches, instead
+  // of a separate flag reset synchronously at the top of the effect.
+  const key = `${watching.type}:${watching.tmdbId}`;
+  const [resolved, setResolved] = useState<{ key: string; preview: Movie | Series | null } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPreview = watching.type === "movie" ? getMoviePreview(watching.tmdbId) : getSeriesPreview(watching.tmdbId);
+    fetchPreview.then((result) => {
+      if (!cancelled) setResolved({ key, preview: result });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [key, watching.type, watching.tmdbId]);
+
+  const loaded = resolved?.key === key;
+  const preview = loaded ? resolved.preview : null;
+  const TypeIcon = watching.type === "movie" ? Film : Tv;
+  const poster = tmdbImage(preview?.posterImgURL, "w342");
+  const genres = (preview?.genres ?? "")
+    .split(",")
+    .map((genre) => genre.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  return (
+    <Link
+      href={watchingHref(watching)}
+      className="mt-2 flex items-center gap-2.5 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] p-2 transition-colors duration-150 hover:bg-emerald-400/[0.1]"
+    >
+      <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-foreground/10">
+        {poster ? (
+          <FadeInImage src={poster} alt="" sizes="40px" className="object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-foreground/30">
+            <TypeIcon size={14} />
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-emerald-400 uppercase">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+          {t("friends.watching")}
+        </p>
+        <p className="truncate text-xs font-semibold text-foreground/90">{watching.title}</p>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {!loaded ? (
+            <span className="h-3.5 w-12 animate-pulse rounded-full bg-foreground/10" />
+          ) : (
+            genres.map((genre) => (
+              <span key={genre} className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-medium text-foreground/60">
+                {genre}
+              </span>
+            ))
+          )}
+        </div>
+      </div>
+    </Link>
   );
 }
 

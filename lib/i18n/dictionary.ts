@@ -180,6 +180,7 @@ export const dictionary = {
 
   "player.pickEpisode": { en: "Pick an episode to start watching", bg: "Избери епизод, за да започнеш гледане" },
   "player.player": { en: "Player", bg: "Плейър" },
+  "player.play": { en: "Play", bg: "Пусни" },
 
   "adblock.message.chrome": {
     en: "For a smoother viewing experience without pop-up ads, the AuroraFlix team recommends the free uBlock Origin extension from the Google Chrome Web Store.",
@@ -242,6 +243,9 @@ export const dictionary = {
   "friends.notifSentRequest": { en: "sent you a friend request.", bg: "ви изпрати покана за приятелство." },
   "friends.notifAcceptedRequest": { en: "accepted your friend request.", bg: "прие вашата покана за приятелство." },
   "friends.notifDeclinedRequest": { en: "declined your friend request.", bg: "отказа поканата ви за приятелство." },
+  "friends.watching": { en: "Watching", bg: "Гледа" },
+  "friends.watchToo": { en: "Watch too", bg: "Гледай и ти" },
+  "friends.dismiss": { en: "Dismiss", bg: "Затвори" },
 
   "order.selectTitle": { en: "What would you like to order?", bg: "Какво искаш да поръчаш?" },
   "order.selectDesc": {

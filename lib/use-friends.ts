@@ -14,6 +14,8 @@ import {
   type FriendRequestItem,
 } from "@/lib/friends";
 import { subscribeFriendsEvent } from "@/lib/friends-events";
+import { getFriendsWatching, type WatchingTarget } from "@/lib/watching";
+import { subscribeWatchingEvent } from "@/lib/watching-events";
 
 /**
  * Friends list + incoming/outgoing requests for the signed-in caller, same
@@ -25,6 +27,7 @@ export function useFriends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [incoming, setIncoming] = useState<FriendRequestItem[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequestItem[]>([]);
+  const [watching, setWatching] = useState<Record<string, WatchingTarget>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -34,15 +37,22 @@ export function useFriends() {
       setFriends([]);
       setIncoming([]);
       setOutgoing([]);
+      setWatching({});
       setIsLoading(false);
       return;
     }
 
     try {
-      const [friendsList, incomingList, outgoingList] = await Promise.all([getFriends(), getIncomingRequests(), getOutgoingRequests()]);
+      const [friendsList, incomingList, outgoingList, watchingList] = await Promise.all([
+        getFriends(),
+        getIncomingRequests(),
+        getOutgoingRequests(),
+        getFriendsWatching(),
+      ]);
       setFriends(friendsList);
       setIncoming(incomingList);
       setOutgoing(outgoingList);
+      setWatching(Object.fromEntries(watchingList.map((entry) => [entry.clerkId, entry.watching])));
     } finally {
       setIsLoading(false);
     }
@@ -61,6 +71,25 @@ export function useFriends() {
     if (!isSignedIn) return;
     return subscribeFriendsEvent(() => refresh());
   }, [isSignedIn, refresh]);
+
+  // Live "who's watching what" updates, applied in place rather than a full
+  // refresh() — this fires far more often than a friend-request event
+  // (every heartbeat's worth of change), so it only touches the one
+  // clerkId's entry instead of re-fetching all four lists.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    return subscribeWatchingEvent(({ clerkId, watching: status }) => {
+      setWatching((prev) => {
+        if (status === null) {
+          if (!(clerkId in prev)) return prev;
+          const next = { ...prev };
+          delete next[clerkId];
+          return next;
+        }
+        return { ...prev, [clerkId]: status };
+      });
+    });
+  }, [isSignedIn]);
 
   const accept = useCallback(
     async (id: string) => {
@@ -96,6 +125,7 @@ export function useFriends() {
     friends,
     incoming,
     outgoing,
+    watching,
     isLoading: !isLoaded || isLoading,
     refresh,
     accept,

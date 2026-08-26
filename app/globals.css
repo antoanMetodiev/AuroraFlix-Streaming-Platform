@@ -213,3 +213,68 @@ body {
     animation: none;
   }
 }
+
+/* CinemaRecordCard's hover-preview panel — swings open like a page turning,
+   hinged on the edge nearest the poster it grew out of (see
+   components/movies/cinema-record-card.tsx's previewSide). */
+@keyframes card-open-right {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-20deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) scale(1);
+  }
+}
+
+@keyframes card-open-left {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(20deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) scale(1);
+  }
+}
+
+.animate-card-open-right {
+  animation: card-open-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: left center;
+}
+
+.animate-card-open-left {
+  animation: card-open-left 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: right center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-open-right,
+  .animate-card-open-left {
+    animation: none;
+  }
+}
+
+/* WatchingToastManager's "friend started watching X" pill — slides in from
+   the corner it's anchored to instead of just popping into place. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ import { PlayerSection } from "@/components/movies/details/player-section";
 import { SeriesWatchSection } from "@/components/movies/details/series-watch-section";
 import { TrackLastViewed } from "@/components/movies/details/track-last-viewed";
 import { LazyCastSection, LazyImageGallery, LazyCommentsSection } from "@/components/movies/details/lazy-sections";
+import { tmdbImage } from "@/lib/tmdb";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -25,7 +26,13 @@ export function CinemaRecordDetailsPage({ record, type }: { record: Movie | Seri
         {type === "series" ? (
           <SeriesWatchSection record={record as Series} />
         ) : (
-          record.videoURL && <PlayerSection videoUrl={record.videoURL} />
+          record.videoURL && (
+            <PlayerSection
+              videoUrl={record.videoURL}
+              title={record.title}
+              poster={tmdbImage(record.backgroundImg_URL ?? record.posterImgURL, "w1280")}
+            />
+          )
         )}
 
         <LazyCommentsSection recordId={record.id} type={type} />

@@ -33,7 +33,14 @@ export function CinemaRecordGrid({ records, type }: { records: (Movie | Series)[
       {records.map((record, index) => (
         <div
           key={record.id}
-          className={inView ? "animate-card-in" : "opacity-0"}
+          // relative + hover:z-40 (not just something inside this cell) is
+          // required for the hover-preview panel to paint above cards in the
+          // row below: animate-card-in animates opacity/transform, which per
+          // spec makes this div its own stacking context for as long as the
+          // animation is "in effect" (forever, since it fills forward) — any
+          // z-index set on a descendant is trapped inside that context and
+          // can never outrank a sibling cell's contents, no matter how high.
+          className={`relative ${inView ? "animate-card-in" : "opacity-0"} hover:z-40`}
           style={inView ? { animationDelay: `${Math.min(index, MAX_STAGGERED) * STAGGER_STEP_MS}ms` } : undefined}
         >
           <CinemaRecordCard record={record} type={type} />

@@ -2,6 +2,7 @@
 
 import { useFriendRequestSocket } from "@/lib/use-friend-request-socket";
 import { emitFriendsEvent } from "@/lib/friends-events";
+import { emitWatchingEvent } from "@/lib/watching-events";
 
 // The single owner of the friend-request WebSocket connection — see
 // useFriendRequestSocket's doc comment for why there must be exactly one of
@@ -9,6 +10,6 @@ import { emitFriendsEvent } from "@/lib/friends-events";
 // NotificationsBell, both of which subscribe via lib/friends-events instead
 // of opening their own connection). Renders nothing.
 export function FriendsSocketManager() {
-  useFriendRequestSocket(emitFriendsEvent);
+  useFriendRequestSocket(emitFriendsEvent, emitWatchingEvent);
   return null;
 }
