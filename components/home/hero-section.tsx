@@ -14,14 +14,26 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
+  // Gates the mute/unmute button — toggling mute against a player that
+  // hasn't started yet (or is still buffering) is what triggers the
+  // pause-instead-of-unmute bug on some mobile browsers, so the button stays
+  // inert until HeroBackground reports its player is actually ready.
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   const currentMovie = movies[currentIndex];
 
+  // Resetting isVideoReady lives in these event handlers rather than a
+  // useEffect keyed on currentMovie.id — HeroBackground already fully
+  // remounts on movie change (key={currentMovie.id}), so every path that
+  // changes currentIndex is a plain user-triggered event, not something
+  // that needs to be derived reactively from a prop.
   const goToPrevious = () => {
+    setIsVideoReady(false);
     setCurrentIndex((prev) => (prev === 0 ? movies.length - 1 : prev - 1));
   };
 
   const goToNext = () => {
+    setIsVideoReady(false);
     setCurrentIndex((prev) => (prev === movies.length - 1 ? 0 : prev + 1));
   };
 
@@ -47,7 +59,7 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
 
   return (
     <section className="relative isolate h-[calc(85vh-4rem)] w-full overflow-hidden bg-black sm:h-[calc(100dvh-4rem)]">
-      <HeroBackground key={currentMovie.id} movie={currentMovie} muted={muted} onEnded={goToNext} />
+      <HeroBackground key={currentMovie.id} movie={currentMovie} muted={muted} onEnded={goToNext} onReady={() => setIsVideoReady(true)} />
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/70 sm:via-transparent sm:to-transparent" />
 
@@ -122,7 +134,10 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
             <button
               key={movie.id}
               type="button"
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => {
+                setIsVideoReady(false);
+                setCurrentIndex(index);
+              }}
               aria-label={`${t("hero.show")} ${movie.title}`}
               aria-current={index === currentIndex}
               className={`h-1.5 w-1.5 rounded-full transition-all duration-300 sm:h-2 sm:w-2 ${
@@ -143,9 +158,10 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
 
         <button
           type="button"
+          disabled={!isVideoReady}
           onClick={() => setMuted((prev) => !prev)}
           aria-label={muted ? t("hero.unmute") : t("hero.mute")}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-108 hover:bg-white/90 hover:text-black sm:h-10 sm:w-10"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-108 hover:bg-white/90 hover:text-black disabled:pointer-events-none disabled:opacity-40 sm:h-10 sm:w-10"
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>

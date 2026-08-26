@@ -18,20 +18,34 @@ export function HeroBackground({
     movie,
     muted,
     onEnded,
+    onReady,
 }: {
     movie: Movie;
     muted: boolean;
     onEnded: () => void;
+    // Fires once the player has actually started (after the same delay
+    // videoReady itself uses) — lets the parent's mute/unmute button stay
+    // disabled until there's a real player to mute/unmute, instead of
+    // queuing a toggle against a not-yet-ready (or still-buffering) iframe.
+    onReady?: () => void;
 }) {
     const videoId = extractYouTubeId(movie.trailerVideoURL);
     const playerRef = useRef<YouTubePlayer | null>(null);
     const [videoReady, setVideoReady] = useState(false);
 
     useEffect(() => {
-        if (!playerRef.current) return;
-        if (muted) playerRef.current.mute();
-        else playerRef.current.unMute();
-    }, [muted, videoReady, playerRef]);
+        if (!playerRef.current || !videoReady) return;
+        if (muted) {
+            playerRef.current.mute();
+        } else {
+            playerRef.current.unMute();
+            // Several mobile browsers (iOS Safari in particular) pause
+            // playback as a side effect of unMute() on an iframe that
+            // autoplayed muted, instead of just unmuting it — nudge it back
+            // into play to counteract that instead of leaving it paused.
+            playerRef.current.playVideo();
+        }
+    }, [muted, videoReady]);
 
     // Same background-preload-then-swap strategy as the movie/series details
     // header and the image lightbox: paint the fast w1280 render immediately,
@@ -93,7 +107,10 @@ export function HeroBackground({
                             // Reveal the video first — nothing below this line may throw and
                             // block the fade-in (quality-level APIs are effectively deprecated
                             // by YouTube and can hang or reject).
-                            window.setTimeout(() => setVideoReady(true), 1200);
+                            window.setTimeout(() => {
+                                setVideoReady(true);
+                                onReady?.();
+                            }, 1200);
                         }}
                         onEnd={onEnded}
                     />
