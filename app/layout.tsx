@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background pt-16 pb-24 text-foreground md:pb-0">
         <LocaleProvider initialLocale={initialLocale}>
-          <ClerkLocalizedProvider>
+          <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ScrollToTopOnNavigate />
             <SiteHeader />
             {children}

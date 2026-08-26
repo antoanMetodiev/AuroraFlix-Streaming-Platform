@@ -9,11 +9,12 @@ import { ClerkLoadKick } from "@/components/providers/clerk-load-kick";
 
 // Clerk's own UI (SignIn/SignUp/UserButton) follows the site's EN/BG toggle,
 // and is themed to match the app's dark, white-accent look instead of Clerk's defaults.
-export function ClerkLocalizedProvider({ children }: { children: ReactNode }) {
+export function ClerkLocalizedProvider({ children, publishableKey }: { children: ReactNode; publishableKey?: string }) {
   const { locale } = useLocale();
 
   return (
     <ClerkProvider
+      publishableKey={publishableKey}
       localization={locale === "bg" ? bgBG : enUS}
       appearance={{
         theme: dark,
