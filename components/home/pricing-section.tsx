@@ -6,6 +6,7 @@ import { SignUpButton, useUser } from "@clerk/nextjs";
 import { SectionHeading } from "@/components/movies/details/section-heading";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { useCurrentUser } from "@/lib/use-current-user";
+import { useInViewOnce } from "@/lib/use-in-view-once";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type Plan = {
@@ -64,6 +65,7 @@ export function PricingSection() {
   const isPro = user?.subscriptionType === "PRO_USER";
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [checkoutError, setCheckoutError] = useState(false);
+  const { ref, inView } = useInViewOnce<HTMLElement>(0.2);
 
   const startCheckout = async () => {
     setCheckoutError(false);
@@ -81,23 +83,37 @@ export function PricingSection() {
   };
 
   return (
-    <section aria-label={t("pricing.sectionAria")} className="relative z-10 bg-background px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:px-8">
+    <section
+      ref={ref}
+      aria-label={t("pricing.sectionAria")}
+      className="bg-grain relative z-10 overflow-hidden bg-background px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:px-8"
+    >
       <div className="mx-auto max-w-4xl">
-        <SectionHeading>{t("pricing.title")}</SectionHeading>
-        <p id="pricing" className="-mt-4 mb-10 max-w-xl scroll-mt-[125px] text-sm text-foreground/60 sm:mb-12 sm:text-base">
-          {t("pricing.subtitle")}
-        </p>
+        <div className={`reveal ${inView ? "" : "reveal-hidden"}`}>
+          <SectionHeading>{t("pricing.title")}</SectionHeading>
+          <p id="pricing" className="-mt-4 mb-10 max-w-xl scroll-mt-[125px] text-sm text-foreground/60 sm:mb-12 sm:text-base">
+            {t("pricing.subtitle")}
+          </p>
+        </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          {PLANS.map((plan) => (
+        <div className="grid gap-6 sm:grid-cols-2 sm:items-center">
+          {PLANS.map((plan, index) => (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-2xl border p-6 sm:p-8 ${
+              style={{ transitionDelay: `${index * 110}ms` }}
+              className={`reveal relative flex flex-col rounded-2xl border p-6 sm:p-8 ${inView ? "" : "reveal-hidden"} ${
                 plan.highlighted
-                  ? "border-white/40 bg-surface shadow-[0_0_40px_rgba(255,255,255,0.12)]"
+                  ? "border-white/40 bg-surface shadow-[0_0_50px_rgba(255,255,255,0.14)] sm:-my-3 sm:py-9"
                   : "border-foreground/10 bg-foreground/5"
               }`}
             >
+              {plan.highlighted && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-6 -top-10 -z-10 h-24 rounded-full bg-white/20 blur-3xl"
+                />
+              )}
+
               {plan.highlighted && (
                 <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-neutral-900 shadow-[0_4px_14px_rgba(255,255,255,0.4)]">
                   <Sparkles size={12} />

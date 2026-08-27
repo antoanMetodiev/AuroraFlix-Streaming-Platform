@@ -22,7 +22,9 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 const BigImageLightbox = dynamic(() => import("@/components/ui/big-image-lightbox").then((mod) => mod.BigImageLightbox), { ssr: false });
 
 function hrefFor(item: LikedItem) {
-  return item.type === "TV-SHOW" ? `/series/${item.tmdbId}` : `/movies/${getMovieSlug({ title: item.title ?? "", movieId: item.videoId })}`;
+  return item.type === "TV-SHOW"
+    ? `/series/${item.tmdbId}`
+    : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
 }
 
 // Compact "user profile" — their liked movies/series and public playlists

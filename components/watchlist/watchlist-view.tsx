@@ -55,7 +55,7 @@ export function WatchlistView() {
               const isSeries = item.type === "TV-SHOW";
               const href = isSeries
                 ? `/series/${item.tmdbId}`
-                : `/movies/${getMovieSlug({ title: item.title ?? "", movieId: item.videoId })}`;
+                : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
               const poster = tmdbImage(item.posterImgURL, "w500");
 
               return (

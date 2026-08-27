@@ -16,7 +16,7 @@ export function MarqueeRow({
   const doubledItems = [...items, ...items];
 
   return (
-    <div className="group relative overflow-hidden py-2" role="group" aria-label={ariaLabel}>
+    <div className="edge-fade-x group relative overflow-hidden py-2" role="group" aria-label={ariaLabel}>
       <ul
         className={`flex w-max gap-4 pr-4 ${
           direction === "left" ? "animate-marquee" : "animate-marquee-reverse"

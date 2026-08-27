@@ -19,7 +19,9 @@ import type { Series } from "@/types/series";
 const PAGE_SIZE = 10;
 
 function hrefFor(item: PlaylistItem) {
-  return item.type === "TV-SHOW" ? `/series/${item.tmdbId}` : `/movies/${getMovieSlug({ title: item.title ?? "", movieId: item.videoId })}`;
+  return item.type === "TV-SHOW"
+    ? `/series/${item.tmdbId}`
+    : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
 }
 
 function toPlaylistItem(record: Movie | Series, type: "movie" | "series"): PlaylistItem {

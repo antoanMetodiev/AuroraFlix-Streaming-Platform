@@ -234,7 +234,7 @@ function IdentityButton({
 
 function watchingHref(watching: WatchingTarget) {
   return watching.type === "movie"
-    ? `/movies/${getMovieSlug({ title: watching.title, movieId: watching.tmdbId })}`
+    ? `/movies/${getMovieSlug({ title: watching.title, tmdbId: watching.tmdbId })}`
     : `/series/${watching.tmdbId}`;
 }
 

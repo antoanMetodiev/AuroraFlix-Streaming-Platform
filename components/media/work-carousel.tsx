@@ -22,7 +22,9 @@ export type WorkCardItem = {
 };
 
 function hrefFor(item: WorkCardItem) {
-  return item.type === "SERIES" ? `/series/${item.tmdbId}` : `/movies/${getMovieSlug({ title: item.title, videoURL: item.videoURL })}`;
+  return item.type === "SERIES"
+    ? `/series/${item.tmdbId}`
+    : `/movies/${getMovieSlug({ title: item.title, tmdbId: item.tmdbId, videoURL: item.videoURL })}`;
 }
 
 const COOLDOWN_KEY_PREFIX = "add_movies_actor_cooldown_";

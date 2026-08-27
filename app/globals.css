@@ -156,6 +156,54 @@ body {
   display: none;
 }
 
+/* Subtle film-grain texture — fixed, pointer-events-none overlay so flat dark
+   sections (hero, pricing, trending) don't read as sterile digital flatness.
+   Kept to a low opacity so it's felt, not seen. */
+.bg-grain {
+  position: relative;
+}
+
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Fades carousel/marquee edges to transparent instead of hard-clipping the
+   first/last visible card — the row this is applied to must have side
+   padding wider than the fade distance, or real content gets masked away. */
+.edge-fade-x {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+/* Generic scroll-triggered reveal (see useInViewOnce) — fade + rise, matching
+   the timing/easing already used for hero/section entrances. */
+.reveal {
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+  }
+
+  .reveal-hidden {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Staggered entrance for movie/series grid cards (see CinemaRecordGrid) */
 @keyframes card-in {
   from {

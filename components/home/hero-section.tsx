@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
@@ -14,6 +14,17 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
+  // Fires once on first paint only — HeroSection never remounts on
+  // prev/next/dot navigation (only HeroBackground does, via its own key), so
+  // this plays the entrance once and stays out of the way of carousel clicks.
+  // A plain setTimeout rather than requestAnimationFrame — rAF is paused for
+  // backgrounded/hidden tabs (e.g. a middle-click "open in new tab"), which
+  // would leave the entrance stuck invisible until the tab is focused.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setMounted(true), 50);
+    return () => window.clearTimeout(timeout);
+  }, []);
   // Gates the mute/unmute button — toggling mute against a player that
   // hasn't started yet (or is still buffering) is what triggers the
   // pause-instead-of-unmute bug on some mobile browsers, so the button stays
@@ -58,30 +69,37 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
     : [];
 
   return (
-    <section className="relative isolate h-[calc(85vh-4rem)] w-full overflow-hidden bg-black sm:h-[calc(100dvh-4rem)]">
+    <section className="bg-grain relative isolate h-[calc(85vh-4rem)] w-full overflow-hidden bg-black sm:h-[calc(100dvh-4rem)]">
       <HeroBackground key={currentMovie.id} movie={currentMovie} muted={muted} onEnded={goToNext} onReady={() => setIsVideoReady(true)} />
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/70 sm:via-transparent sm:to-transparent" />
 
       <div className="absolute inset-x-0 bottom-24 z-20 px-4 sm:bottom-28 sm:px-8 lg:bottom-32 lg:px-16">
         <div className="max-w-xl lg:max-w-2xl">
-          {currentMovie.logoURL ? (
-            <div className="relative mb-3 h-16 w-[140px] sm:h-20 sm:w-[180px] lg:h-24 lg:w-[210px]">
-              <Image
-                src={currentMovie.logoURL}
-                alt={currentMovie.title}
-                fill
-                priority
-                sizes="210px"
-                className="object-contain object-left"
-              />
-            </div>
-          ) : (
-            <h1 className="mb-3 text-2xl font-bold text-white sm:text-4xl lg:text-5xl">{currentMovie.title}</h1>
-          )}
+          <div className={`reveal ${mounted ? "" : "reveal-hidden"}`}>
+            {currentMovie.logoURL ? (
+              <div className="relative mb-3 h-16 w-[140px] sm:h-20 sm:w-[180px] lg:h-24 lg:w-[210px]">
+                <Image
+                  src={currentMovie.logoURL}
+                  alt={currentMovie.title}
+                  fill
+                  priority
+                  sizes="210px"
+                  className="object-contain object-left"
+                />
+              </div>
+            ) : (
+              <h1 className="mb-3 text-3xl leading-[1.05] font-extrabold tracking-tighter text-white text-balance sm:text-5xl lg:text-6xl">
+                {currentMovie.title}
+              </h1>
+            )}
+          </div>
 
           {truncatedDescription && (
-            <p className="mb-3 line-clamp-2 max-w-xl text-xs leading-relaxed font-medium text-white/70 sm:line-clamp-3 sm:text-base sm:text-white/80 lg:text-lg">
+            <p
+              style={{ transitionDelay: "90ms" }}
+              className={`reveal mb-3 line-clamp-2 max-w-xl text-xs leading-relaxed font-medium text-white/70 sm:line-clamp-3 sm:text-base sm:text-white/80 lg:text-lg ${mounted ? "" : "reveal-hidden"}`}
+            >
               {truncatedDescription}
             </p>
           )}
@@ -90,7 +108,10 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
             <p className="sr-only">{currentMovie.description}</p>
           )}
 
-          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/75 sm:gap-4 sm:text-sm lg:text-base">
+          <div
+            style={{ transitionDelay: "160ms" }}
+            className={`reveal mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/75 sm:gap-4 sm:text-sm lg:text-base ${mounted ? "" : "reveal-hidden"}`}
+          >
             {genreList.map((genre) => (
               <Link
                 key={genre}
@@ -106,7 +127,10 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
             <span className="rounded-md bg-black/65 px-2 py-1">4K</span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div
+            style={{ transitionDelay: "230ms" }}
+            className={`reveal flex items-center gap-3 sm:gap-4 ${mounted ? "" : "reveal-hidden"}`}
+          >
             <Link
               href={movieHref}
               className="rounded-xl border border-white/25 bg-white/90 px-4 py-2.5 text-sm font-semibold tracking-wide text-black shadow-[0_6px_20px_rgba(255,255,255,0.17)] transition-transform duration-300 hover:scale-105 sm:px-6 sm:py-3 sm:text-base"

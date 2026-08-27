@@ -9,7 +9,8 @@ export function tmdbImage(path?: string | null, size: TmdbImageSize = "w780") {
 
 /**
  * Movie list/search/details endpoints don't return a `movieId` field — only the
- * trending-movies endpoint does. Everywhere else the id has to be pulled from the
+ * trending-movies endpoint does. Records are being backfilled with a real
+ * `tmdbId` column, but until that finishes some rows still fall back to the
  * trailing number in `videoURL` (e.g. ".../embed/movie/1064213" -> "1064213").
  */
 function extractIdFromVideoUrl(videoURL?: string | null): string | null {
@@ -18,9 +19,13 @@ function extractIdFromVideoUrl(videoURL?: string | null): string | null {
   return match ? match[1] : null;
 }
 
-export function getMovieSlug(movie: { title: string; movieId?: string | null; videoURL?: string | null }) {
-  const id = movie.movieId ?? extractIdFromVideoUrl(movie.videoURL) ?? "";
-  return `${encodeURIComponent(movie.title)}-${id}`;
+/** tmdbId is the source of truth once a record has it; movieId/videoURL are legacy fallbacks. */
+export function getMovieId(movie: { movieId?: string | null; tmdbId?: string | null; videoURL?: string | null }) {
+  return movie.tmdbId ?? movie.movieId ?? extractIdFromVideoUrl(movie.videoURL) ?? "";
+}
+
+export function getMovieSlug(movie: { title: string; movieId?: string | null; tmdbId?: string | null; videoURL?: string | null }) {
+  return `${encodeURIComponent(movie.title)}-${getMovieId(movie)}`;
 }
 
 export function parseMovieIdFromSlug(slug: string) {

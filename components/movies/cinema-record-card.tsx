@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Film, Play, Tv } from "lucide-react";
-import { tmdbImage, getMovieSlug, parseMovieIdFromSlug } from "@/lib/tmdb";
+import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
@@ -77,7 +77,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
       setIsPreviewOpen(true);
       if (!preview) {
         const fetchPreview =
-          type === "movie" ? getMoviePreview(parseMovieIdFromSlug(getMovieSlug(record as Movie))) : getSeriesPreview((record as Series).tmdbId);
+          type === "movie" ? getMoviePreview(getMovieId(record as Movie)) : getSeriesPreview((record as Series).tmdbId);
         fetchPreview.then((result) => result && setPreview(result));
       }
       galleryTimeoutRef.current = window.setTimeout(() => setShowGallery(true), GALLERY_HOLD_MS);
