@@ -26,10 +26,9 @@ export function CinemaRecordDetailsPage({ record, type }: { record: Movie | Seri
         {type === "series" ? (
           <SeriesWatchSection record={record as Series} />
         ) : (
-          (record.videoURL || (record as Movie).vidmPlayer) && (
+          record.videoURL && (
             <PlayerSection
               videoUrl={record.videoURL}
-              vidmPlayer={(record as Movie).vidmPlayer}
               title={record.title}
               poster={tmdbImage(record.backgroundImg_URL ?? record.posterImgURL, "w1280")}
             />

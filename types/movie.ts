@@ -17,7 +17,6 @@ export type Movie = {
   trailerVideoURL?: string | null;
   logoURL?: string | null;
   videoURL?: string | null;
-  vidmPlayer?: string | null;
   player2URL?: string | null;
   videoURLs?: string[];
   castList?: Actor[];

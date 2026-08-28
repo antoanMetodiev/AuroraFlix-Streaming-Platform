@@ -69,27 +69,26 @@ function toCinesrcUrl(ref: VidsrcRef) {
   return `https://cinesrc.st/embed/${path}${separator}subtitlelang=${DEFAULT_SUBTITLE_LANG_NAME}&Position=10&autoplay=true`;
 }
 
-export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl?: string | null; vidmPlayer?: string | null; title?: string; poster?: string | null }>(function PlayerSection(
-  { videoUrl, vidmPlayer, title, poster },
+export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl: string; title?: string; poster?: string | null }>(function PlayerSection(
+  { videoUrl, title, poster },
   forwardedRef
 ) {
   const { t } = useTranslation();
   const { ref, inView } = useInViewOnce<HTMLDivElement>(0.2);
   const [isFrameLoading, setIsFrameLoading] = useState(true);
-  const [activePlayer, setActivePlayer] = useState(1);
+  const [activePlayer, setActivePlayer] = useState<1 | 2 | 3>(1);
   // The iframe itself doesn't mount until this is true — see hasStarted's
   // reset effect and the click-to-play overlay below for why.
   const [hasStarted, setHasStarted] = useState(false);
 
   const vidsrcRef = videoUrl ? parseVidsrcUrl(videoUrl) : null;
-  const playerOffset = vidmPlayer ? 1 : 0;
-  const playerSources = [
-    ...(vidmPlayer ? [{ number: 1, url: vidmPlayer }] : []),
-    ...(videoUrl ? [{ number: 1 + playerOffset, url: toPlayableUrl(videoUrl) }] : []),
-    ...(vidsrcRef ? [{ number: 2 + playerOffset, url: toVidfastUrl(vidsrcRef) }] : []),
-    ...(vidsrcRef ? [{ number: 3 + playerOffset, url: toCinesrcUrl(vidsrcRef) }] : []),
-  ];
-  const activeSrc = playerSources.find((player) => player.number === activePlayer)?.url ?? playerSources[0]?.url ?? "";
+  const player2Url = vidsrcRef ? toVidfastUrl(vidsrcRef) : null;
+  const player3Url = vidsrcRef ? toCinesrcUrl(vidsrcRef) : null;
+  const player1Url = videoUrl ? toPlayableUrl(videoUrl) : "";
+  const activeSrc =
+    (activePlayer === 2 && player2Url) ||
+    (activePlayer === 3 && player3Url) ||
+    player1Url;
 
   useEffect(() => {
     if (activeSrc) setIsFrameLoading(true);
@@ -100,8 +99,7 @@ export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl?: string | nu
   // itself hasn't changed.
   useEffect(() => {
     setHasStarted(false);
-    setActivePlayer(1);
-  }, [videoUrl, vidmPlayer]);
+  }, [videoUrl]);
 
   // See use-watching-presence's doc comment: the third-party embed exposes
   // no onPlay/onPause/onReady we could listen for (cross-origin iframe, no
@@ -139,20 +137,20 @@ export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl?: string | nu
           inView ? "translate-y-0 opacity-100" : "translate-y-14 opacity-0"
         }`}
       >
-        {playerSources.length > 1 && (
+        {videoUrl && vidsrcRef && (
           <div className="mb-3 flex w-full max-w-[80rem] justify-end">
             <ModernSelect
               value={String(activePlayer)}
-              onChange={(next) => setActivePlayer(Number(next))}
-              options={playerSources.map((player) => ({
-                value: String(player.number),
-                label: `${t("player.player")} ${player.number}`,
+              onChange={(next) => setActivePlayer(Number(next) as 1 | 2 | 3)}
+              options={([1, 2, 3] as const).map((player) => ({
+                value: String(player),
+                label: `${t("player.player")} ${player}`,
               }))}
             />
           </div>
         )}
         <div className="relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]">
-          {activeSrc ? (
+          {videoUrl ? (
             hasStarted ? (
               <>
                 {isFrameLoading && (
@@ -192,7 +190,7 @@ export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl?: string | nu
           )}
         </div>
 
-        {activeSrc && <AdblockPrompt />}
+        {videoUrl && <AdblockPrompt />}
       </section>
     </div>
   );
