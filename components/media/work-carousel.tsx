@@ -129,11 +129,7 @@ export function WorkCarousel({
                 href={hrefFor(item)}
                 className="group w-[200px] shrink-0 text-center sm:w-[240px]"
               >
-                <div
-                  className={`relative mt-2 aspect-[2/3] overflow-hidden rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.25)] ${
-                    mode === "last-viewed" ? "" : "transition-all duration-300 group-hover:scale-103 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]"
-                  }`}
-                >
+                <div className="relative mt-2 aspect-[2/3] overflow-hidden rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.25)] transition-all duration-300 group-hover:scale-103 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                   <FadeInImage
                     src={tmdbImage(item.posterURL, "w500") ?? ""}
                     alt={item.title}
