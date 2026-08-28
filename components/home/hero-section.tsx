@@ -97,7 +97,7 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
 
           {truncatedDescription && (
             <p
-              style={{ transitionDelay: "90ms" }}
+              style={{ transitionDelay: "60ms", transitionDuration: "250ms" }}
               className={`reveal mb-3 line-clamp-2 max-w-xl text-xs leading-relaxed font-medium text-white/70 sm:line-clamp-3 sm:text-base sm:text-white/80 lg:text-lg ${mounted ? "" : "reveal-hidden"}`}
             >
               {truncatedDescription}
