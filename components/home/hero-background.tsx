@@ -70,7 +70,7 @@ export function HeroBackground({
                     placeholder="blur"
                     blurDataURL={SHIMMER_BLUR_DATA_URL}
                     sizes="100vw"
-                    className={`object-cover transition-opacity duration-1000 ${videoReady ? "opacity-0" : "opacity-100"}`}
+                    className={videoReady ? "object-cover opacity-0" : "object-cover opacity-100"}
                 />
             )}
 
@@ -78,7 +78,7 @@ export function HeroBackground({
 
             {videoId && (
                 <div
-                    className={`pointer-events-none absolute inset-0 overflow-hidden transition-opacity duration-1000 ${videoReady ? "opacity-100" : "opacity-0"
+                    className={`pointer-events-none absolute inset-0 overflow-hidden ${videoReady ? "opacity-100" : "opacity-0"
                         } [&_iframe]:absolute [&_iframe]:top-1/2 [&_iframe]:left-1/2 [&_iframe]:w-screen [&_iframe]:h-[56.25vw] [&_iframe]:min-h-full [&_iframe]:min-w-[177.78vh] [&_iframe]:-translate-x-1/2 [&_iframe]:-translate-y-1/2`}
                 >
                     <YouTube
