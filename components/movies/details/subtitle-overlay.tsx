@@ -246,7 +246,7 @@ export function SubtitleOverlay({
   return (
     <>
       {visible && activeText && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-16 z-20 flex justify-center px-4 sm:bottom-20">
+        <div className="pointer-events-none absolute inset-x-0 bottom-12 z-20 flex justify-center px-4 sm:bottom-16">
           <p className="max-w-[92%] whitespace-pre-line rounded-lg bg-black/70 px-4 py-2 text-center font-semibold text-white shadow-[0_2px_14px_rgba(0,0,0,0.7)] text-[clamp(1.15rem,2.6vw,2.75rem)] leading-tight">
             {activeText}
           </p>
