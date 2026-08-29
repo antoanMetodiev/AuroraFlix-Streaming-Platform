@@ -38,16 +38,7 @@ function hrefFor(watching: WatchingTarget) {
  * screen would just be dead chrome.
  */
 export function WatchingFriendsSidebar() {
-  const { friends: realFriends, watching: realWatching } = useFriends();
-  // TEMP-TEST-FAKE-DATA
-  const friends: Friend[] =
-    realFriends.length > 0
-      ? realFriends
-      : [{ clerkId: "fake1", displayName: "Ivan Petrov", profileImageURL: null, friendsSince: null }];
-  const watching: Record<string, WatchingTarget> =
-    Object.keys(realWatching).length > 0
-      ? realWatching
-      : { fake1: { tmdbId: "1396", type: "series", title: "Breaking Bad: An Extremely Long Title For Testing Truncation", season: 3, episode: 5 } };
+  const { friends, watching } = useFriends();
   // Capped rather than made scrollable — a scroll container needs
   // overflow-y, and per the CSS overflow spec setting only one axis forces
   // the OTHER to compute as "auto" too (never "visible") whenever it isn't
@@ -81,17 +72,22 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
   const [anchorTop, setAnchorTop] = useState(0);
 
   // The flyout is roughly 360px tall (aspect-video image + text content) —
-  // centering it exactly on a row near the top or bottom of the rail would
-  // push it off-screen, so its midpoint is clamped to stay clear of both
-  // viewport edges by (approximately) its own half-height.
-  const FLYOUT_HALF_HEIGHT = 180;
+  // vastly taller than the ~48px row that triggers it. Centering the card ON
+  // the row (its old behavior) put the card's own vertical midpoint at the
+  // row's midpoint, which — because the card is so much taller — made it
+  // balloon out far above AND below the row, reading as "floating in the
+  // middle of the screen" rather than attached to anything. Aligning its TOP
+  // edge with the row's top instead makes it visibly grow down from that
+  // specific pill, same as a dropdown would. Only clamped upward, and only
+  // when there isn't enough room below, to keep it from running off the
+  // bottom of the screen for a row near the end of the rail.
+  const FLYOUT_HEIGHT_ESTIMATE = 380;
 
   function handleEnter() {
     const rect = rowRef.current?.getBoundingClientRect();
     if (rect) {
-      const center = rect.top + rect.height / 2;
-      const clamped = Math.min(Math.max(center, FLYOUT_HALF_HEIGHT + 16), window.innerHeight - FLYOUT_HALF_HEIGHT - 16);
-      setAnchorTop(clamped);
+      const maxTop = window.innerHeight - FLYOUT_HEIGHT_ESTIMATE - 16;
+      setAnchorTop(Math.max(16, Math.min(rect.top, maxTop)));
     }
     setIsHovered(true);
   }
@@ -176,7 +172,7 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
           <Link
             href={href}
             style={{ top: anchorTop }}
-            className="animate-modal-card-in fixed right-80 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
+            className="animate-modal-card-in fixed right-80 z-30 block w-72 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
           >
             <div className="relative aspect-video w-full overflow-hidden bg-black">
               {backdrop ? (
