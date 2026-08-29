@@ -52,7 +52,7 @@ export function WatchingFriendsSidebar() {
   if (watchingFriends.length === 0) return null;
 
   return (
-    <div className="fixed top-1/2 right-80 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex">
+    <div className="fixed top-[42%] right-4 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex">
       {watchingFriends.map((friend) => (
         <WatchingSidebarItem key={friend.clerkId} friend={friend} watching={watching[friend.clerkId]} />
       ))}
@@ -123,17 +123,19 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
       </Link>
 
       {/* Portaled to <body> — this item's own ancestor (the rail) is
-          vertically centered via top-1/2 -translate-y-1/2, and that
-          translate is a transform, which makes the rail the containing
-          block for any fixed/absolute descendant instead of the viewport.
-          A plain `fixed right-4` here would resolve against the rail's own
-          narrow box (itself inset from the true edge via right-80, to leave
-          room for this card), not the screen's actual right edge. */}
+          positioned via top-[42%] -translate-y-1/2, and that translate is a
+          transform, which makes the rail the containing block for any
+          fixed/absolute descendant instead of the viewport. A plain `fixed
+          right-80` here would resolve against the rail's own narrow box
+          instead of the screen's actual right edge.
+          The rail itself sits flush against the true right edge (right-4),
+          so this card opens further in (right-80) — to its LEFT — instead
+          of stacking on top of it. */}
       {isHovered &&
         createPortal(
           <Link
             href={href}
-            className="animate-modal-card-in fixed top-1/2 right-4 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
+            className="animate-modal-card-in fixed top-[42%] right-80 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
           >
             <div className="relative aspect-video w-full overflow-hidden bg-black">
               {backdrop ? (

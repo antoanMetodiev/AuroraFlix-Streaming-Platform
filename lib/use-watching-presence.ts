@@ -4,10 +4,13 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { setWatching, clearWatching, type WatchingTarget } from "@/lib/watching";
 
-// Also lumo-user-svc's watching.Store TTL margin — see that package's doc
-// comment for why 30s (one heartbeat every this often, expiring an entry
-// that's missed three of them).
-const HEARTBEAT_MS = 30_000;
+// Frequent on purpose (per the user's explicit call) so a friend's "watching"
+// status is never more than a few seconds stale — lumo-user-svc's
+// watching.Store ttl (90s) is well above this now, so a live tab refreshes
+// its status many times before anything would expire; that ttl is purely the
+// backstop for a tab that crashed/lost network and never got to send an
+// explicit "stopped watching" at all.
+const HEARTBEAT_MS = 5_000;
 
 /**
  * Best-effort "a friend is watching this" presence, pushed to lumo-user-svc
