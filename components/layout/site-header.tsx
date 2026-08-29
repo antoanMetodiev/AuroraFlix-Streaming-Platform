@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Navigation } from "@/components/layout/navigation";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { WatchingToastManager } from "@/components/friends/watching-toast";
+import { WatchingFriendsSidebar } from "@/components/friends/watching-sidebar";
+import { WatchingFriendsMobilePill } from "@/components/friends/watching-friends-mobile-pill";
 
 // Rendered once from the root layout so it's identical and always present
 // across every route — home, list, detail, watchlist, order, actor pages alike.
@@ -23,6 +25,8 @@ export function SiteHeader() {
           driven from here to keep all nav wiring in one place. */}
       <MobileTabBar />
       <WatchingToastManager />
+      <WatchingFriendsSidebar />
+      <WatchingFriendsMobilePill />
     </>
   );
 }

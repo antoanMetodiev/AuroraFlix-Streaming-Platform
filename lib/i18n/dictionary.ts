@@ -278,6 +278,8 @@ export const dictionary = {
   "friends.notifAcceptedRequest": { en: "accepted your friend request.", bg: "прие вашата покана за приятелство." },
   "friends.notifDeclinedRequest": { en: "declined your friend request.", bg: "отказа поканата ви за приятелство." },
   "friends.watching": { en: "Watching", bg: "Гледа" },
+  "friends.watchingAria": { en: "Friends watching now", bg: "Приятели гледат в момента" },
+  "friends.watchingNow": { en: "Watching now", bg: "Гледат сега" },
   "friends.watchToo": { en: "Watch too", bg: "Гледай и ти" },
   "friends.dismiss": { en: "Dismiss", bg: "Затвори" },
 
