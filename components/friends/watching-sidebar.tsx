@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Film, Play, Star, Tv } from "lucide-react";
@@ -52,7 +52,7 @@ export function WatchingFriendsSidebar() {
   if (watchingFriends.length === 0) return null;
 
   return (
-    <div className="fixed top-1/2 left-4 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex">
+    <div className="fixed top-1/2 right-80 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex">
       {watchingFriends.map((friend) => (
         <WatchingSidebarItem key={friend.clerkId} friend={friend} watching={watching[friend.clerkId]} />
       ))}
@@ -63,34 +63,48 @@ export function WatchingFriendsSidebar() {
 function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: WatchingTarget }) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
-  const [preview, setPreview] = useState<{ data: Movie | Series | null; loaded: boolean }>({ data: null, loaded: false });
+  // Keyed like friends-panel.tsx's FriendWatchingCard, not a plain "have we
+  // ever fetched" boolean — a bare loaded flag never re-fetches once true,
+  // so switching to a different title while already hovered once (or
+  // re-hovering after a switch) kept showing the previous title's
+  // poster/genres/rating forever instead of catching up.
+  const key = `${watching.type}:${watching.tmdbId}`;
+  const [resolved, setResolved] = useState<{ key: string; data: Movie | Series | null } | null>(null);
 
   const href = hrefFor(watching);
   const TypeIcon = watching.type === "movie" ? Film : Tv;
 
-  // Fetched lazily on first hover, not up front for every friend in the
-  // rail — the compact pill already has everything it needs (name, title)
-  // without a request; the richer poster/genres/rating/description only
-  // matter once someone's actually looking. getMoviePreview/getSeriesPreview
-  // cache by id, so hovering the same item again never re-fetches.
-  function handleEnter() {
-    setIsHovered(true);
-    if (preview.loaded) return;
+  // Fetched lazily on hover, not up front for every friend in the rail —
+  // the compact pill already has everything it needs (name, title) without
+  // a request; the richer poster/genres/rating/description only matter once
+  // someone's actually looking. Re-runs if `key` changes while still
+  // hovered too, so a friend switching titles mid-hover catches up live
+  // instead of only on the next hover-enter.
+  useEffect(() => {
+    if (!isHovered || resolved?.key === key) return;
+    let cancelled = false;
     const fetchPreview = watching.type === "movie" ? getMoviePreview(watching.tmdbId) : getSeriesPreview(watching.tmdbId);
-    fetchPreview.then((data) => setPreview({ data, loaded: true }));
-  }
+    fetchPreview.then((data) => {
+      if (!cancelled) setResolved({ key, data });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isHovered, key, watching.type, watching.tmdbId, resolved?.key]);
 
-  const genres = (preview.data?.genres ?? "")
+  const loaded = resolved?.key === key;
+  const preview = loaded ? resolved.data : null;
+  const genres = (preview?.genres ?? "")
     .split(",")
     .map((genre) => genre.trim())
     .filter(Boolean)
     .slice(0, 3);
-  const rating = preview.data?.tmdbRating ? Number(preview.data.tmdbRating) : null;
-  const year = preview.data?.releaseDate?.split("-")[0];
-  const backdrop = tmdbImage(preview.data?.backgroundImg_URL ?? preview.data?.posterImgURL, "w780");
+  const rating = preview?.tmdbRating ? Number(preview.tmdbRating) : null;
+  const year = preview?.releaseDate?.split("-")[0];
+  const backdrop = tmdbImage(preview?.backgroundImg_URL ?? preview?.posterImgURL, "w780");
 
   return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={() => setIsHovered(false)}>
+    <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <Link
         href={href}
         className="flex items-center gap-2.5 rounded-full border border-foreground/10 bg-surface/90 py-1.5 pr-4 pl-1.5 shadow-[0_8px_25px_-8px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-colors hover:border-emerald-400/30"
@@ -113,7 +127,8 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
           translate is a transform, which makes the rail the containing
           block for any fixed/absolute descendant instead of the viewport.
           A plain `fixed right-4` here would resolve against the rail's own
-          (narrow, left-edge) box, not the screen's right edge. */}
+          narrow box (itself inset from the true edge via right-80, to leave
+          room for this card), not the screen's actual right edge. */}
       {isHovered &&
         createPortal(
           <Link
@@ -157,7 +172,7 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
               </div>
 
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {!preview.loaded ? (
+                {!loaded ? (
                   <>
                     <span className="h-5 w-14 animate-pulse rounded-full bg-foreground/10" />
                     <span className="h-5 w-16 animate-pulse rounded-full bg-foreground/10" />
@@ -171,8 +186,8 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
                 )}
               </div>
 
-              {preview.loaded && preview.data?.description && (
-                <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-foreground/60">{preview.data.description}</p>
+              {loaded && preview?.description && (
+                <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-foreground/60">{preview.description}</p>
               )}
 
               <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900">
