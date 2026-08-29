@@ -38,7 +38,16 @@ function hrefFor(watching: WatchingTarget) {
  * screen would just be dead chrome.
  */
 export function WatchingFriendsSidebar() {
-  const { friends, watching } = useFriends();
+  const { friends: realFriends, watching: realWatching } = useFriends();
+  // TEMP-TEST-FAKE-DATA
+  const friends: Friend[] =
+    realFriends.length > 0
+      ? realFriends
+      : [{ clerkId: "fake1", displayName: "Ivan Petrov", profileImageURL: null, friendsSince: null }];
+  const watching: Record<string, WatchingTarget> =
+    Object.keys(realWatching).length > 0
+      ? realWatching
+      : { fake1: { tmdbId: "1396", type: "series", title: "Breaking Bad: An Extremely Long Title For Testing Truncation", season: 3, episode: 5 } };
   // Capped rather than made scrollable — a scroll container needs
   // overflow-y, and per the CSS overflow spec setting only one axis forces
   // the OTHER to compute as "auto" too (never "visible") whenever it isn't
@@ -131,13 +140,17 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
       <Link
         ref={rowRef}
         href={href}
-        className="flex items-center gap-2.5 rounded-full border border-foreground/10 bg-surface/90 py-1.5 pr-4 pl-1.5 shadow-[0_8px_25px_-8px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-colors hover:border-emerald-400/30"
+        className="flex w-52 items-center gap-2.5 rounded-full border border-foreground/10 bg-surface/90 py-1.5 pr-4 pl-1.5 shadow-[0_8px_25px_-8px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-colors hover:border-emerald-400/30"
       >
         <span className="relative shrink-0">
           <Avatar src={friend.profileImageURL} name={friend.displayName} size={32} />
           <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-surface" />
         </span>
-        <span className="min-w-0">
+        {/* min-w-0 alone doesn't give `truncate` anything to truncate
+            against inside an otherwise unconstrained flex-col rail — a long
+            title just grew the whole pill instead of ellipsizing. The fixed
+            w-52 above is what actually bounds it. */}
+        <span className="min-w-0 flex-1">
           <span className="block truncate text-xs font-semibold text-foreground/90">{friend.displayName || "?"}</span>
           <span className="flex items-center gap-1 truncate text-[11px] text-foreground/50">
             <TypeIcon size={10} className="shrink-0" />
