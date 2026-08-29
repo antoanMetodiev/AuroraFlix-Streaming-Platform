@@ -371,8 +371,8 @@ export function SubtitleOverlay({
           right:
             (activePlayer === 3 ? 3 : 0) +
             (isFullscreen ? 2 : 0) +
-            (isFullscreen && isMobile ? 8 : 0),
-          bottom: (isFullscreen ? 2 : 0) + (isFullscreen && isMobile ? 8 : 0),
+            (isFullscreen && isMobile ? 12 : 0),
+          bottom: (isFullscreen ? 2 : 0) + (isFullscreen && isMobile ? 12 : 0),
         }}
         className="group pointer-events-auto absolute z-30 flex h-14 w-14 items-center justify-center"
       >
