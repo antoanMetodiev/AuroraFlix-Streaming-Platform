@@ -601,12 +601,6 @@ export const PlayerSection = forwardRef<
         {videoUrl && (
           <AdblockPrompt />
         )}
-
-        {subtitleUrl && !hasStarted && (
-          <p className="mt-3 text-xs text-white/40">
-            🇧🇬 {t("subtitles.available")}
-          </p>
-        )}
       </section>
     </div>
   );

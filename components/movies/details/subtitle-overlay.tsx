@@ -17,6 +17,23 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 import { findActiveCue, parseSubtitles, type SubtitleCue } from "@/lib/vtt-parser";
 import { extractTelemetry, PLAYER_ORIGIN, type PlayerId } from "@/lib/player-telemetry";
 
+const MOBILE_QUERY = "(max-width: 639px)";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const handleChange = () => setIsMobile(mql.matches);
+    mql.addEventListener("change", handleChange);
+    return () => mql.removeEventListener("change", handleChange);
+  }, []);
+
+  return isMobile;
+}
+
 type SubtitleOverlayProps = {
   subtitleUrl: string;
   /** True once the user has pressed the main Play button. */
@@ -36,7 +53,7 @@ const DETECT_GRACE_MS = 4000;
  *  that much so lines land on the beat instead of a step behind it. Only
  *  applies to telemetry mode; the self-timed clock has no such lag to
  *  correct for. */
-const TELEMETRY_LEAD_SECONDS = 0.5;
+const TELEMETRY_LEAD_SECONDS = 0.15;
 
 type Mode = "detecting" | "telemetry" | "manual";
 
@@ -76,6 +93,7 @@ export function SubtitleOverlay({
   onToggleFullscreen,
 }: SubtitleOverlayProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const [cues, setCues] = useState<SubtitleCue[] | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -346,11 +364,15 @@ export function SubtitleOverlay({
         aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
         title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
         // CineSrc's own icon sits a hair further left than the other two
-        // providers', and the corner sits a couple px further in once we're
-        // actually in the big view.
+        // providers', the corner sits a couple px further in once we're
+        // actually in the big view, and mobile needs a little extra on top
+        // of that again once it's in the big view.
         style={{
-          right: (activePlayer === 3 ? 3 : 0) + (isFullscreen ? 2 : 0),
-          bottom: isFullscreen ? 2 : 0,
+          right:
+            (activePlayer === 3 ? 3 : 0) +
+            (isFullscreen ? 2 : 0) +
+            (isFullscreen && isMobile ? 3 : 0),
+          bottom: (isFullscreen ? 2 : 0) + (isFullscreen && isMobile ? 3 : 0),
         }}
         className="group pointer-events-auto absolute z-30 flex h-14 w-14 items-center justify-center"
       >
