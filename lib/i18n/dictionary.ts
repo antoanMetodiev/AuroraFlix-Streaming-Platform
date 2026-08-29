@@ -182,7 +182,6 @@ export const dictionary = {
   "player.player": { en: "Player", bg: "Плейър" },
   "player.play": { en: "Play", bg: "Пусни" },
 
-  "subtitles.available": { en: "Bulgarian subtitles", bg: "Български субтитри" },
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
   "subtitles.retry": { en: "Retry", bg: "Опитай пак" },
   "subtitles.play": { en: "Start subtitles", bg: "Пусни субтитрите" },
