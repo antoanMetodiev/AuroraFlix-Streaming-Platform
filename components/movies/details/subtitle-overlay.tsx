@@ -48,12 +48,10 @@ const DURATION_PADDING_SECONDS = 8;
 /** How long we wait for a provider to prove it sends real playback telemetry
  *  before falling back to our own self-timed clock. */
 const DETECT_GRACE_MS = 4000;
-/** The providers' own reported `currentTime` consistently lags what's
- *  actually on screen by about a second — nudge our cue lookup forward by
- *  that much so lines land on the beat instead of a step behind it. Only
- *  applies to telemetry mode; the self-timed clock has no such lag to
- *  correct for. */
-const TELEMETRY_LEAD_SECONDS = 0.15;
+/** Shifts our cue lookup relative to the provider's reported `currentTime` —
+ *  positive pulls cues earlier, negative pushes them later. Only applies to
+ *  telemetry mode; the self-timed clock has no such offset to correct for. */
+const TELEMETRY_LEAD_SECONDS = 0.25;
 
 type Mode = "detecting" | "telemetry" | "manual";
 
@@ -358,29 +356,47 @@ export function SubtitleOverlay({
           than the visible button itself — reliably lands on ours first
           across all three players' slightly different icon placements, so
           people never end up on the one that would hide the subtitles. */}
-      <button
-        type="button"
-        onClick={onToggleFullscreen}
-        aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
-        title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
-        // CineSrc's own icon sits a hair further left than the other two
-        // providers', the corner sits a couple px further in once we're
-        // actually in the big view, and mobile needs a little extra on top
-        // of that again once it's in the big view.
-        style={{
-          right:
-            (activePlayer === 3 ? 3 : 0) +
-            (isFullscreen ? 2 : 0) +
-            (isFullscreen && isMobile ? 12 : 0),
-          bottom: (isFullscreen ? 2 : 0) + (isFullscreen && isMobile ? 12 : 0),
-        }}
-        className="group pointer-events-auto absolute z-30 flex h-14 w-14 items-center justify-center"
-      >
-        <span className="absolute h-9 w-9 rounded-full bg-white/25 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
-        <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-200 ease-out group-hover:scale-110 group-hover:border-white/35 group-hover:bg-black/80 group-active:scale-95">
-          {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-        </span>
-      </button>
+      {(() => {
+        // On mobile, once we're actually in the big view, the provider's
+        // own icon still peeked out from behind small position nudges — so
+        // instead of chasing its exact spot, the click-catcher just grows
+        // enough there to swallow that whole corner outright.
+        const bigOnMobile = isFullscreen && isMobile;
+        const hitSize = bigOnMobile ? 88 : 56;
+        const visibleSize = bigOnMobile ? 68 : 44;
+        const glowSize = bigOnMobile ? 44 : 36;
+        const iconSize = bigOnMobile ? 26 : 18;
+
+        return (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
+            title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
+            // CineSrc's own icon sits a hair further left than the other two
+            // providers', and the corner sits a couple px further in once
+            // we're actually in the big view.
+            style={{
+              right: (activePlayer === 3 ? 3 : 0) + (isFullscreen ? 2 : 0),
+              bottom: isFullscreen ? 2 : 0,
+              width: hitSize,
+              height: hitSize,
+            }}
+            className="group pointer-events-auto absolute z-30 flex items-center justify-center"
+          >
+            <span
+              className="absolute rounded-full bg-white/25 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100"
+              style={{ width: glowSize, height: glowSize }}
+            />
+            <span
+              className="relative flex items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-200 ease-out group-hover:scale-110 group-hover:border-white/35 group-hover:bg-black/80 group-active:scale-95"
+              style={{ width: visibleSize, height: visibleSize }}
+            >
+              {isFullscreen ? <Minimize2 size={iconSize} /> : <Maximize2 size={iconSize} />}
+            </span>
+          </button>
+        );
+      })()}
 
       {/* Manual transport controls — only shown when a provider hasn't
           proven it sends real playback telemetry within the grace period. */}

@@ -119,11 +119,6 @@ function exitFullscreen() {
 const DEFAULT_SUBTITLE_LANG = "bg";
 
 /**
- * CineSrc expects the display name rather than the ISO code.
- */
-const DEFAULT_SUBTITLE_LANG_NAME = "Bulgarian";
-
-/**
  * Player 1
  *
  * vidsrc.icu -> vidsrc2.ru
@@ -177,27 +172,29 @@ function toVidfastUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
 
 /**
  * Player 3 — CineSrc
+ *
+ * Per the official docs (cinesrc.st/docs), there is no subtitle-related URL
+ * parameter or postMessage command at all — `Position` and `subtitlelang`
+ * (previously sent here) aren't real parameters and had no effect. CineSrc
+ * shows its own default subtitle track (usually English) with no
+ * documented way to turn it off or select a language, which is why it can
+ * still appear alongside <SubtitleOverlay>'s — a genuine platform
+ * limitation, not something a query param can fix.
  */
-function toCinesrcUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
+function toCinesrcUrl(ref: VidsrcRef): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
-      : `tv/${ref.tmdbId}?s=${ref.season}&e=${ref.episode}`;
+      : `tv/${ref.tmdbId}`;
 
-  const separator =
-    ref.kind === "movie" ? "?" : "&";
-
-  const url =
-    `https://cinesrc.st/embed/${path}${separator}` +
-    `Position=10` +
-    `&autoplay=true`;
-
-  if (hasOwnSubtitles) {
-    return url;
-  }
-
-  return appendParams(url, {
-    subtitlelang: DEFAULT_SUBTITLE_LANG_NAME,
+  return appendParams(`https://cinesrc.st/embed/${path}`, {
+    autoplay: "true",
+    ...(ref.kind === "tv"
+      ? {
+          s: ref.season,
+          e: ref.episode,
+        }
+      : {}),
   });
 }
 
@@ -390,7 +387,7 @@ export const PlayerSection = forwardRef<
   const player3Url = useMemo(
     () =>
       vidsrcRef
-        ? toCinesrcUrl(vidsrcRef, hasOwnSubtitles)
+        ? toCinesrcUrl(vidsrcRef)
         : null,
     [vidsrcRef, hasOwnSubtitles]
   );
