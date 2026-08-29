@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navigation } from "@/components/layout/navigation";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
+import { FriendsSocketManager } from "@/components/friends/friends-socket-manager";
 import { WatchingToastManager } from "@/components/friends/watching-toast";
 import { WatchingFriendsSidebar } from "@/components/friends/watching-sidebar";
 import { WatchingFriendsMobilePill } from "@/components/friends/watching-friends-mobile-pill";
@@ -22,7 +23,14 @@ export function SiteHeader() {
       </header>
 
       {/* Fixed to the viewport, so it lives outside <header> but is still
-          driven from here to keep all nav wiring in one place. */}
+          driven from here to keep all nav wiring in one place.
+          FriendsSocketManager used to live inside Navigation instead — moved
+          here (a plain, rarely-re-rendering wrapper) since Navigation's own
+          re-renders (mobile menu toggling, etc.) were tearing the socket
+          down and reconnecting it far more than intended, dropping whatever
+          the server pushed during each gap. See use-friend-request-socket's
+          getTokenRef doc comment for the other half of that same fix. */}
+      <FriendsSocketManager />
       <MobileTabBar />
       <WatchingToastManager />
       <WatchingFriendsSidebar />

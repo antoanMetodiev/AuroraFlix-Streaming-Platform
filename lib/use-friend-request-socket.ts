@@ -53,12 +53,27 @@ export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void
   const { isSignedIn, getToken } = useAuth();
   const callbackRef = useRef(onEvent);
   const watchingRef = useRef(onWatching);
+  const getTokenRef = useRef(getToken);
 
   // Kept in sync via an effect (not a plain assignment in the render body)
-  // so the "latest callback" ref write happens after render, not during it.
+  // so the "latest callback"/"latest getToken" ref writes happen after
+  // render, not during it.
+  //
+  // getTokenRef specifically: Clerk's `getToken` from useAuth() isn't a
+  // referentially stable function across every render, and it used to sit
+  // directly in the reconnect effect's dependency array below — any
+  // unrelated re-render that happened to produce a new `getToken` reference
+  // tore the live socket down and reconnected it, with no replay for
+  // whatever the server pushed during that gap. That's why a friend
+  // starting to watch something only ever showed up right after a fresh
+  // page load and stopped arriving afterwards. Routing it through a ref
+  // (like callbackRef/watchingRef already do) keeps the connection itself
+  // tied only to real sign-in/out, while `connect()` still always reads the
+  // latest getToken when it actually needs a fresh token.
   useEffect(() => {
     callbackRef.current = onEvent;
     watchingRef.current = onWatching;
+    getTokenRef.current = getToken;
   });
 
   useEffect(() => {
@@ -72,7 +87,7 @@ export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void
     const connect = async () => {
       if (cancelled) return;
 
-      const token = await getToken();
+      const token = await getTokenRef.current();
       if (!token || cancelled) return;
 
       socket = new WebSocket(`${WS_BASE_URL}/ws?token=${encodeURIComponent(token)}`);
@@ -117,5 +132,5 @@ export function useFriendRequestSocket(onEvent: (type: FriendsEventType) => void
       clearTimeout(reconnectTimeout);
       socket?.close();
     };
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn]);
 }
