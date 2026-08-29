@@ -17,6 +17,15 @@ import { subscribeFriendsEvent } from "@/lib/friends-events";
 import { getFriendsWatching, type WatchingTarget } from "@/lib/watching";
 import { subscribeWatchingEvent } from "@/lib/watching-events";
 
+// Backstop for the live WS push below — same idea as FriendsNavButton's own
+// incoming-request poll. The push should be the one actually keeping this
+// fresh in practice, but this hook is now consumed by components that stay
+// mounted for a whole browsing session (the sidebar rail, the mobile pill),
+// not just ones that re-fetch fresh every time they're opened (the friends
+// panel) — so a missed/delayed push here doesn't mean "wrong until the next
+// page load," just "wrong for up to this long."
+const WATCHING_POLL_INTERVAL_MS = 5_000;
+
 /**
  * Friends list + incoming/outgoing requests for the signed-in caller, same
  * shape as useCurrentUser/useWatchlist — no signed-out fallback data, since
@@ -89,6 +98,21 @@ export function useFriends() {
         return { ...prev, [clerkId]: status };
       });
     });
+  }, [isSignedIn]);
+
+  // Backstop poll — see WATCHING_POLL_INTERVAL_MS's doc comment above. A
+  // full resnapshot (not a merge) so a friend who quietly expired without
+  // ever sending an explicit "stopped" push (a crashed tab, lost network)
+  // still gets cleared here even though no event ever arrived for them.
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    const interval = window.setInterval(async () => {
+      const watchingList = await getFriendsWatching();
+      setWatching(Object.fromEntries(watchingList.map((entry) => [entry.clerkId, entry.watching])));
+    }, WATCHING_POLL_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
   }, [isSignedIn]);
 
   const accept = useCallback(
