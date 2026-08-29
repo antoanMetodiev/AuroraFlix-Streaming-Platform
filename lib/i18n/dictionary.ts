@@ -419,6 +419,31 @@ export const dictionary = {
   "footer.terms": { en: "Terms", bg: "Условия" },
   "footer.cookies": { en: "Cookies", bg: "Бисквитки" },
   "footer.contact": { en: "Contact", bg: "Контакти" },
+
+  "assistant.openAria": { en: "Open AI assistant", bg: "Отвори AI асистента" },
+  "assistant.title": { en: "AuroraFlix Assistant", bg: "AuroraFlix Асистент" },
+  "assistant.subtitle": { en: "Movie & series recommendations", bg: "Препоръки за филми и сериали" },
+  "assistant.closeAria": { en: "Close assistant", bg: "Затвори асистента" },
+  "assistant.greeting": {
+    en: "Hi! Ask me to find something by description, suggest titles similar to one you like, or recommend something based on your likes and watchlist.",
+    bg: "Здравей! Питай ме да открия нещо по описание, да предложа заглавия подобни на любимо твое, или да ти препоръчам нещо на база харесаните и запазените ти заглавия.",
+  },
+  "assistant.suggestion1": { en: "Suggest something from my likes", bg: "Препоръчай ми нещо от харесаните" },
+  "assistant.suggestion2": { en: "Something similar to Inception", bg: "Нещо подобно на Inception" },
+  "assistant.suggestion3": { en: "A movie about time travel and regret", bg: "Филм за пътуване във времето и съжаление" },
+  "assistant.placeholder": { en: "Ask about movies or series...", bg: "Питай за филми или сериали..." },
+  "assistant.send": { en: "Send", bg: "Изпрати" },
+  "assistant.thinking": { en: "Thinking…", bg: "Мисля…" },
+  "assistant.errorGeneric": {
+    en: "Something went wrong. Please try again.",
+    bg: "Нещо се обърка. Опитай пак.",
+  },
+  "assistant.rateLimited": {
+    en: "Too many requests right now — please wait a moment and try again.",
+    bg: "Прекалено много заявки в момента — изчакай малко и опитай пак.",
+  },
+  "assistant.newChat": { en: "New chat", bg: "Нов разговор" },
+  "assistant.viewTitle": { en: "View", bg: "Виж" },
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof dictionary;

@@ -10,6 +10,7 @@ import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
 import { FriendsNavButton } from "@/components/friends/friends-nav-button";
 import { NotificationsBell } from "@/components/friends/notifications-bell";
+import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
 import { FriendsSocketManager } from "@/components/friends/friends-socket-manager";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
@@ -111,6 +112,7 @@ export function Navigation() {
       <FriendsSocketManager />
       <FriendsNavButton />
       <NotificationsBell />
+      <AssistantLauncher />
 
       <LanguageToggle />
 
