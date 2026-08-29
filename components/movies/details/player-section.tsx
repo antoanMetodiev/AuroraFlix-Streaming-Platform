@@ -119,18 +119,14 @@ function exitFullscreen() {
 const DEFAULT_SUBTITLE_LANG = "bg";
 
 /**
- * Player 1
- *
  * vidsrc.icu -> vidsrc2.ru
  *
- * `hasOwnSubtitles` tells us whether <SubtitleOverlay> already has a
- * Bulgarian track from our own server. When it does, we deliberately do NOT
- * ask the provider to preselect its own bundled subtitle — showing both at
- * once produced two overlapping, out-of-sync lines. When we have nothing of
- * our own, we fall back to asking the provider for its bundled Bulgarian
- * track instead of leaving the viewer with no subtitles at all.
+ * <SubtitleOverlay> is CineSrc-exclusive now (see `hasOwnSubtitles` below),
+ * so it never competes with this provider's own bundled subtitle — always
+ * ask it to preselect its Bulgarian track instead of leaving the viewer
+ * with no subtitles at all when they switch to this player.
  */
-function toPlayableUrl(videoUrl: string, hasOwnSubtitles: boolean): string {
+function toPlayableUrl(videoUrl: string): string {
   const playableUrl = videoUrl.replace(
     "vidsrc.icu",
     "vidsrc2.ru"
@@ -138,19 +134,18 @@ function toPlayableUrl(videoUrl: string, hasOwnSubtitles: boolean): string {
 
   return appendParams(playableUrl, {
     autoplay: "1",
-    ...(hasOwnSubtitles
-      ? {}
-      : {
-          sub: DEFAULT_SUBTITLE_LANG,
-          ds_lang: DEFAULT_SUBTITLE_LANG,
-        }),
+    sub: DEFAULT_SUBTITLE_LANG,
+    ds_lang: DEFAULT_SUBTITLE_LANG,
   });
 }
 
 /**
- * Player 2 — VidFast
+ * VidFast
+ *
+ * Same reasoning as vidsrc2.ru above — <SubtitleOverlay> doesn't render on
+ * this player, so its own bundled Bulgarian track is always requested.
  */
-function toVidfastUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
+function toVidfastUrl(ref: VidsrcRef): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
@@ -160,18 +155,14 @@ function toVidfastUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
     `https://vidfast.vc/${path}`,
     {
       autoPlay: "true",
-      ...(hasOwnSubtitles
-        ? {}
-        : {
-            sub: DEFAULT_SUBTITLE_LANG,
-            lang: DEFAULT_SUBTITLE_LANG,
-          }),
+      sub: DEFAULT_SUBTITLE_LANG,
+      lang: DEFAULT_SUBTITLE_LANG,
     }
   );
 }
 
 /**
- * Player 3 — CineSrc
+ * CineSrc — the only player <SubtitleOverlay> renders on.
  *
  * Per the official docs (cinesrc.st/docs), there is no subtitle-related URL
  * parameter or postMessage command at all — `Position` and `subtitlelang`
@@ -221,12 +212,10 @@ export const PlayerSection = forwardRef<
     useState(true);
 
   /**
-   * When we have our own Bulgarian subtitles, CineSrc is the only player on
-   * offer — VidFast and vidsrc2.ru have both proven less reliable to load in
-   * practice, and with subtitles of our own to protect there's no upside to
-   * offering a player more likely to just spin on "loading". Without
-   * subtitles of our own there's nothing to protect either way, so all
-   * three stay in their original order.
+   * <SubtitleOverlay> only ever renders on CineSrc (see below), so when we
+   * have our own Bulgarian subtitles it's listed first/default — VidFast
+   * and vidsrc2.ru stay available too, just as fallbacks the viewer can
+   * switch to (with their own bundled subtitles instead of ours).
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
 
@@ -235,7 +224,7 @@ export const PlayerSection = forwardRef<
   >(
     () =>
       hasOwnSubtitles
-        ? [3]
+        ? [3, 1, 2]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
@@ -291,7 +280,7 @@ export const PlayerSection = forwardRef<
 
       setIsRealFullscreen(false);
 
-      if (current && hasOwnSubtitles) {
+      if (current && hasOwnSubtitles && activePlayer === 3) {
         exitFullscreen();
         setIsBigView(true);
       }
@@ -316,7 +305,7 @@ export const PlayerSection = forwardRef<
         handleFullscreenChange
       );
     };
-  }, [hasOwnSubtitles]);
+  }, [hasOwnSubtitles, activePlayer]);
 
   /**
    * Escape closes the CSS big view, and the page can't scroll behind it —
@@ -365,23 +354,23 @@ export const PlayerSection = forwardRef<
   /**
    * Build all three player URLs.
    *
-   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, not by
-   * these third-party embeds — see the comments on the URL builders above.
+   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, only on
+   * top of player 3 (CineSrc) — see the comments on the URL builders above.
    */
   const player1Url = useMemo(
     () =>
       videoUrl
-        ? toPlayableUrl(videoUrl, hasOwnSubtitles)
+        ? toPlayableUrl(videoUrl)
         : "",
-    [videoUrl, hasOwnSubtitles]
+    [videoUrl]
   );
 
   const player2Url = useMemo(
     () =>
       vidsrcRef
-        ? toVidfastUrl(vidsrcRef, hasOwnSubtitles)
+        ? toVidfastUrl(vidsrcRef)
         : null,
-    [vidsrcRef, hasOwnSubtitles]
+    [vidsrcRef]
   );
 
   const player3Url = useMemo(
@@ -389,7 +378,7 @@ export const PlayerSection = forwardRef<
       vidsrcRef
         ? toCinesrcUrl(vidsrcRef)
         : null,
-    [vidsrcRef, hasOwnSubtitles]
+    [vidsrcRef]
   );
 
   /**
@@ -510,7 +499,7 @@ export const PlayerSection = forwardRef<
                 }
               />
 
-              {subtitleUrl && (
+              {subtitleUrl && activePlayer === 3 && (
                 <SubtitleOverlay
                   subtitleUrl={subtitleUrl}
                   active={hasStarted}

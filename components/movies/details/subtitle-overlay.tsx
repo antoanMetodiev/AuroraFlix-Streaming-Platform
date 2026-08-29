@@ -49,7 +49,7 @@ const DETECT_GRACE_MS = 4000;
 /** Shifts our cue lookup relative to the provider's reported `currentTime` —
  *  positive pulls cues earlier, negative pushes them later. Only applies to
  *  telemetry mode; the self-timed clock has no such offset to correct for. */
-const TELEMETRY_LEAD_SECONDS = 0.30;
+const TELEMETRY_LEAD_SECONDS = 0;
 
 type Mode = "detecting" | "telemetry" | "manual";
 
