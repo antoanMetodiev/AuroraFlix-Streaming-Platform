@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Film, Play, Star, Tv } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -44,8 +45,8 @@ export function WatchingFriendsSidebar() {
   // already non-visible: https://www.w3.org/TR/CSS22/visufx.html#overflow
   // ("if one is visible and other isn't, visible behaves as auto"). That
   // silently clipped the hover flyout below, which deliberately overflows
-  // this rail's own bounds to the right (left-full) — a capped, unscrolled
-  // list sidesteps the whole issue instead of fighting it with a portal.
+  // this rail's own bounds — a capped, unscrolled list sidesteps the whole
+  // issue instead of fighting it with yet another portal.
   const watchingFriends = friends.filter((friend) => watching[friend.clerkId]).slice(0, MAX_SIDEBAR_FRIENDS);
 
   if (watchingFriends.length === 0) return null;
@@ -107,73 +108,81 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
         </span>
       </Link>
 
-      {isHovered && (
-        <Link
-          href={href}
-          className="animate-card-open-right absolute top-0 left-full ml-3 block w-72 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
-        >
-          <div className="relative aspect-video w-full overflow-hidden bg-black">
-            {backdrop ? (
-              <FadeInImage src={backdrop} alt="" sizes="288px" className="object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-foreground/10 text-foreground/30">
-                <TypeIcon size={26} />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/10 to-transparent" />
-
-            <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
-              <Avatar src={friend.profileImageURL} name={friend.displayName} size={20} className="ring-2 ring-surface" />
-              <span className="text-xs font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                {friend.displayName || "?"} · {t("friends.watching").toLowerCase()}
-              </span>
-            </div>
-          </div>
-
-          <div className="px-3.5 pt-2.5 pb-3.5">
-            <h3 className="line-clamp-1 text-sm font-bold text-foreground">{watching.title}</h3>
-
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-foreground/55">
-              {rating !== null && (
-                <span className="flex items-center gap-1 text-amber-400">
-                  <Star size={11} className="fill-amber-400" />
-                  {rating.toFixed(1)}
-                </span>
-              )}
-              {year && <span>{year}</span>}
-              {watching.season && watching.episode && (
-                <span>
-                  S{watching.season} E{watching.episode}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {!preview.loaded ? (
-                <>
-                  <span className="h-5 w-14 animate-pulse rounded-full bg-foreground/10" />
-                  <span className="h-5 w-16 animate-pulse rounded-full bg-foreground/10" />
-                </>
+      {/* Portaled to <body> — this item's own ancestor (the rail) is
+          vertically centered via top-1/2 -translate-y-1/2, and that
+          translate is a transform, which makes the rail the containing
+          block for any fixed/absolute descendant instead of the viewport.
+          A plain `fixed right-4` here would resolve against the rail's own
+          (narrow, left-edge) box, not the screen's right edge. */}
+      {isHovered &&
+        createPortal(
+          <Link
+            href={href}
+            className="animate-modal-card-in fixed top-1/2 right-4 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
+          >
+            <div className="relative aspect-video w-full overflow-hidden bg-black">
+              {backdrop ? (
+                <FadeInImage src={backdrop} alt="" sizes="288px" className="object-cover" />
               ) : (
-                genres.map((genre) => (
-                  <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
-                    {genre}
-                  </span>
-                ))
+                <div className="flex h-full w-full items-center justify-center bg-foreground/10 text-foreground/30">
+                  <TypeIcon size={26} />
+                </div>
               )}
+              <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/10 to-transparent" />
+
+              <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
+                <Avatar src={friend.profileImageURL} name={friend.displayName} size={20} className="ring-2 ring-surface" />
+                <span className="text-xs font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  {friend.displayName || "?"} · {t("friends.watching").toLowerCase()}
+                </span>
+              </div>
             </div>
 
-            {preview.loaded && preview.data?.description && (
-              <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-foreground/60">{preview.data.description}</p>
-            )}
+            <div className="px-3.5 pt-2.5 pb-3.5">
+              <h3 className="line-clamp-1 text-sm font-bold text-foreground">{watching.title}</h3>
 
-            <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900">
-              <Play size={12} className="fill-current" />
-              {t("friends.watchToo")}
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-foreground/55">
+                {rating !== null && (
+                  <span className="flex items-center gap-1 text-amber-400">
+                    <Star size={11} className="fill-amber-400" />
+                    {rating.toFixed(1)}
+                  </span>
+                )}
+                {year && <span>{year}</span>}
+                {watching.season && watching.episode && (
+                  <span>
+                    S{watching.season} E{watching.episode}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {!preview.loaded ? (
+                  <>
+                    <span className="h-5 w-14 animate-pulse rounded-full bg-foreground/10" />
+                    <span className="h-5 w-16 animate-pulse rounded-full bg-foreground/10" />
+                  </>
+                ) : (
+                  genres.map((genre) => (
+                    <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
+                      {genre}
+                    </span>
+                  ))
+                )}
+              </div>
+
+              {preview.loaded && preview.data?.description && (
+                <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-foreground/60">{preview.data.description}</p>
+              )}
+
+              <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900">
+                <Play size={12} className="fill-current" />
+                {t("friends.watchToo")}
+              </div>
             </div>
-          </div>
-        </Link>
-      )}
+          </Link>,
+          document.body
+        )}
     </div>
   );
 }
