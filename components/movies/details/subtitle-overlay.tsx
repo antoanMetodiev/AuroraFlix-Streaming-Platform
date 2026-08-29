@@ -17,7 +17,10 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 import { findActiveCue, parseSubtitles, type SubtitleCue } from "@/lib/vtt-parser";
 import { extractTelemetry, PLAYER_ORIGIN, type PlayerId } from "@/lib/player-telemetry";
 
-const MOBILE_QUERY = "(max-width: 639px)";
+// Width-based checks flip when a phone rotates into landscape for
+// fullscreen — its width can clear 639px even though it's still a phone.
+// Coarse pointer + no hover is what actually stays true across rotation.
+const MOBILE_QUERY = "(pointer: coarse), (max-width: 639px)";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(
@@ -93,7 +96,6 @@ export function SubtitleOverlay({
   const { t } = useTranslation();
   const isMobile = useIsMobile();
 
-  const [cues, setCues] = useState<SubtitleCue[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -124,7 +126,7 @@ export function SubtitleOverlay({
   useEffect(() => {
     let cancelled = false;
 
-    setCues(null);
+    cuesRef.current = null;
     setLoadError(false);
     setElapsed(0);
     elapsedRef.current = 0;
@@ -136,7 +138,6 @@ export function SubtitleOverlay({
         if (cancelled) return;
         const parsed = parseSubtitles(text);
         cuesRef.current = parsed;
-        setCues(parsed);
         setManualDuration(parsed.length ? parsed[parsed.length - 1].end + DURATION_PADDING_SECONDS : null);
       })
       .catch((error) => {
@@ -374,11 +375,14 @@ export function SubtitleOverlay({
             aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
             title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
             // CineSrc's own icon sits a hair further left than the other two
-            // providers', and the corner sits a couple px further in once
-            // we're actually in the big view.
+            // providers', the corner sits a couple px further in once we're
+            // actually in the big view, and phones need a bit more still.
             style={{
-              right: (activePlayer === 3 ? 3 : 0) + (isFullscreen ? 2 : 0),
-              bottom: isFullscreen ? 2 : 0,
+              right:
+                (activePlayer === 3 ? 3 : 0) +
+                (isFullscreen ? 2 : 0) +
+                (bigOnMobile ? 5 : 0),
+              bottom: (isFullscreen ? 2 : 0) + (bigOnMobile ? 5 : 0),
               width: hitSize,
               height: hitSize,
             }}
