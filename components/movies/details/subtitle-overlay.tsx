@@ -8,10 +8,6 @@ import {
   Info,
   Maximize2,
   Minimize2,
-  Pause,
-  Play,
-  RotateCcw,
-  RotateCw,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { findActiveCue, parseSubtitles, type SubtitleCue } from "@/lib/vtt-parser";
@@ -46,7 +42,6 @@ type SubtitleOverlayProps = {
   onToggleFullscreen: () => void;
 };
 
-const JUMP_SECONDS = 10;
 const DURATION_PADDING_SECONDS = 8;
 /** How long we wait for a provider to prove it sends real playback telemetry
  *  before falling back to our own self-timed clock. */
@@ -64,15 +59,6 @@ type Telemetry = {
   playing: boolean;
   receivedAt: number;
 };
-
-function formatClock(seconds: number): string {
-  const total = Math.max(0, Math.floor(seconds));
-  const mm = Math.floor(total / 60)
-    .toString()
-    .padStart(2, "0");
-  const ss = (total % 60).toString().padStart(2, "0");
-  return `${mm}:${ss}`;
-}
 
 /**
  * Renders the Bulgarian subtitles ourselves, on top of the (cross-origin,
@@ -106,7 +92,6 @@ export function SubtitleOverlay({
 
   // Manual-mode (fallback) clock state.
   const [isTicking, setIsTicking] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const [manualDuration, setManualDuration] = useState<number | null>(null);
 
   const cuesRef = useRef<SubtitleCue[] | null>(null);
@@ -116,7 +101,6 @@ export function SubtitleOverlay({
   const telemetryRef = useRef<Telemetry | null>(null);
   const lastFrameRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
-  const wasTickingRef = useRef(false);
   const infoRef = useRef<HTMLDivElement>(null);
 
   modeRef.current = mode;
@@ -128,7 +112,6 @@ export function SubtitleOverlay({
 
     cuesRef.current = null;
     setLoadError(false);
-    setElapsed(0);
     elapsedRef.current = 0;
     setActiveText(null);
 
@@ -217,14 +200,12 @@ export function SubtitleOverlay({
           TELEMETRY_LEAD_SECONDS;
         const next = tel.duration ? Math.min(tel.duration, Math.max(0, projected)) : Math.max(0, projected);
         elapsedRef.current = next;
-        setElapsed(next);
       } else if (modeRef.current === "manual" && isTickingRef.current && lastFrameRef.current !== null) {
         const delta = (now - lastFrameRef.current) / 1000;
         const next = manualDuration
           ? Math.min(manualDuration, elapsedRef.current + delta)
           : elapsedRef.current + delta;
         elapsedRef.current = next;
-        setElapsed(next);
       }
 
       lastFrameRef.current = now;
@@ -258,21 +239,9 @@ export function SubtitleOverlay({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [infoOpen]);
 
-  function seekTo(nextSeconds: number) {
-    const clamped = Math.max(0, manualDuration ? Math.min(manualDuration, nextSeconds) : nextSeconds);
-    elapsedRef.current = clamped;
-    setElapsed(clamped);
-
-    const activeCues = cuesRef.current;
-    const cue = activeCues ? findActiveCue(activeCues, clamped) : null;
-    setActiveText(cue?.text ?? null);
-  }
-
   if (!active || !subtitleUrl) {
     return null;
   }
-
-  const percent = manualDuration ? Math.min(100, (elapsed / manualDuration) * 100) : 0;
 
   return (
     <>
@@ -358,15 +327,14 @@ export function SubtitleOverlay({
           across all three players' slightly different icon placements, so
           people never end up on the one that would hide the subtitles. */}
       {(() => {
-        // On mobile, once we're actually in the big view, the provider's
-        // own icon still peeked out from behind small position nudges — so
-        // instead of chasing its exact spot, the click-catcher just grows
-        // enough there to swallow that whole corner outright.
+        // On mobile in fullscreen, the corner sits a bit further in than on
+        // desktop — this only nudges position, size stays the same as
+        // everywhere else.
         const bigOnMobile = isFullscreen && isMobile;
-        const hitSize = bigOnMobile ? 88 : 56;
-        const visibleSize = bigOnMobile ? 68 : 44;
-        const glowSize = bigOnMobile ? 44 : 36;
-        const iconSize = bigOnMobile ? 26 : 18;
+        const hitSize = 56;
+        const visibleSize = 44;
+        const glowSize = 36;
+        const iconSize = 18;
 
         return (
           <button
@@ -402,69 +370,6 @@ export function SubtitleOverlay({
         );
       })()}
 
-      {/* Manual transport controls — only shown when a provider hasn't
-          proven it sends real playback telemetry within the grace period. */}
-      {mode === "manual" && !loadError && (
-        <div className="pointer-events-auto absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-2 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-          <button
-            type="button"
-            onClick={() => seekTo(elapsedRef.current - JUMP_SECONDS)}
-            aria-label={t("subtitles.jumpBack")}
-            title={t("subtitles.jumpBack")}
-            className="flex items-center rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <RotateCcw size={18} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsTicking((prev) => !prev)}
-            aria-label={isTicking ? t("subtitles.pause") : t("subtitles.play")}
-            title={isTicking ? t("subtitles.pause") : t("subtitles.play")}
-            className="flex items-center justify-center rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/25"
-          >
-            {isTicking ? <Pause size={18} /> : <Play size={18} />}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => seekTo(elapsedRef.current + JUMP_SECONDS)}
-            aria-label={t("subtitles.jumpForward")}
-            title={t("subtitles.jumpForward")}
-            className="flex items-center rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <RotateCw size={18} />
-          </button>
-
-          <span className="min-w-[2.8rem] font-mono text-sm text-white/70">{formatClock(elapsed)}</span>
-
-          <input
-            type="range"
-            min={0}
-            max={manualDuration ?? 0}
-            step={1}
-            value={Math.min(elapsed, manualDuration ?? 0)}
-            disabled={!manualDuration}
-            onPointerDown={() => {
-              wasTickingRef.current = isTicking;
-              setIsTicking(false);
-            }}
-            onChange={(event) => seekTo(Number(event.target.value))}
-            onPointerUp={() => {
-              if (wasTickingRef.current) setIsTicking(true);
-            }}
-            aria-label={t("subtitles.seekLabel")}
-            style={{
-              background: `linear-gradient(to right, white ${percent}%, rgba(255,255,255,0.22) ${percent}%)`,
-            }}
-            className="h-2 w-32 cursor-pointer appearance-none rounded-full disabled:cursor-default disabled:opacity-30 sm:w-48 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
-          />
-
-          <span className="min-w-[2.8rem] text-right font-mono text-sm text-white/70">
-            {manualDuration ? formatClock(manualDuration) : "--:--"}
-          </span>
-        </div>
-      )}
     </>
   );
 }
