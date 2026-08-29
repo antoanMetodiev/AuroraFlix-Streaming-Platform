@@ -112,7 +112,7 @@ export function Navigation() {
       <FriendsSocketManager />
       <FriendsNavButton />
       <NotificationsBell />
-      <AssistantLauncher />
+      <AssistantLauncher className="hidden md:flex" />
 
       <LanguageToggle />
 
@@ -163,6 +163,10 @@ export function Navigation() {
           <Crown size={17} />
           {t("nav.pricing")}
         </Link>
+
+        <div onClick={() => setIsOpen(false)}>
+          <AssistantLauncher asMenuItem className="w-full" />
+        </div>
 
         <span className="my-1 h-px w-full bg-foreground/10" />
 

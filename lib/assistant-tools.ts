@@ -58,7 +58,11 @@ async function fetchLibraryList(path: string, token: string): Promise<LibraryEnt
     const response = await fetch(`${API_BASE_URL}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
+      // Render's free tier spins lumo-user-svc down after idling and can
+      // take 30s+ to cold-start back up on the next request — 10s was
+      // cutting that off mid-wake, silently turning into "no key available"
+      // / an empty library and surfacing as a generic chat error.
+      signal: AbortSignal.timeout(25_000),
     });
     if (!response.ok) return [];
     const data = (await response.json()) as unknown;
@@ -82,7 +86,11 @@ export async function fetchRandomGeminiApiKey(authToken: string | null): Promise
     const response = await fetch(`${API_BASE_URL}/ai-assistant/api-key`, {
       headers: { Authorization: `Bearer ${authToken}` },
       cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
+      // Render's free tier spins lumo-user-svc down after idling and can
+      // take 30s+ to cold-start back up on the next request — 10s was
+      // cutting that off mid-wake, silently turning into "no key available"
+      // / an empty library and surfacing as a generic chat error.
+      signal: AbortSignal.timeout(25_000),
     });
     if (!response.ok) return null;
     const data = (await response.json()) as { apiKey?: string };
