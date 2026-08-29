@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Film, Play, Star, Tv } from "lucide-react";
@@ -62,7 +62,30 @@ export function WatchingFriendsSidebar() {
 
 function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: WatchingTarget }) {
   const { t } = useTranslation();
+  const rowRef = useRef<HTMLAnchorElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  // The flyout is portaled to <body> (see below), so it doesn't naturally
+  // sit next to whichever row triggered it — measured fresh on every hover
+  // instead, so it lines up with THAT friend's own pill instead of always
+  // popping up at one fixed spot on screen regardless of which row (1st,
+  // 2nd, ...) is actually hovered.
+  const [anchorTop, setAnchorTop] = useState(0);
+
+  // The flyout is roughly 360px tall (aspect-video image + text content) —
+  // centering it exactly on a row near the top or bottom of the rail would
+  // push it off-screen, so its midpoint is clamped to stay clear of both
+  // viewport edges by (approximately) its own half-height.
+  const FLYOUT_HALF_HEIGHT = 180;
+
+  function handleEnter() {
+    const rect = rowRef.current?.getBoundingClientRect();
+    if (rect) {
+      const center = rect.top + rect.height / 2;
+      const clamped = Math.min(Math.max(center, FLYOUT_HALF_HEIGHT + 16), window.innerHeight - FLYOUT_HALF_HEIGHT - 16);
+      setAnchorTop(clamped);
+    }
+    setIsHovered(true);
+  }
   // Keyed like friends-panel.tsx's FriendWatchingCard, not a plain "have we
   // ever fetched" boolean — a bare loaded flag never re-fetches once true,
   // so switching to a different title while already hovered once (or
@@ -104,8 +127,9 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
   const backdrop = tmdbImage(preview?.backgroundImg_URL ?? preview?.posterImgURL, "w780");
 
   return (
-    <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={() => setIsHovered(false)}>
       <Link
+        ref={rowRef}
         href={href}
         className="flex items-center gap-2.5 rounded-full border border-foreground/10 bg-surface/90 py-1.5 pr-4 pl-1.5 shadow-[0_8px_25px_-8px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-colors hover:border-emerald-400/30"
       >
@@ -125,17 +149,21 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
       {/* Portaled to <body> — this item's own ancestor (the rail) is
           positioned via top-[42%] -translate-y-1/2, and that translate is a
           transform, which makes the rail the containing block for any
-          fixed/absolute descendant instead of the viewport. A plain `fixed
-          right-80` here would resolve against the rail's own narrow box
-          instead of the screen's actual right edge.
-          The rail itself sits flush against the true right edge (right-4),
+          fixed/absolute descendant instead of the viewport. A plain `fixed`
+          here would resolve against the rail's own narrow box instead of
+          the screen's actual edges.
+          `top` is measured off the hovered row itself (see handleEnter), not
+          a fixed value — otherwise every row's flyout popped up at the same
+          spot on screen instead of next to whichever friend is actually
+          hovered. The rail sits flush against the true right edge (right-4),
           so this card opens further in (right-80) — to its LEFT — instead
           of stacking on top of it. */}
       {isHovered &&
         createPortal(
           <Link
             href={href}
-            className="animate-modal-card-in fixed top-[42%] right-80 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
+            style={{ top: anchorTop }}
+            className="animate-modal-card-in fixed right-80 z-30 block w-72 -translate-y-1/2 overflow-hidden rounded-2xl border border-foreground/10 bg-surface shadow-[0_25px_55px_-15px_rgba(0,0,0,0.75)]"
           >
             <div className="relative aspect-video w-full overflow-hidden bg-black">
               {backdrop ? (
