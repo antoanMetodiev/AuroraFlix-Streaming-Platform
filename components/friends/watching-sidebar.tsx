@@ -15,11 +15,6 @@ import type { Friend } from "@/lib/friends";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
-// How many rows the rail shows before just stopping — no "+N", unlike the
-// header cluster's overflow pill, since there's no natural place to put one
-// in a vertical list without it looking like just another (blank) friend.
-const MAX_SIDEBAR_FRIENDS = 6;
-
 function hrefFor(watching: WatchingTarget) {
   return watching.type === "movie"
     ? `/movies/${getMovieSlug({ title: watching.title, tmdbId: watching.tmdbId })}`
@@ -39,20 +34,26 @@ function hrefFor(watching: WatchingTarget) {
  */
 export function WatchingFriendsSidebar() {
   const { friends, watching } = useFriends();
-  // Capped rather than made scrollable — a scroll container needs
-  // overflow-y, and per the CSS overflow spec setting only one axis forces
-  // the OTHER to compute as "auto" too (never "visible") whenever it isn't
-  // already non-visible: https://www.w3.org/TR/CSS22/visufx.html#overflow
-  // ("if one is visible and other isn't, visible behaves as auto"). That
-  // silently clipped the hover flyout below, which deliberately overflows
-  // this rail's own bounds — a capped, unscrolled list sidesteps the whole
-  // issue instead of fighting it with yet another portal.
-  const watchingFriends = friends.filter((friend) => watching[friend.clerkId]).slice(0, MAX_SIDEBAR_FRIENDS);
+  const watchingFriends = friends.filter((friend) => watching[friend.clerkId]);
 
   if (watchingFriends.length === 0) return null;
 
   return (
-    <div className="fixed top-[42%] right-4 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex">
+    // top-4/bottom-4 (not a centered fixed-height box) bounds this to
+    // whatever room the viewport actually has, so overflow-y-auto only
+    // kicks in once enough friends are watching to genuinely need it,
+    // instead of a hard cap silently hiding anyone past a fixed count.
+    // Per the CSS overflow spec, setting overflow-y alone forces overflow-x
+    // to compute as "auto" too (never "visible") — that used to matter here
+    // because the hover flyout below rendered as a child of this box and
+    // would've gotten clipped by it. It's since been moved to a
+    // document.body portal (see WatchingSidebarItem), so it's no longer a
+    // descendant of this scroll container at all and nothing is at risk of
+    // being clipped by turning scrolling back on here.
+    // Scrollbar hidden visually (still fully scrollable via wheel/trackpad/
+    // touch) since a visible bar sitting right at the screen's edge would
+    // look like stray chrome rather than part of the list.
+    <div className="fixed top-4 right-4 bottom-4 z-30 hidden w-52 flex-col gap-2.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] xl:flex [&::-webkit-scrollbar]:hidden">
       {watchingFriends.map((friend) => (
         <WatchingSidebarItem key={friend.clerkId} friend={friend} watching={watching[friend.clerkId]} />
       ))}
@@ -155,12 +156,12 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
         </span>
       </Link>
 
-      {/* Portaled to <body> — this item's own ancestor (the rail) is
-          positioned via top-[42%] -translate-y-1/2, and that translate is a
-          transform, which makes the rail the containing block for any
-          fixed/absolute descendant instead of the viewport. A plain `fixed`
-          here would resolve against the rail's own narrow box instead of
-          the screen's actual edges.
+      {/* Portaled to <body> — the rail is now an overflow-y-auto scroll
+          container, and a flyout rendered as its direct DOM child would
+          scroll away with the row that opened it (its `top`, measured once
+          on hover-enter, is never re-measured on scroll). Portaling it out
+          keeps it anchored to the viewport regardless of how far the rail
+          itself has scrolled.
           `top` is measured off the hovered row itself (see handleEnter), not
           a fixed value — otherwise every row's flyout popped up at the same
           spot on screen instead of next to whichever friend is actually
