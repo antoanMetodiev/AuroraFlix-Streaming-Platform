@@ -66,7 +66,7 @@ export function ModernSelect({
 
       <div
         role="listbox"
-        className={`absolute right-0 z-20 mt-2 max-h-80 min-w-full origin-top-right overflow-y-auto rounded-2xl border border-foreground/10 bg-surface p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-all duration-200 ${
+        className={`absolute right-0 z-40 mt-2 max-h-80 min-w-full origin-top-right overflow-y-auto rounded-2xl border border-foreground/10 bg-surface p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-all duration-200 ${
           open ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >

@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
@@ -8,189 +9,604 @@ import { ModernSelect } from "@/components/ui/modern-select";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
+import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
 import type { WatchingTarget } from "@/lib/watching";
 
-// ISO 639-1 code both vidsrc-family mirrors and VidFast read to preselect a subtitle
-// track, so viewers never have to open the player's own subtitle menu for this.
-const DEFAULT_SUBTITLE_LANG = "bg";
+type VidsrcRef =
+  | {
+      kind: "movie";
+      tmdbId: string;
+    }
+  | {
+      kind: "tv";
+      tmdbId: string;
+      season: string;
+      episode: string;
+    };
 
-// CineSrc's matcher (found in its client bundle) lowercases this and checks it against
-// each fetched subtitle's display/language name, not an ISO code, so a language name is
-// what it expects here rather than "bg".
-const DEFAULT_SUBTITLE_LANG_NAME = "Bulgarian";
-
-/**
- * The backend returns vidsrc.icu embed URLs, but the live app points the
- * iframe at a mirror domain instead — currently vidsrc2.ru. `ds_lang` (ISO639
- * code) is the vidsrc-embed-family's documented param for preselecting the
- * default subtitle language; `sub` is kept alongside for older vidsrc.icu/to
- * style mirrors that read that name instead.
- *
- * `autoplay=1` is vidsrc2.ru's own documented param (see /vidsrc/docs) — but
- * its docs are explicit that this only skips the internal play button on a
- * *custom* domain whitelisted with them; on official/mirror domains like
- * this one, their player always shows its own play button first regardless.
- * That's an intentional restriction on their end, not something any URL
- * param here can bypass — kept anyway since it at least removes friction on
- * whatever step follows that first click.
- */
-function toPlayableUrl(videoUrl: string) {
-  return `${videoUrl.replace("vidsrc.icu", "vidsrc2.ru")}?sub=${DEFAULT_SUBTITLE_LANG}&ds_lang=${DEFAULT_SUBTITLE_LANG}&autoplay=1`;
-}
-
-type VidsrcRef = { kind: "movie"; tmdbId: string } | { kind: "tv"; tmdbId: string; season: string; episode: string };
+type PlayerSectionProps = {
+  videoUrl: string;
+  subtitleUrl?: string;
+  title?: string;
+  poster?: string | null;
+};
 
 /**
- * Backend videoURLs are always vidsrc.icu embeds — ".../embed/movie/{tmdbId}" or
- * ".../embed/tv/{tmdbId}/{season}/{episode}" (see lib/tmdb.ts for the same trailing-id
- * trick). Parsed out here so the same TMDB title/episode can be requested from other
- * TMDB-id-based sources (vidfast.vc, cinesrc.st) as alternate players.
+ * Parse the original vidsrc URL so we can construct
+ * the other two player URLs from the same TMDB id.
  */
 function parseVidsrcUrl(videoUrl: string): VidsrcRef | null {
-  const tv = videoUrl.match(/\/embed\/tv\/(\d+)\/(\d+)\/(\d+)/);
-  if (tv) return { kind: "tv", tmdbId: tv[1], season: tv[2], episode: tv[3] };
+  const tv = videoUrl.match(
+    /\/embed\/tv\/(\d+)\/(\d+)\/(\d+)/
+  );
 
-  const movie = videoUrl.match(/\/embed\/movie\/(\d+)/);
-  if (movie) return { kind: "movie", tmdbId: movie[1] };
+  if (tv) {
+    return {
+      kind: "tv",
+      tmdbId: tv[1],
+      season: tv[2],
+      episode: tv[3],
+    };
+  }
+
+  const movie = videoUrl.match(
+    /\/embed\/movie\/(\d+)/
+  );
+
+  if (movie) {
+    return {
+      kind: "movie",
+      tmdbId: movie[1],
+    };
+  }
 
   return null;
 }
 
-function toVidfastUrl(ref: VidsrcRef) {
-  const path = ref.kind === "movie" ? `movie/${ref.tmdbId}` : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
-  return `https://vidfast.vc/${path}?sub=${DEFAULT_SUBTITLE_LANG}&autoPlay=true`;
+/**
+ * Add query parameters safely to a URL.
+ */
+function appendParams(
+  url: string,
+  params: Record<string, string | undefined>
+): string {
+  try {
+    const parsed = new URL(url);
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value) {
+        parsed.searchParams.set(key, value);
+      }
+    }
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 }
 
-function toCinesrcUrl(ref: VidsrcRef) {
+/**
+ * Safari/iOS still only expose the prefixed Fullscreen API.
+ */
+type PrefixedFullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+};
+
+type PrefixedFullscreenElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void>;
+};
+
+function getFullscreenElement(): Element | null {
+  const doc = document as PrefixedFullscreenDocument;
+  return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+}
+
+function requestFullscreen(el: HTMLElement) {
+  const target = el as PrefixedFullscreenElement;
+  return (target.requestFullscreen ?? target.webkitRequestFullscreen)?.call(target);
+}
+
+function exitFullscreen() {
+  const doc = document as PrefixedFullscreenDocument;
+  return (document.exitFullscreen ?? doc.webkitExitFullscreen)?.call(document);
+}
+
+/**
+ * Default language used by the player providers' own bundled subtitles.
+ */
+const DEFAULT_SUBTITLE_LANG = "bg";
+
+/**
+ * CineSrc expects the display name rather than the ISO code.
+ */
+const DEFAULT_SUBTITLE_LANG_NAME = "Bulgarian";
+
+/**
+ * Player 1
+ *
+ * vidsrc.icu -> vidsrc2.ru
+ *
+ * `hasOwnSubtitles` tells us whether <SubtitleOverlay> already has a
+ * Bulgarian track from our own server. When it does, we deliberately do NOT
+ * ask the provider to preselect its own bundled subtitle — showing both at
+ * once produced two overlapping, out-of-sync lines. When we have nothing of
+ * our own, we fall back to asking the provider for its bundled Bulgarian
+ * track instead of leaving the viewer with no subtitles at all.
+ */
+function toPlayableUrl(videoUrl: string, hasOwnSubtitles: boolean): string {
+  const playableUrl = videoUrl.replace(
+    "vidsrc.icu",
+    "vidsrc2.ru"
+  );
+
+  return appendParams(playableUrl, {
+    autoplay: "1",
+    ...(hasOwnSubtitles
+      ? {}
+      : {
+          sub: DEFAULT_SUBTITLE_LANG,
+          ds_lang: DEFAULT_SUBTITLE_LANG,
+        }),
+  });
+}
+
+/**
+ * Player 2 — VidFast
+ */
+function toVidfastUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
   const path =
-    ref.kind === "movie" ? `movie/${ref.tmdbId}` : `tv/${ref.tmdbId}?s=${ref.season}&e=${ref.episode}`;
-  const separator = ref.kind === "movie" ? "?" : "&";
-  return `https://cinesrc.st/embed/${path}${separator}subtitlelang=${DEFAULT_SUBTITLE_LANG_NAME}&Position=10&autoplay=true`;
+    ref.kind === "movie"
+      ? `movie/${ref.tmdbId}`
+      : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+
+  return appendParams(
+    `https://vidfast.vc/${path}`,
+    {
+      autoPlay: "true",
+      ...(hasOwnSubtitles
+        ? {}
+        : {
+            sub: DEFAULT_SUBTITLE_LANG,
+            lang: DEFAULT_SUBTITLE_LANG,
+          }),
+    }
+  );
 }
 
-export const PlayerSection = forwardRef<HTMLDivElement, { videoUrl: string; title?: string; poster?: string | null }>(function PlayerSection(
-  { videoUrl, title, poster },
+/**
+ * Player 3 — CineSrc
+ */
+function toCinesrcUrl(ref: VidsrcRef, hasOwnSubtitles: boolean): string {
+  const path =
+    ref.kind === "movie"
+      ? `movie/${ref.tmdbId}`
+      : `tv/${ref.tmdbId}?s=${ref.season}&e=${ref.episode}`;
+
+  const separator =
+    ref.kind === "movie" ? "?" : "&";
+
+  const url =
+    `https://cinesrc.st/embed/${path}${separator}` +
+    `Position=10` +
+    `&autoplay=true`;
+
+  if (hasOwnSubtitles) {
+    return url;
+  }
+
+  return appendParams(url, {
+    subtitlelang: DEFAULT_SUBTITLE_LANG_NAME,
+  });
+}
+
+export const PlayerSection = forwardRef<
+  HTMLDivElement,
+  PlayerSectionProps
+>(function PlayerSection(
+  {
+    videoUrl,
+    subtitleUrl,
+    title,
+    poster,
+  },
   forwardedRef
 ) {
   const { t } = useTranslation();
-  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.2);
-  const [isFrameLoading, setIsFrameLoading] = useState(true);
-  const [activePlayer, setActivePlayer] = useState<1 | 2 | 3>(1);
-  // The iframe itself doesn't mount until this is true — see hasStarted's
-  // reset effect and the click-to-play overlay below for why.
-  const [hasStarted, setHasStarted] = useState(false);
 
-  const vidsrcRef = videoUrl ? parseVidsrcUrl(videoUrl) : null;
-  const player2Url = vidsrcRef ? toVidfastUrl(vidsrcRef) : null;
-  const player3Url = vidsrcRef ? toCinesrcUrl(vidsrcRef) : null;
-  const player1Url = videoUrl ? toPlayableUrl(videoUrl) : "";
-  const activeSrc =
-    (activePlayer === 2 && player2Url) ||
-    (activePlayer === 3 && player3Url) ||
-    player1Url;
+  const {
+    ref,
+    inView,
+  } = useInViewOnce<HTMLDivElement>(0.2);
+
+  const [isFrameLoading, setIsFrameLoading] =
+    useState(true);
+
+  /**
+   * When we have our own Bulgarian subtitles, CineSrc is the only player on
+   * offer — VidFast and vidsrc2.ru have both proven less reliable to load in
+   * practice, and with subtitles of our own to protect there's no upside to
+   * offering a player more likely to just spin on "loading". Without
+   * subtitles of our own there's nothing to protect either way, so all
+   * three stay in their original order.
+   */
+  const hasOwnSubtitles = Boolean(subtitleUrl);
+
+  const playerOrder = useMemo<
+    readonly (1 | 2 | 3)[]
+  >(
+    () =>
+      hasOwnSubtitles
+        ? [3]
+        : [1, 2, 3],
+    [hasOwnSubtitles]
+  );
+
+  const [activePlayer, setActivePlayer] =
+    useState<1 | 2 | 3>(() =>
+      hasOwnSubtitles ? 3 : 1
+    );
+
+  const [hasStarted, setHasStarted] =
+    useState(false);
+
+  /**
+   * "Big view" — a CSS `fixed inset-0` expansion of our wrapper (iframe +
+   * subtitle overlay together), not the real browser Fullscreen API.
+   *
+   * Our own button just toggles this directly — no privileged API, no
+   * gesture requirements, always works.
+   *
+   * The provider's own fullscreen button (inside the cross-origin iframe)
+   * fullscreens just the iframe, hiding our overlay (a sibling) behind the
+   * browser's fullscreen "top layer" — no CSS reaches that from outside it.
+   * Re-requesting real fullscreen on our own wrapper right after doesn't
+   * work either: a click *inside* the iframe grants activation to the
+   * iframe's own browsing context, not ours, so our own
+   * `requestFullscreen()` call gets silently rejected. `exitFullscreen()`
+   * has no such restriction though — a page can always leave fullscreen —
+   * so for THAT specific case (and only that case) we let their request
+   * through, immediately exit it, and fall back to a CSS "big view" that
+   * doesn't need permission from anything. Their player never gets a real
+   * fullscreen signal of its own, so its own controls stay their normal
+   * (non-fullscreen) size, and the browser's own chrome (tabs, address bar)
+   * stays visible — a real trade-off, not a bug, and the reason our own
+   * button (real fullscreen, hides all of that) stays the better option.
+   */
+  const [isRealFullscreen, setIsRealFullscreen] =
+    useState(false);
+
+  const [isBigView, setIsBigView] =
+    useState(false);
+
+  const containerRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (activeSrc) setIsFrameLoading(true);
+    function handleFullscreenChange() {
+      const current = getFullscreenElement();
+
+      if (current === containerRef.current) {
+        setIsRealFullscreen(true);
+        return;
+      }
+
+      setIsRealFullscreen(false);
+
+      if (current && hasOwnSubtitles) {
+        exitFullscreen();
+        setIsBigView(true);
+      }
+    }
+
+    document.addEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+    document.addEventListener(
+      "webkitfullscreenchange",
+      handleFullscreenChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "fullscreenchange",
+        handleFullscreenChange
+      );
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+    };
+  }, [hasOwnSubtitles]);
+
+  /**
+   * Escape closes the CSS big view, and the page can't scroll behind it —
+   * real fullscreen already gets both of these from the browser for free.
+   */
+  useEffect(() => {
+    if (!isBigView) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsBigView(false);
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isBigView]);
+
+  function toggleFullscreen() {
+    if (isBigView) {
+      setIsBigView(false);
+      return;
+    }
+
+    if (getFullscreenElement()) {
+      exitFullscreen();
+    } else if (containerRef.current) {
+      requestFullscreen(
+        containerRef.current
+      )?.catch(() => {});
+    }
+  }
+
+  const vidsrcRef = useMemo(
+    () =>
+      videoUrl
+        ? parseVidsrcUrl(videoUrl)
+        : null,
+    [videoUrl]
+  );
+
+  /**
+   * Build all three player URLs.
+   *
+   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, not by
+   * these third-party embeds — see the comments on the URL builders above.
+   */
+  const player1Url = useMemo(
+    () =>
+      videoUrl
+        ? toPlayableUrl(videoUrl, hasOwnSubtitles)
+        : "",
+    [videoUrl, hasOwnSubtitles]
+  );
+
+  const player2Url = useMemo(
+    () =>
+      vidsrcRef
+        ? toVidfastUrl(vidsrcRef, hasOwnSubtitles)
+        : null,
+    [vidsrcRef, hasOwnSubtitles]
+  );
+
+  const player3Url = useMemo(
+    () =>
+      vidsrcRef
+        ? toCinesrcUrl(vidsrcRef, hasOwnSubtitles)
+        : null,
+    [vidsrcRef, hasOwnSubtitles]
+  );
+
+  /**
+   * Select active player.
+   */
+  const activeSrc =
+    activePlayer === 2 && player2Url
+      ? player2Url
+      : activePlayer === 3 && player3Url
+        ? player3Url
+        : player1Url;
+
+  /**
+   * Show loader whenever iframe source changes.
+   */
+  useEffect(() => {
+    if (activeSrc) {
+      setIsFrameLoading(true);
+    }
   }, [activeSrc]);
 
-  // A new title/episode requires pressing play again — switching between
-  // player 1/2/3 (same title, different mirror) does not, since videoUrl
-  // itself hasn't changed.
+  /**
+   * New movie / episode requires clicking our Play button again.
+   */
   useEffect(() => {
     setHasStarted(false);
   }, [videoUrl]);
 
-  // See use-watching-presence's doc comment: the third-party embed exposes
-  // no onPlay/onPause/onReady we could listen for (cross-origin iframe, no
-  // postMessage contract with these mirrors), so `hasStarted` — a real click
-  // on our own Play button, not the embed's — is the proxy for "the user
-  // actually started watching this". Deliberately NOT also gated on
-  // `!isFrameLoading`: these ad-heavy mirrors often keep background
-  // tracker/ad requests going indefinitely, so the iframe's `load` event can
-  // fire very late or never at all even once their own play button is
-  // already visible and clickable — gating on it left presence silently
-  // never firing.
+  /**
+   * Watching presence.
+   */
   const watchingTarget: WatchingTarget | null =
-    vidsrcRef && title && hasStarted
+    vidsrcRef &&
+    title &&
+    hasStarted
       ? {
           tmdbId: vidsrcRef.tmdbId,
-          type: vidsrcRef.kind === "movie" ? "movie" : "series",
+
+          type:
+            vidsrcRef.kind === "movie"
+              ? "movie"
+              : "series",
+
           title,
-          season: vidsrcRef.kind === "tv" ? Number(vidsrcRef.season) : undefined,
-          episode: vidsrcRef.kind === "tv" ? Number(vidsrcRef.episode) : undefined,
+
+          season:
+            vidsrcRef.kind === "tv"
+              ? Number(vidsrcRef.season)
+              : undefined,
+
+          episode:
+            vidsrcRef.kind === "tv"
+              ? Number(vidsrcRef.episode)
+              : undefined,
         }
       : null;
-  useWatchingPresence(watchingTarget);
 
-  // Rendering is intentionally unconditional (no early `return null` for an
-  // empty videoUrl) — this section used to unmount/remount every time a
-  // series went from "no video selected" to "episode picked", which reset
-  // the scroll-reveal animation's IntersectionObserver and could leave the
-  // freshly-mounted player stuck at opacity-0 right as the user scrolled to
-  // it. Keeping the section mounted means only the iframe's src changes.
+  useWatchingPresence(
+    watchingTarget
+  );
+
   return (
     <div ref={forwardedRef}>
       <section
         ref={ref}
         className={`mx-auto flex max-w-[80rem] flex-col items-center px-4 py-16 transition-all duration-700 sm:px-6 sm:py-20 ${
-          inView ? "translate-y-0 opacity-100" : "translate-y-14 opacity-0"
+          inView
+            ? "translate-y-0 opacity-100"
+            : "translate-y-14 opacity-0"
         }`}
       >
-        {videoUrl && vidsrcRef && (
+        {videoUrl && vidsrcRef && playerOrder.length > 1 && (
           <div className="mb-3 flex w-full max-w-[80rem] justify-end">
             <ModernSelect
               value={String(activePlayer)}
-              onChange={(next) => setActivePlayer(Number(next) as 1 | 2 | 3)}
-              options={([1, 2, 3] as const).map((player) => ({
-                value: String(player),
-                label: `${t("player.player")} ${player}`,
-              }))}
+              onChange={(next) =>
+                setActivePlayer(
+                  Number(next) as 1 | 2 | 3
+                )
+              }
+              options={
+                playerOrder.map(
+                  (provider, index) => ({
+                    value: String(provider),
+                    label: `${t(
+                      "player.player"
+                    )} ${index + 1}`,
+                  })
+                )
+              }
             />
           </div>
         )}
-        <div className="relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]">
-          {videoUrl ? (
-            hasStarted ? (
-              <>
-                {isFrameLoading && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
-                    <Spinner size={44} />
-                  </div>
-                )}
-                <iframe
-                  key={activeSrc}
-                  className="h-full w-full border-0"
-                  src={activeSrc}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  scrolling="no"
-                  onLoad={() => setIsFrameLoading(false)}
+
+        {(() => {
+          const playerBody = (
+            <>
+              {isFrameLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
+                  <Spinner size={44} />
+                </div>
+              )}
+
+              <iframe
+                key={activeSrc}
+                className="h-full w-full border-0"
+                src={activeSrc}
+                title={
+                  title
+                    ? `${title} player`
+                    : "Video player"
+                }
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                scrolling="no"
+                onLoad={() =>
+                  setIsFrameLoading(false)
+                }
+              />
+
+              {subtitleUrl && (
+                <SubtitleOverlay
+                  subtitleUrl={subtitleUrl}
+                  active={hasStarted}
+                  activePlayer={activePlayer}
+                  isFullscreen={isRealFullscreen || isBigView}
+                  onToggleFullscreen={toggleFullscreen}
                 />
-              </>
-            ) : (
+              )}
+            </>
+          );
+
+          if (
+            isBigView &&
+            typeof document !== "undefined"
+          ) {
+            /**
+             * The fade-in-on-scroll animation above sets `translate-y-*` on
+             * the ancestor <section> — any CSS transform on an ancestor
+             * becomes the containing block for `position: fixed`
+             * descendants, so a plain fixed box here would size itself to
+             * that section instead of the viewport. Portalling straight to
+             * <body> sidesteps that ancestor chain entirely.
+             */
+            return createPortal(
+              <div
+                ref={containerRef}
+                className="animate-big-view-in fixed inset-0 z-[100] bg-black"
+              >
+                {playerBody}
+              </div>,
+              document.body
+            );
+          }
+
+          return (
+            <div
+              ref={containerRef}
+              className="relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]"
+            >
+              {videoUrl ? (
+                hasStarted ? (
+                  playerBody
+                ) : (
               <button
                 type="button"
-                onClick={() => setHasStarted(true)}
-                aria-label={t("player.play")}
+                onClick={() =>
+                  setHasStarted(true)
+                }
+                aria-label={t(
+                  "player.play"
+                )}
                 className="group absolute inset-0 flex cursor-pointer items-center justify-center overflow-hidden"
               >
                 {poster && (
-                  <FadeInImage src={poster} alt="" className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                  <FadeInImage
+                    src={poster}
+                    alt=""
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
                 )}
+
                 <div className="absolute inset-0 bg-black/50 transition-colors duration-300 ease-out group-hover:bg-black/35" />
+
                 <span className="absolute h-20 w-20 rounded-full bg-white/20 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100 sm:h-24 sm:w-24" />
+
                 <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-white/10 text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] backdrop-blur-md transition-all duration-300 ease-out group-hover:scale-110 group-hover:border-white/70 group-hover:bg-white/20 sm:h-20 sm:w-20">
-                  <Play size={28} className="ml-1 fill-current sm:size-8" />
+                  <Play
+                    size={28}
+                    className="ml-1 fill-current sm:size-8"
+                  />
                 </span>
               </button>
             )
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">{t("player.pickEpisode")}</div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+              {t(
+                "player.pickEpisode"
+              )}
+            </div>
           )}
-        </div>
+            </div>
+          );
+        })()}
 
-        {videoUrl && <AdblockPrompt />}
+        {videoUrl && (
+          <AdblockPrompt />
+        )}
+
+        {subtitleUrl && !hasStarted && (
+          <p className="mt-3 text-xs text-white/40">
+            🇧🇬 {t("subtitles.available")}
+          </p>
+        )}
       </section>
     </div>
   );

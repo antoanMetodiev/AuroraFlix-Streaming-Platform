@@ -326,3 +326,27 @@ body {
     animation: none;
   }
 }
+
+/* PlayerSection's "big view" — the CSS-only stand-in for real fullscreen
+   used when a subtitle track needs to survive it (see player-section.tsx).
+   A quick fade+scale keeps the transition from feeling like a jarring pop. */
+@keyframes big-view-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-big-view-in {
+  animation: big-view-in 0.18s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-big-view-in {
+    animation: none;
+  }
+}

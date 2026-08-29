@@ -182,6 +182,41 @@ export const dictionary = {
   "player.player": { en: "Player", bg: "Плейър" },
   "player.play": { en: "Play", bg: "Пусни" },
 
+  "subtitles.available": { en: "Bulgarian subtitles", bg: "Български субтитри" },
+  "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
+  "subtitles.retry": { en: "Retry", bg: "Опитай пак" },
+  "subtitles.play": { en: "Start subtitles", bg: "Пусни субтитрите" },
+  "subtitles.pause": { en: "Pause subtitles", bg: "Спри субтитрите" },
+  "subtitles.jumpBack": { en: "Back 10s", bg: "Назад 10с" },
+  "subtitles.jumpForward": { en: "Forward 10s", bg: "Напред 10с" },
+  "subtitles.seekLabel": { en: "Subtitle position", bg: "Позиция на субтитрите" },
+  "subtitles.hide": { en: "Hide subtitles", bg: "Скрий субтитрите" },
+  "subtitles.show": { en: "Show subtitles", bg: "Покажи субтитрите" },
+  "subtitles.download": { en: "Download .vtt", bg: "Свали .vtt" },
+  "subtitles.downloadHint": {
+    en: "Save the Bulgarian subtitle file to your device.",
+    bg: "Запази българския субтитър на устройството си.",
+  },
+  "subtitles.info": { en: "How does subtitle sync work?", bg: "Как работи синхронизацията?" },
+  "subtitles.infoBodySynced": {
+    en: "These subtitles are synced automatically to the real video position.",
+    bg: "Тези субтитри се синхронизират автоматично с реалната позиция на видеото.",
+  },
+  "subtitles.infoBody": {
+    en: "This player didn't report its playback position, so these subtitles run on their own clock. If you seek in the video, drag the progress bar here to the same spot.",
+    bg: "Този плейър не съобщава позицията си, затова субтитрите вървят по собствен таймер. Ако превъртиш видеото, довлечи плъзгача тук до същия момент.",
+  },
+  "subtitles.infoManualTip": {
+    en: "Player {player} may let you load your own subtitle file from its own menu — download the .vtt below and try adding it there for perfect sync.",
+    bg: "Плейър {player} може да позволява добавяне на собствен субтитър от своето меню — свали .vtt файла по-долу и опитай да го добавиш там за перфектен синхрон.",
+  },
+  "subtitles.infoDoubleTip": {
+    en: "If you also turn on this player's own built-in subtitles, you'll see two overlapping subtitle lines — turn one of them off with the button above.",
+    bg: "Ако включиш и вградените субтитри на самия плейър, ще виждаш два реда едновременно — изключи единия с бутона по-горе.",
+  },
+  "subtitles.fullscreen": { en: "Fullscreen", bg: "Цял екран" },
+  "subtitles.exitFullscreen": { en: "Exit fullscreen", bg: "Изход от цял екран" },
+
   "adblock.message.chrome": {
     en: "For a smoother viewing experience without pop-up ads, the AuroraFlix team recommends the free uBlock Origin extension from the Google Chrome Web Store.",
     bg: "За по-чисто гледане без изкачащи реклами, екипът на AuroraFlix препоръчва безплатното разширение uBlock Origin от Google Chrome Web Store.",
