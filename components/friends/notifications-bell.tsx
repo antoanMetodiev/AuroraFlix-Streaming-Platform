@@ -30,7 +30,11 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
   const [profile, setProfile] = useState<ProfileTarget | null>(null);
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- a signed-out visitor has no notifications to be counting
+      setCount(0);
+      return;
+    }
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -43,18 +47,23 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
     };
     poll();
 
+    // Re-read the count on every friend event rather than incrementing by one:
+    // not every event has a notification row behind it (a request being
+    // withdrawn or a friendship being ended are pushes with nothing to read
+    // later, and a withdrawn request also *removes* the row it left in this
+    // bell), so counting events instead of asking meant a badge that drifted
+    // upward and never came back down — showing "+2" over a tray that opened
+    // empty, then reappearing on the next event.
+    const unsubscribe = subscribeFriendsEvent(async () => {
+      const next = await getNotificationCount();
+      if (!cancelled) setCount(next);
+    });
+
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
+      unsubscribe();
     };
-  }, [isSignedIn]);
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-    // Any friend-request event (received or accepted) means a fresh
-    // notification row is waiting server-side — bump instantly by exactly
-    // one instead of waiting for the next poll tick.
-    return subscribeFriendsEvent(() => setCount((prev) => prev + 1));
   }, [isSignedIn]);
 
   useEffect(() => {

@@ -36,6 +36,30 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Each result's relationship is re-derived from the live lists rather than
+  // trusted as the snapshot the search query returned, because those lists
+  // move underneath it: accept someone in the Requests tab, or have a request
+  // withdrawn by its sender while the tab sits open, and the already-rendered
+  // search rows kept showing whatever was true when they were fetched — and
+  // patching the affected row by hand after each action (what this used to do)
+  // only covered the actions taken from this tab, and even then guessed wrong
+  // whenever a "send" turned out to be an accept.
+  //
+  // It also gets the row an id to act on, which the search query itself
+  // deliberately doesn't return: a pending request found through search used
+  // to be a dead label saying "go and manage this somewhere else".
+  const decorate = (result: FriendSearchResult): DecoratedResult => {
+    if (isLoading) return { ...result, requestId: null };
+    if (friends.some((friend) => friend.clerkId === result.clerkId)) {
+      return { ...result, relationship: "FRIENDS", requestId: null };
+    }
+    const sent = outgoing.find((request) => request.clerkId === result.clerkId);
+    if (sent) return { ...result, relationship: "PENDING_SENT", requestId: sent.id };
+    const received = incoming.find((request) => request.clerkId === result.clerkId);
+    if (received) return { ...result, relationship: "PENDING_RECEIVED", requestId: received.id };
+    return { ...result, relationship: "NONE", requestId: null };
+  };
+
   // Fetches on every query change, blank included — a blank query is what
   // shows recently-joined users by default (see lib/friends.ts's
   // searchUsers doc comment), not an empty state. The 250ms debounce only
@@ -69,18 +93,19 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
     return () => window.clearTimeout(timeout);
   }, [query]);
 
-  const handleSend = async (clerkId: string) => {
+  // No local patching of `results` in any of these — the row's state comes
+  // from decorate() against the lists these actions refresh, so it lands on
+  // what actually happened rather than on what was intended. That's the whole
+  // point for `send` in particular: sending to someone whose own request to
+  // you was already pending accepts it, and the row should say "friends", not
+  // "waiting for their answer".
+  const runAction = async (clerkId: string, action: () => Promise<unknown>) => {
     setBusyId(clerkId);
-    await send(clerkId);
-    setResults((prev) => prev.map((r) => (r.clerkId === clerkId ? { ...r, relationship: "PENDING_SENT" } : r)));
-    setBusyId(null);
-  };
-
-  const handleRemoveFromSearch = async (clerkId: string) => {
-    setBusyId(clerkId);
-    await remove(clerkId);
-    setResults((prev) => prev.map((r) => (r.clerkId === clerkId ? { ...r, relationship: "NONE" } : r)));
-    setBusyId(null);
+    try {
+      await action();
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const tabs: { key: Tab; label: string; icon: typeof Search; badge: number }[] = [
@@ -134,13 +159,15 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
             {query.trim() && results.length === 0 && !isSearching && (
               <p className="px-1 py-3 text-center text-sm text-foreground/50">{t("friends.searchEmpty")}</p>
             )}
-            {results.map((result) => (
+            {results.map(decorate).map((result) => (
               <SearchResultRow
                 key={result.clerkId}
                 result={result}
                 busy={busyId === result.clerkId}
-                onAdd={() => handleSend(result.clerkId)}
-                onRemove={() => handleRemoveFromSearch(result.clerkId)}
+                onAdd={() => runAction(result.clerkId, () => send(result.clerkId))}
+                onRemove={() => runAction(result.clerkId, () => remove(result.clerkId))}
+                onAccept={() => result.requestId && runAction(result.clerkId, () => accept(result.requestId!))}
+                onCancelOrDecline={() => result.requestId && runAction(result.clerkId, () => cancelOrDecline(result.requestId!))}
                 onOpenProfile={setProfile}
               />
             ))}
@@ -344,22 +371,33 @@ function RequestsList({
   );
 }
 
-// See earlier note: PENDING_SENT/PENDING_RECEIVED found via search have no
-// request id to act on here (the search query deliberately stays a single
-// JOIN, no extra lookups) — those two states just show a passive label;
-// manage them from the Requests tab instead. FRIENDS can still act inline
-// since removeFriend only needs the other person's clerkId.
+// A search result plus the id of the pending request behind it, when there is
+// one — see decorate(), which pairs each result up against the caller's own
+// incoming/outgoing lists. The search query itself deliberately stays a single
+// JOIN with no extra lookups, so this is where the id comes from.
+type DecoratedResult = FriendSearchResult & { requestId: string | null };
+
+// Every state here is actionable, which it wasn't before: a pending request
+// found through search used to render as a passive label telling the user to
+// go find the same person in the Requests tab. Since decorate() now knows the
+// request's id, someone who has already invited you can be accepted or
+// declined right where you found them, and your own outgoing invite can be
+// withdrawn from the same row.
 function SearchResultRow({
   result,
   busy,
   onAdd,
   onRemove,
+  onAccept,
+  onCancelOrDecline,
   onOpenProfile,
 }: {
-  result: FriendSearchResult;
+  result: DecoratedResult;
   busy: boolean;
   onAdd: () => void;
   onRemove: () => void;
+  onAccept: () => void;
+  onCancelOrDecline: () => void;
   onOpenProfile: (target: ProfileTarget) => void;
 }) {
   const { t } = useTranslation();
@@ -371,8 +409,21 @@ function SearchResultRow({
       {result.relationship === "NONE" && (
         <ActionIcon icon={UserPlus} label={t("friends.addFriend")} variant="primary" busy={busy} onClick={onAdd} />
       )}
-      {result.relationship === "PENDING_SENT" && <StatusPill icon={Clock} label={t("friends.pendingSent")} />}
-      {result.relationship === "PENDING_RECEIVED" && <StatusPill icon={Inbox} label={t("friends.incomingTitle")} />}
+      {result.relationship === "PENDING_SENT" &&
+        (result.requestId ? (
+          <ActionIcon icon={Clock} label={t("friends.cancel")} busy={busy} onClick={onCancelOrDecline} />
+        ) : (
+          <StatusPill icon={Clock} label={t("friends.pendingSent")} />
+        ))}
+      {result.relationship === "PENDING_RECEIVED" &&
+        (result.requestId ? (
+          <>
+            <ActionIcon icon={Check} label={t("friends.accept")} variant="primary" busy={busy} onClick={onAccept} />
+            <ActionIcon icon={X} label={t("friends.decline")} busy={busy} onClick={onCancelOrDecline} />
+          </>
+        ) : (
+          <StatusPill icon={Inbox} label={t("friends.incomingTitle")} />
+        ))}
       {result.relationship === "FRIENDS" && <ActionIcon icon={UserMinus} label={t("friends.remove")} busy={busy} onClick={onRemove} />}
     </li>
   );

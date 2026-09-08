@@ -60,13 +60,29 @@ export async function searchUsers(query: string, signal?: AbortSignal): Promise<
   return (await response.json()) as FriendSearchResult[];
 }
 
-export async function sendFriendRequest(addresseeId: string): Promise<boolean> {
+// What a send actually resolved to — it isn't always a new pending request.
+// Sending to someone whose own request to you is already pending accepts it
+// instead, so you come out of it as friends, not as a sender waiting for an
+// answer (see lumo-user-svc's friends.SendOutcome).
+export type SendRequestStatus = "PENDING" | "FRIENDS" | "FAILED";
+
+export async function sendFriendRequest(addresseeId: string): Promise<SendRequestStatus> {
   const response = await fetch("/api/friends/requests", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ addresseeId }),
   });
-  return response.ok;
+  if (!response.ok) return "FAILED";
+
+  // Treat an unreadable/unexpected body as a plain pending send rather than a
+  // failure: the request itself succeeded, and reporting it as failed would
+  // undo a state change the server has already made.
+  try {
+    const data = (await response.json()) as { status?: SendRequestStatus } | null;
+    return data?.status === "FRIENDS" ? "FRIENDS" : "PENDING";
+  } catch {
+    return "PENDING";
+  }
 }
 
 export async function cancelOrDeclineRequest(id: string): Promise<boolean> {

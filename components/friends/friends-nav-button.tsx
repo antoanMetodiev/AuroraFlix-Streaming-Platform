@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Users } from "lucide-react";
 import { FriendsModal } from "@/components/friends/friends-modal";
 import { Avatar } from "@/components/ui/avatar";
 import { WatchingFriendCard } from "@/components/friends/watching-friend-card";
-import { getIncomingRequests } from "@/lib/friends";
-import { subscribeFriendsEvent } from "@/lib/friends-events";
 import { useFriends } from "@/lib/use-friends";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
@@ -15,24 +13,21 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 // into a "+N" pill — past this, the cluster would eat too much nav space.
 const MAX_WATCHING_AVATARS = 3;
 
-// Low-urgency background poll for the incoming-request badge — setTimeout
-// chaining (not setInterval) so a slow request can't overlap the next tick,
-// same shape as CheckoutResultOverlay's polling but recurring forever
-// instead of giving up after a fixed budget.
-const POLL_INTERVAL_MS = 25_000;
-
 export function FriendsNavButton({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   const { isSignedIn } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isWatchingOpen, setIsWatchingOpen] = useState(false);
-  const [incomingCount, setIncomingCount] = useState(0);
   const watchingRef = useRef<HTMLDivElement>(null);
-  // Separate from the incoming-count polling above (kept untouched) — this
-  // reuses useFriends' own fetch+live-push wiring purely for the "who's
-  // watching what" cluster below, same shape as watching-toast.tsx.
-  const { friends, watching } = useFriends();
+  // The badge counts useFriends' incoming list rather than running its own
+  // fetch and its own poll beside it. Two independent readers of the same
+  // endpoint answered at different moments, so the badge and the panel this
+  // button opens routinely disagreed — the badge advertising a request the
+  // panel didn't list, or still showing one the panel had just let you
+  // decline. One list, one answer.
+  const { friends, incoming, watching, refresh } = useFriends();
   const watchingFriends = friends.filter((friend) => watching[friend.clerkId]);
+  const incomingCount = incoming.length;
 
   useEffect(() => {
     if (!isWatchingOpen) return;
@@ -43,47 +38,14 @@ export function FriendsNavButton({ className = "" }: { className?: string }) {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [isWatchingOpen]);
 
-  const refreshCount = useCallback(async () => {
-    const list = await getIncomingRequests();
-    setIncomingCount(list.length);
-  }, []);
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const poll = async () => {
-      const list = await getIncomingRequests();
-      if (cancelled) return;
-      setIncomingCount(list.length);
-      timeoutId = setTimeout(poll, POLL_INTERVAL_MS);
-    };
-    poll();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [isSignedIn]);
-
-  // Instant refresh the moment a friend-request event arrives (received, or
-  // one of ours got accepted), instead of waiting for the next poll tick —
-  // the poll above keeps running underneath regardless. Subscribes to the
-  // shared event bus rather than opening its own socket — see
-  // FriendsSocketManager, the single owner of the actual connection.
-  useEffect(() => {
-    if (!isSignedIn) return;
-    return subscribeFriendsEvent(() => refreshCount());
-  }, [isSignedIn, refreshCount]);
-
   // Re-check right after the modal closes so accept/decline/send actions
-  // taken inside it are reflected in the badge without waiting for the next
-  // scheduled poll tick.
+  // taken inside it are reflected without waiting for the next backstop tick
+  // — useFriends already refreshes on each of those actions and on every live
+  // event, so this is only covering a change made in another tab or by
+  // someone else while the modal was open.
   const handleClose = () => {
     setIsOpen(false);
-    if (isSignedIn) refreshCount();
+    if (isSignedIn) refresh();
   };
 
   if (!isSignedIn) return null;

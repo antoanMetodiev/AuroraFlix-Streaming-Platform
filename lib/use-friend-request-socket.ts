@@ -42,10 +42,11 @@ type WSMessage =
  * a Next.js route handler can forward, so this really does call the gateway
  * directly from the browser.
  *
- * There must be exactly one call site for this hook in the whole app (see
- * FriendsSocketManager) — the gateway's Hub keeps only one live connection
- * per clerkId, so a second one from the same tab would evict the first.
- * Everything else that cares about these events subscribes to
+ * There should be exactly one call site for this hook in the whole app (see
+ * FriendsSocketManager): the gateway's Hub delivers each push to every
+ * connection a user has, so extra sockets from the same tab wouldn't break
+ * anything, they'd just each receive their own copy of every event for no
+ * reason. Everything else that cares about these events subscribes to
  * lib/friends-events (or lib/watching-events, for "friend_watching")
  * instead of calling this hook again.
  */
