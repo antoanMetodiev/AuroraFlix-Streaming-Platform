@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { CinemaRecordDetailsPage } from "@/components/movies/cinema-record-details-page";
 import { getMovieDetails } from "@/lib/api";
 import {
-  getMovieId,
   parseMovieIdFromSlug,
   tmdbImage,
 } from "@/lib/tmdb";
-import { getMovieSubtitles } from "@/lib/movie-subtitles";
 
 async function loadMovie(slug: string) {
   const movieId =
@@ -20,37 +17,6 @@ async function loadMovie(slug: string) {
   }
 
   return getMovieDetails(movieId);
-}
-
-async function getAppOrigin() {
-  const configuredOrigin =
-    process.env.NEXT_PUBLIC_APP_URL;
-
-  if (configuredOrigin) {
-    return new URL(
-      configuredOrigin
-    ).origin;
-  }
-
-  const requestHeaders =
-    await headers();
-
-  const host =
-    requestHeaders.get(
-      "x-forwarded-host"
-    ) ??
-    requestHeaders.get("host");
-
-  if (!host) {
-    return null;
-  }
-
-  const protocol =
-    requestHeaders.get(
-      "x-forwarded-proto"
-    ) ?? "https";
-
-  return `${protocol}://${host}`;
 }
 
 export async function generateMetadata({
@@ -116,47 +82,17 @@ export default async function MovieDetailsPage({
     notFound();
   }
 
-  const tmdbId =
-    getMovieId(movie);
-
-  const [
-    subtitles,
-    appOrigin,
-  ] = await Promise.all([
-    getMovieSubtitles(tmdbId),
-    getAppOrigin(),
-  ]);
-
-  const subtitleUrl =
-    subtitles && appOrigin
-      ? `${appOrigin}/api/subtitles/${encodeURIComponent(
-          subtitles.tmdbId
-        )}`
-      : undefined;
-
-  console.log(
-    `[movie:${tmdbId}] subtitles:`,
-    subtitles
-      ? {
-          hasSubtitleUrl:
-            Boolean(
-              subtitles.subtitleTextUrl
-            ),
-          hasSubtitleFile:
-            Boolean(
-              subtitles.subtitleFile
-            ),
-          playerSubtitleUrl:
-            subtitleUrl ?? null,
-        }
-      : null
-  );
-
+  // Subtitles are no longer fetched here. This used to await
+  // getMovieSubtitles(tmdbId) — a call to the (external, Render free-tier)
+  // subtitles-taker service — before returning any HTML at all. When that
+  // service was slow or down, its 10s AbortSignal.timeout blocked the whole
+  // page for the full 10 seconds on every single load. PlayerSection now
+  // checks for subtitles itself, client-side, in the background, after the
+  // player has already rendered — see its own effect for the doc comment.
   return (
     <CinemaRecordDetailsPage
       record={movie}
       type="movie"
-      subtitleUrl={subtitleUrl}
     />
   );
 }

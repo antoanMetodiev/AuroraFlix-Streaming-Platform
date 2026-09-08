@@ -18,11 +18,9 @@ import type { Series } from "@/types/series";
 export function CinemaRecordDetailsPage({
   record,
   type,
-  subtitleUrl,
 }: {
   record: Movie | Series;
   type: "movie" | "series";
-  subtitleUrl?: string;
 }) {
   return (
     <div className="relative isolate min-h-screen w-full overflow-x-hidden">
@@ -71,10 +69,6 @@ export function CinemaRecordDetailsPage({
             <PlayerSection
               videoUrl={
                 record.videoURL
-              }
-
-              subtitleUrl={
-                subtitleUrl
               }
 
               title={

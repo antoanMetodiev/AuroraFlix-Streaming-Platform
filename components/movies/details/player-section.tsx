@@ -27,7 +27,6 @@ type VidsrcRef =
 
 type PlayerSectionProps = {
   videoUrl: string;
-  subtitleUrl?: string;
   title?: string;
   poster?: string | null;
 };
@@ -195,7 +194,6 @@ export const PlayerSection = forwardRef<
 >(function PlayerSection(
   {
     videoUrl,
-    subtitleUrl,
     title,
     poster,
   },
@@ -210,6 +208,14 @@ export const PlayerSection = forwardRef<
 
   const [isFrameLoading, setIsFrameLoading] =
     useState(true);
+
+  // Whether *we* have our own Bulgarian subtitles for this title — checked
+  // client-side, in the background, by the effect below (see its doc
+  // comment for why this can no longer be a prop resolved before this
+  // component ever mounts). Starts as "no subtitles" and flips to the real
+  // answer once/if the check resolves; never blocks anything above.
+  const [subtitleUrl, setSubtitleUrl] =
+    useState<string | undefined>(undefined);
 
   /**
    * <SubtitleOverlay> only ever renders on CineSrc (see below), so when we
@@ -236,6 +242,16 @@ export const PlayerSection = forwardRef<
 
   const [hasStarted, setHasStarted] =
     useState(false);
+
+  // Read inside the subtitle-check effect below without making it re-run
+  // (and re-fetch) every time playback starts or the viewer switches
+  // players — it only needs the *latest* values at the moment the check
+  // resolves, not to react to their changes itself.
+  const hasStartedRef = useRef(hasStarted);
+  useEffect(() => {
+    hasStartedRef.current = hasStarted;
+  }, [hasStarted]);
+  const userChangedPlayerRef = useRef(false);
 
   /**
    * "Big view" — a CSS `fixed inset-0` expansion of our wrapper (iframe +
@@ -352,6 +368,51 @@ export const PlayerSection = forwardRef<
   );
 
   /**
+   * Checks, in the background, whether we have our own Bulgarian subtitles
+   * for this movie. Deliberately NOT awaited by the server component that
+   * renders this page (see app/movies/[slug]/page.tsx) — that used to call
+   * the subtitles-taker service directly before returning any HTML at all,
+   * so whenever that (Render free-tier) service was slow or fully down,
+   * every single movie page waited the full 10s AbortSignal.timeout before
+   * showing anything. This effect runs client-side, after the player has
+   * already mounted and started playing on its default choice — a failure
+   * or slow response here (caught below) just means no subtitle track for
+   * this session, exactly like a genuine "not found" already behaves; it
+   * can never block or break the player itself.
+   *
+   * If it resolves in time — before the viewer has clicked Play or touched
+   * the player selector themselves — the CineSrc-first default is applied
+   * retroactively via setActivePlayer(3), same preference the old
+   * synchronous check used to set from the start. After either of those,
+   * the subtitle track is still available in the player list, just no
+   * longer auto-selected — switching mid-playback would be more jarring
+   * than helpful.
+   */
+  useEffect(() => {
+    if (!vidsrcRef || vidsrcRef.kind !== "movie") return;
+
+    let cancelled = false;
+    const url = `/api/subtitles/${encodeURIComponent(vidsrcRef.tmdbId)}`;
+
+    fetch(url, { cache: "force-cache" })
+      .then((res) => {
+        if (cancelled || !res.ok) return;
+        setSubtitleUrl(url);
+        if (!hasStartedRef.current && !userChangedPlayerRef.current) {
+          setActivePlayer(3);
+        }
+      })
+      .catch(() => {
+        // Subtitles service unreachable/slow/down — no subtitle track for
+        // this session. Never surfaced to the viewer.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [vidsrcRef]);
+
+  /**
    * Build all three player URLs.
    *
    * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, only on
@@ -454,11 +515,12 @@ export const PlayerSection = forwardRef<
           <div className="mb-3 flex w-full max-w-[80rem] justify-end">
             <ModernSelect
               value={String(activePlayer)}
-              onChange={(next) =>
+              onChange={(next) => {
+                userChangedPlayerRef.current = true;
                 setActivePlayer(
                   Number(next) as 1 | 2 | 3
-                )
-              }
+                );
+              }}
               options={
                 playerOrder.map(
                   (provider, index) => ({
