@@ -9,6 +9,7 @@ import { getRatingColor } from "@/components/ui/rating-ring";
 import { tmdbImage, getMovieSlug } from "@/lib/tmdb";
 import { searchMatchingMovies, searchMatchingSeries } from "@/lib/api-public";
 import { addPlaylistItem, getPlaylistItems, removePlaylistItem, type Playlist, type PlaylistItem } from "@/lib/playlists";
+import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -27,7 +28,8 @@ function hrefFor(item: PlaylistItem) {
 function toPlaylistItem(record: Movie | Series, type: "movie" | "series"): PlaylistItem {
   const videoId = record.videoURL?.split("/")[5] ?? "";
   return {
-    id: record.id,
+    // TMDB id, the same identity watchlist/likes store — see lib/record-key.ts.
+    id: getRecordKey(record, type),
     tmdbId: record.tmdbId,
     title: record.title,
     posterImgURL: record.posterImgURL,
@@ -445,7 +447,7 @@ function AddItemsPanel({
   };
 
   const handleAdd = async (record: Movie | Series) => {
-    setAddingId(record.id);
+    setAddingId(getRecordKey(record, type));
     const item = toPlaylistItem(record, type);
     const result = await addPlaylistItem(playlistId, item);
     if (result === "ok") onAdded(item);
@@ -505,7 +507,8 @@ function AddItemsPanel({
           {results.length > 0 && (
             <ul className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
               {results.map((record, index) => {
-                const alreadyIn = existingIds.has(record.id);
+                const recordKey = getRecordKey(record, type);
+                const alreadyIn = existingIds.has(recordKey);
                 const poster = tmdbImage(record.posterImgURL, "w342");
                 return (
                   <li
@@ -527,11 +530,11 @@ function AddItemsPanel({
                       <button
                         type="button"
                         onClick={() => handleAdd(record)}
-                        disabled={addingId === record.id}
+                        disabled={addingId === recordKey}
                         aria-label={t("playlists.addTitles")}
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 transition-transform duration-200 hover:scale-105 disabled:opacity-50"
                       >
-                        {addingId === record.id ? <Spinner size={13} /> : <Plus size={15} />}
+                        {addingId === recordKey ? <Spinner size={13} /> : <Plus size={15} />}
                       </button>
                     )}
                   </li>

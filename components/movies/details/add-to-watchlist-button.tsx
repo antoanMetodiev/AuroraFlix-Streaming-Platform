@@ -2,6 +2,7 @@
 
 import { Bookmark } from "lucide-react";
 import { useWatchlist } from "@/lib/use-watchlist";
+import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -21,12 +22,14 @@ export function AddToWatchlistButton({
 }) {
   const { t } = useTranslation();
   const { has, add, isLoading } = useWatchlist();
-  const added = has(record.id);
+  // Keyed by TMDB id, not record.id — see lib/record-key.ts for why.
+  const recordKey = getRecordKey(record, type);
+  const added = has(recordKey);
 
   const handleAdd = () => {
     const videoId = record.videoURL?.split("/")[5] ?? "";
     add({
-      id: record.id,
+      id: recordKey,
       tmdbId: record.tmdbId,
       title: record.title,
       posterImgURL: record.posterImgURL,

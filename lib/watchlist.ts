@@ -28,10 +28,33 @@ function readLocalWatchlist(): WatchlistItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as WatchlistItem[]) : [];
+    return raw ? normalizeIds(JSON.parse(raw) as WatchlistItem[]) : [];
   } catch {
     return [];
   }
+}
+
+/**
+ * Signed-out equivalent of the server-side backfill (lumo-user-svc's
+ * migrations/001_record_id_to_tmdb_id.sql): entries saved before ids became
+ * TMDB-keyed (see lib/record-key.ts) hold a table uuid instead, which no
+ * longer matches what the buttons look up. Rewrite those to the tmdbId they
+ * already carry, dropping any duplicate the rewrite collapses (the same
+ * title saved once from the hero and once from its details page). Entries
+ * with no tmdbId are left alone — there is nothing to rewrite them to.
+ *
+ * Read-time only; whatever writes next persists the normalized list.
+ */
+function normalizeIds(items: WatchlistItem[]): WatchlistItem[] {
+  const seen = new Set<string>();
+  const normalized: WatchlistItem[] = [];
+  for (const entry of items) {
+    const id = entry.tmdbId ?? entry.id;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    normalized.push(entry.id === id ? entry : { ...entry, id });
+  }
+  return normalized;
 }
 
 // Newest-first, matching the server-backed list's ordering.

@@ -55,7 +55,16 @@ export function useWatchlist() {
     [isSignedIn, refresh]
   );
 
-  const has = useCallback((id: string) => (items ?? []).some((entry) => entry.id === id), [items]);
+  // Matches on tmdbId as well as the stored recordId. They are the same
+  // value for anything saved since the switch to TMDB-keyed records (see
+  // lib/record-key.ts), but rows written before it still carry a table
+  // uuid as their recordId — this keeps those recognised as already-saved
+  // instead of silently offering to save them a second time, whether or
+  // not the backfill migration has been run yet.
+  const has = useCallback(
+    (key: string) => (items ?? []).some((entry) => entry.id === key || (entry.tmdbId != null && entry.tmdbId === key)),
+    [items]
+  );
 
   return { items, isLoading: !isLoaded || items === null, add, remove, has };
 }

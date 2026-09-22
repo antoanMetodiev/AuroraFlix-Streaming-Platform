@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useLikes } from "@/lib/use-likes";
+import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -20,7 +21,9 @@ export function LikeButton({
 }) {
   const { t } = useTranslation();
   const { has, add, remove, isLoading } = useLikes();
-  const liked = has(record.id);
+  // Keyed by TMDB id, not record.id — see lib/record-key.ts for why.
+  const recordKey = getRecordKey(record, type);
+  const liked = has(recordKey);
   const [showLimitMessage, setShowLimitMessage] = useState(false);
 
   useEffect(() => {
@@ -31,12 +34,12 @@ export function LikeButton({
 
   const toggle = async () => {
     if (liked) {
-      remove(record.id);
+      remove(recordKey);
       return;
     }
     const videoId = record.videoURL?.split("/")[5] ?? "";
     const result = await add({
-      id: record.id,
+      id: recordKey,
       tmdbId: record.tmdbId,
       title: record.title,
       posterImgURL: record.posterImgURL,
