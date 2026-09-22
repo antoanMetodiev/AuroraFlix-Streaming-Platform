@@ -399,6 +399,22 @@ export const dictionary = {
   "common.close": { en: "Close", bg: "Затвори" },
   "common.minutes": { en: "min", bg: "мин" },
 
+  "status.notFoundTitle": { en: "This page doesn't exist", bg: "Тази страница не съществува" },
+  "status.notFoundDesc": {
+    en: "The link may be broken, or the title you're looking for was removed from the catalog.",
+    bg: "Линкът може да е грешен или заглавието, което търсиш, вече не е в каталога.",
+  },
+  "status.errorTitle": { en: "Something went wrong", bg: "Нещо се обърка" },
+  "status.errorDesc": {
+    en: "An unexpected error interrupted this page. It's usually temporary — try again in a moment.",
+    bg: "Неочаквана грешка прекъсна страницата. Обикновено е временно — опитай пак след малко.",
+  },
+  "status.errorCode": { en: "Error code", bg: "Код на грешката" },
+  "status.retry": { en: "Try again", bg: "Опитай отново" },
+  "status.goHome": { en: "Go to homepage", bg: "Към началото" },
+  "status.browseMovies": { en: "Browse movies", bg: "Разгледай филмите" },
+  "status.browseSeries": { en: "Browse series", bg: "Разгледай сериалите" },
+
   "footer.tagline": { en: "made by", bg: "направено от" },
   "footer.rights": { en: "All rights reserved.", bg: "Всички права запазени." },
   "footer.browse": { en: "Browse", bg: "Разгледай" },

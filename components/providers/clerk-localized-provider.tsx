@@ -27,7 +27,7 @@ export function ClerkLocalizedProvider({ children, publishableKey }: { children:
         theme: dark,
         variables: {
           colorPrimary: "#ffffff",
-          colorBackground: "#121212",
+          colorBackground: "#000000",
           colorInput: "rgba(255,255,255,0.06)",
           colorInputForeground: "#ffffff",
           borderRadius: "0.75rem",
