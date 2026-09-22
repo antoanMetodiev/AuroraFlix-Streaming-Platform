@@ -1,4 +1,5 @@
-"use client"; // Error boundaries must be Client Components
+"use client"; // Error boundaries must be Client Components 
+// test commit
 
 import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
