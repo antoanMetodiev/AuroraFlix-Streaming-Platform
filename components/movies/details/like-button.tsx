@@ -8,7 +8,16 @@ import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
 // Compact toggle, deliberately smaller/secondary next to AddToWatchlistButton.
-export function LikeButton({ record, type }: { record: Movie | Series; type: "movie" | "series" }) {
+export function LikeButton({
+  record,
+  type,
+  variant = "default",
+}: {
+  record: Movie | Series;
+  type: "movie" | "series";
+  // See AddToWatchlistButton for what "overlay" changes.
+  variant?: "default" | "overlay";
+}) {
   const { t } = useTranslation();
   const { has, add, remove, isLoading } = useLikes();
   const liked = has(record.id);
@@ -39,18 +48,24 @@ export function LikeButton({ record, type }: { record: Movie | Series; type: "mo
   };
 
   return (
-    <div className="relative mt-2 self-end">
+    <div className={variant === "overlay" ? "relative" : "relative mt-2 self-end"}>
       <button
         type="button"
         disabled={isLoading}
         onClick={toggle}
         aria-pressed={liked}
         aria-label={liked ? t("likeButton.liked") : t("likeButton.like")}
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50 ${
-          liked ? "border-transparent bg-white text-neutral-900" : "border-foreground/15 bg-foreground/5 text-foreground/70 hover:bg-foreground/10"
+        className={`flex shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50 ${
+          variant === "overlay" ? "h-8 w-8 backdrop-blur-md" : "h-11 w-11"
+        } ${
+          liked
+            ? "border-transparent bg-white text-neutral-900"
+            : variant === "overlay"
+              ? "border-white/25 bg-black/60 text-white hover:bg-black/80"
+              : "border-foreground/15 bg-foreground/5 text-foreground/70 hover:bg-foreground/10"
         }`}
       >
-        <Heart size={18} className={liked ? "fill-current" : ""} />
+        <Heart size={variant === "overlay" ? 14 : 18} className={liked ? "fill-current" : ""} />
       </button>
 
       {showLimitMessage && (

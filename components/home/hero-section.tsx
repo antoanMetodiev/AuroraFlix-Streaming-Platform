@@ -5,12 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 import { HeroBackground } from "@/components/home/hero-background";
+import type { HeroItem } from "@/components/home/hero-item";
+import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
+import { LikeButton } from "@/components/movies/details/like-button";
 import { RatingRing } from "@/components/ui/rating-ring";
 import { getMovieSlug } from "@/lib/tmdb";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import type { Series } from "@/types/series";
 import type { Movie } from "@/types/movie";
 
-export function HeroSection({ movies }: { movies: Movie[] }) {
+export function HeroSection({ items }: { items: HeroItem[] }) {
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -26,24 +30,24 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
   // inert until HeroBackground reports its player is actually ready.
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  const currentMovie = movies[currentIndex];
+  const current = items[currentIndex];
 
   // Resetting isVideoReady lives in these event handlers rather than a
-  // useEffect keyed on currentMovie.id — HeroBackground already fully
-  // remounts on movie change (key={currentMovie.id}), so every path that
-  // changes currentIndex is a plain user-triggered event, not something
-  // that needs to be derived reactively from a prop.
+  // useEffect keyed on the current record — HeroBackground already fully
+  // remounts on change (key={...}), so every path that changes currentIndex
+  // is a plain user-triggered event, not something that needs to be derived
+  // reactively from a prop.
   const goToPrevious = () => {
     setIsVideoReady(false);
-    setCurrentIndex((prev) => (prev === 0 ? movies.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
   };
 
   const goToNext = () => {
     setIsVideoReady(false);
-    setCurrentIndex((prev) => (prev === movies.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
   };
 
-  if (!currentMovie) {
+  if (!current) {
     return (
       <section className="relative flex h-[calc(70vh-4rem)] w-full items-center justify-center bg-background text-foreground sm:h-[calc(100dvh-4rem)]">
         <h1 className="px-6 text-center text-2xl font-semibold text-foreground/80 sm:text-3xl">
@@ -53,11 +57,16 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
     );
   }
 
-  const description = currentMovie.description ?? "";
+  const { record, type } = current;
+  const description = record.description ?? "";
   const truncatedDescription = description.length > 230 ? `${description.slice(0, 230)}..` : description;
-  const movieHref = `/movies/${getMovieSlug(currentMovie)}`;
-  const genreList = currentMovie.genres
-    ? currentMovie.genres
+  // Series are addressed by bare tmdbId, movies by a title-and-id slug —
+  // same split as CinemaRecordCard's own href.
+  const detailsHref =
+    type === "series" ? `/series/${(record as Series).tmdbId}` : `/movies/${getMovieSlug(record as Movie)}`;
+  const genreBase = type === "series" ? "/series/genres" : "/movies/genres";
+  const genreList = record.genres
+    ? record.genres
         .split(",")
         .map((genre) => genre.trim())
         .filter(Boolean)
@@ -65,18 +74,24 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
 
   return (
     <section className="bg-grain relative isolate h-[calc(85vh-4rem)] w-full overflow-hidden bg-black sm:h-[calc(100dvh-4rem)]">
-      <HeroBackground key={currentMovie.id} movie={currentMovie} muted={muted} onEnded={goToNext} onReady={() => setIsVideoReady(true)} />
+      <HeroBackground
+        key={record.id}
+        record={record}
+        muted={muted}
+        onEnded={goToNext}
+        onReady={() => setIsVideoReady(true)}
+      />
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/70 sm:via-transparent sm:to-transparent" />
 
       <div className="absolute inset-x-0 bottom-24 z-20 px-4 sm:bottom-28 sm:px-8 lg:bottom-32 lg:px-16">
         <div className="max-w-xl lg:max-w-2xl">
           <div>
-            {currentMovie.logoURL ? (
+            {record.logoURL ? (
               <div className="relative mb-3 h-16 w-[140px] sm:h-20 sm:w-[180px] lg:h-24 lg:w-[210px]">
                 <Image
-                  src={currentMovie.logoURL}
-                  alt={currentMovie.title}
+                  src={record.logoURL}
+                  alt={record.title}
                   fill
                   priority
                   sizes="210px"
@@ -85,7 +100,7 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
               </div>
             ) : (
               <h1 className="mb-3 text-3xl leading-[1.05] font-extrabold tracking-tighter text-white text-balance sm:text-5xl lg:text-6xl">
-                {currentMovie.title}
+                {record.title}
               </h1>
             )}
           </div>
@@ -96,35 +111,47 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
             </p>
           )}
 
-          {currentMovie.description && (
-            <p className="sr-only">{currentMovie.description}</p>
-          )}
+          {record.description && <p className="sr-only">{record.description}</p>}
 
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/75 sm:gap-4 sm:text-sm lg:text-base">
+            {/* Which kind of title this is — the carousel mixes both, and
+                without this the only hint is where the Watch button goes. */}
+            <span className="rounded-md bg-white/15 px-2 py-1 text-white">
+              {type === "series" ? t("hero.badgeSeries") : t("hero.badgeMovie")}
+            </span>
             {genreList.map((genre) => (
               <Link
                 key={genre}
-                href={`/movies/genres/${encodeURIComponent(genre)}`}
+                href={`${genreBase}/${encodeURIComponent(genre)}`}
                 className="rounded-md bg-black/65 px-2 py-1 hover:bg-black/85 hover:text-white"
               >
                 {genre}
               </Link>
             ))}
-            {currentMovie.releaseDate && (
-              <span className="rounded-md bg-black/65 px-2 py-1">{currentMovie.releaseDate}</span>
-            )}
+            {record.releaseDate && <span className="rounded-md bg-black/65 px-2 py-1">{record.releaseDate}</span>}
             <span className="rounded-md bg-black/65 px-2 py-1">4K</span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <Link
-              href={movieHref}
+              href={detailsHref}
               className="rounded-xl border border-white/25 bg-white/90 px-4 py-2.5 text-sm font-semibold tracking-wide text-black shadow-[0_6px_20px_rgba(255,255,255,0.17)] sm:px-6 sm:py-3 sm:text-base"
             >
               {t("hero.watchNow")}
             </Link>
 
-            <RatingRing value={currentMovie.tmdbRating} className="border-2 border-white/55" />
+            {/* Same two buttons as the details page, so a title can be saved
+                or liked without opening it first. They key off record.id,
+                which for a trending row is the catalog record's own id (see
+                the trending services' saveTrending* — a row only exists once
+                the catalog has the title), so state stays in sync with the
+                details page and /watchlist. */}
+            <div className="flex items-center gap-2 self-center [&>*]:mt-0 [&>*]:self-center">
+              <AddToWatchlistButton record={record} type={type} />
+              <LikeButton record={record} type={type} />
+            </div>
+
+            <RatingRing value={record.tmdbRating} className="border-2 border-white/55" />
           </div>
         </div>
       </div>
@@ -140,18 +167,20 @@ export function HeroSection({ movies }: { movies: Movie[] }) {
         </button>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {movies.map((movie, index) => (
+          {items.map((item, index) => (
             <button
-              key={movie.id}
+              key={item.record.id}
               type="button"
               onClick={() => {
                 setIsVideoReady(false);
                 setCurrentIndex(index);
               }}
-              aria-label={`${t("hero.show")} ${movie.title}`}
+              aria-label={`${t("hero.show")} ${item.record.title}`}
               aria-current={index === currentIndex}
               className={`h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 ${
-                index === currentIndex ? "bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]" : "bg-white/25 hover:bg-white/60"
+                index === currentIndex
+                  ? "bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]"
+                  : "bg-white/25 hover:bg-white/60"
               }`}
             />
           ))}

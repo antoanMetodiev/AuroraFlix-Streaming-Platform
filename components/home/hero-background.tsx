@@ -6,7 +6,7 @@ import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
 import { tmdbImage } from "@/lib/tmdb";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/shimmer";
 import { useProgressiveImage } from "@/lib/use-progressive-image";
-import type { Movie } from "@/types/movie";
+import type { HeroItem } from "@/components/home/hero-item";
 
 function extractYouTubeId(url?: string | null) {
     if (!url) return "";
@@ -15,12 +15,12 @@ function extractYouTubeId(url?: string | null) {
 }
 
 export function HeroBackground({
-    movie,
+    record,
     muted,
     onEnded,
     onReady,
 }: {
-    movie: Movie;
+    record: HeroItem["record"];
     muted: boolean;
     onEnded: () => void;
     // Fires once the player has actually started (after the same delay
@@ -29,7 +29,7 @@ export function HeroBackground({
     // queuing a toggle against a not-yet-ready (or still-buffering) iframe.
     onReady?: () => void;
 }) {
-    const videoId = extractYouTubeId(movie.trailerVideoURL);
+    const videoId = extractYouTubeId(record.trailerVideoURL);
     const playerRef = useRef<YouTubePlayer | null>(null);
     const [videoReady, setVideoReady] = useState(false);
 
@@ -52,8 +52,8 @@ export function HeroBackground({
     // then quietly upgrade to the full-res backdrop once it's done loading —
     // all while this same image is fading out into the trailer once it's ready.
     const { src: backgroundSrc, isHighRes } = useProgressiveImage(
-        tmdbImage(movie.backgroundImg_URL, "w1280"),
-        tmdbImage(movie.backgroundImg_URL, "original")
+        tmdbImage(record.backgroundImg_URL, "w1280"),
+        tmdbImage(record.backgroundImg_URL, "original")
     );
 
     return (

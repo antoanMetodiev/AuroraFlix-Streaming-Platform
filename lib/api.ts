@@ -46,6 +46,18 @@ export async function getTrendingMovies(): Promise<Movie[]> {
   return unwrapList<Movie>(data);
 }
 
+/**
+ * Series counterpart of getTrendingMovies, backed by lumo-series-svc's own
+ * trending_series table (added alongside this — the shape matches
+ * TrendingMovie field for field, including the hero-only trailerVideoURL /
+ * logoURL). Returns the slim trending rows, not full catalog Series: no
+ * castList/allEpisodes/imagesList, which the homepage hero doesn't read.
+ */
+export async function getTrendingSeries(): Promise<Series[]> {
+  const data = await getJson<unknown>("/get-trending-series");
+  return unwrapList<Series>(data);
+}
+
 const PAGE_SIZE = 30;
 
 export type SortOption = "newest" | "oldest" | "top_rated";

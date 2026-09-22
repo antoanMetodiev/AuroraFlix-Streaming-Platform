@@ -7,6 +7,8 @@ import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
+import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
+import { LikeButton } from "@/components/movies/details/like-button";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -129,6 +131,16 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
   return (
     <div ref={wrapperRef} className="group/tile relative hover:z-40" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      {/* Deliberately a sibling of the <Link>, not a child: a <button> inside
+          an <a> is invalid HTML, and a click would navigate as well as
+          toggle. Sits above the card (z-10) in the corner opposite the
+          rating badge. Hidden until hover on pointer devices; always visible
+          on touch, where there is no hover to reveal it with. */}
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 opacity-100 transition-opacity duration-300 sm:top-2.5 sm:left-2.5 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/tile:opacity-100">
+        <AddToWatchlistButton record={record} type={type} variant="overlay" />
+        <LikeButton record={record} type={type} variant="overlay" />
+      </div>
+
       <Link
         href={href}
         className="group relative block w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-transform duration-500 ease-out hover:-translate-y-2"

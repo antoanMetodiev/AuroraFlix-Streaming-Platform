@@ -55,6 +55,8 @@ export const dictionary = {
   "hero.mute": { en: "Mute", bg: "Изключи звука" },
   "hero.unmute": { en: "Unmute", bg: "Включи звука" },
   "hero.show": { en: "Show", bg: "Покажи" },
+  "hero.badgeMovie": { en: "Movie", bg: "Филм" },
+  "hero.badgeSeries": { en: "Series", bg: "Сериал" },
 
   "home.popularMovies": { en: "Popular Movies", bg: "Популярни филми" },
   "home.popularShows": { en: "Popular Shows", bg: "Популярни сериали" },
