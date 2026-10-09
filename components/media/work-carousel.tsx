@@ -21,7 +21,7 @@ export type WorkCardItem = {
   tmdbId?: string | null;
 };
 
-function hrefFor(item: WorkCardItem) {
+export function hrefFor(item: WorkCardItem) {
   return item.type === "SERIES"
     ? `/series/${item.tmdbId}`
     : `/movies/${getMovieSlug({ title: item.title, tmdbId: item.tmdbId, videoURL: item.videoURL })}`;

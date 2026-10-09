@@ -352,3 +352,25 @@ body {
     animation: none;
   }
 }
+
+/* Homepage popular coverflow — the active title's details rise in on change. */
+@keyframes popular-info {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-popular-info {
+  animation: popular-info 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-popular-info {
+    animation: none;
+  }
+}

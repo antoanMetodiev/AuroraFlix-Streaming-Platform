@@ -69,9 +69,9 @@ export default async function Home() {
 
 			<HeroSection items={heroItems} />
 
-			<LazyPricingSection />
-
 			<LazyLastViewedSection />
+
+			<LazyPricingSection />
 
 			{/* Streams in after the hero — see PopularSection's doc comment. */}
 			<Suspense fallback={null}>

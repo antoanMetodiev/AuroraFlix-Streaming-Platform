@@ -1,6 +1,5 @@
 import { getMoviesDiscover, getSeriesDiscover } from "@/lib/api";
-import { PopularCarousels } from "@/components/home/popular-carousels";
-import type { WorkCardItem } from "@/components/media/work-carousel";
+import { PopularCarousels, type PopularItem } from "@/components/home/popular-carousels";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -24,7 +23,7 @@ function toIsoDate(date: Date) {
  * fetched and merged, then trimmed to the last WINDOW_MONTHS — in January
  * the current year alone would barely have anything.
  */
-function pickPopular(records: (Movie | Series)[], type: "MOVIE" | "SERIES"): WorkCardItem[] {
+function pickPopular(records: (Movie | Series)[], type: "MOVIE" | "SERIES"): PopularItem[] {
 	const now = new Date();
 	const today = toIsoDate(now);
 	const since = new Date(now);
@@ -62,6 +61,7 @@ function pickPopular(records: (Movie | Series)[], type: "MOVIE" | "SERIES"): Wor
 			type,
 			videoURL: record.videoURL,
 			tmdbId: record.tmdbId,
+			releaseYear: record.releaseDate?.slice(0, 4),
 		}));
 }
 
