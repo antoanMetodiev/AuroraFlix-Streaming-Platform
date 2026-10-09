@@ -257,7 +257,7 @@ export function SubtitleOverlay({
     <>
       {visible && activeText && (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4 sm:bottom-6">
-          <p className="max-w-[92%] whitespace-pre-line rounded-lg bg-black/70 px-4 py-2 text-center font-semibold text-white shadow-[0_2px_14px_rgba(0,0,0,0.7)] text-[clamp(1.15rem,2.6vw,2.75rem)] leading-tight">
+          <p className="max-w-[92%] whitespace-pre-line rounded-md bg-black/70 px-2.5 py-1 text-center font-semibold text-white shadow-[0_2px_14px_rgba(0,0,0,0.7)] text-[clamp(0.8rem,2.6vw,2.75rem)] leading-tight sm:rounded-lg sm:px-4 sm:py-2">
             {activeText}
           </p>
         </div>
@@ -265,7 +265,7 @@ export function SubtitleOverlay({
 
       {/* Toggle cluster — deliberately in a top corner so it never collides
           with the provider's own bottom control bar. */}
-      <div className="pointer-events-auto absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full border border-white/10 bg-black/50 px-1.5 py-1.5 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-0.5 rounded-full border border-white/10 bg-black/50 p-1 backdrop-blur-md sm:top-3 sm:right-3 sm:gap-1 sm:p-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
         {loadError ? (
           <button
             type="button"
@@ -282,9 +282,9 @@ export function SubtitleOverlay({
               onClick={() => setVisible((prev) => !prev)}
               aria-label={visible ? t("subtitles.hide") : t("subtitles.show")}
               title={visible ? t("subtitles.hide") : t("subtitles.show")}
-              className="flex items-center rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex items-center rounded-full p-1.5 text-white/80 sm:p-2 transition-colors hover:bg-white/10 hover:text-white"
             >
-              {visible ? <Captions size={19} /> : <CaptionsOff size={19} />}
+              {visible ? <Captions size={isMobile ? 16 : 19} /> : <CaptionsOff size={isMobile ? 16 : 19} />}
             </button>
 
             <a
@@ -292,9 +292,9 @@ export function SubtitleOverlay({
               download="Bulgarian.vtt"
               aria-label={t("subtitles.download")}
               title={t("subtitles.downloadHint")}
-              className="flex items-center rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex items-center rounded-full p-1.5 text-white/80 sm:p-2 transition-colors hover:bg-white/10 hover:text-white"
             >
-              <Download size={19} />
+              <Download size={isMobile ? 16 : 19} />
             </a>
 
             <div ref={infoRef} className="relative">
@@ -303,11 +303,11 @@ export function SubtitleOverlay({
                 onClick={() => setInfoOpen((prev) => !prev)}
                 aria-label={t("subtitles.info")}
                 title={t("subtitles.info")}
-                className={`flex items-center rounded-full p-2 transition-colors hover:bg-white/10 hover:text-white ${
+                className={`flex items-center rounded-full p-1.5 transition-colors sm:p-2 hover:bg-white/10 hover:text-white ${
                   infoOpen ? "bg-white/10 text-white" : "text-white/80"
                 }`}
               >
-                <Info size={19} />
+                <Info size={isMobile ? 16 : 19} />
               </button>
 
               {infoOpen && (
@@ -340,6 +340,11 @@ export function SubtitleOverlay({
         // On mobile in fullscreen, the corner sits a bit further in than on
         // desktop — this only nudges position.
         const bigOnMobile = isFullscreen && isMobile;
+        // VidFast's bar on a phone (not fullscreen) ends in a picture-in-
+        // picture button, which pushes its settings gear to exactly where
+        // our button sits on desktop — so there it goes right into the
+        // corner instead, over the PiP button.
+        const smallVidfast = isMobile && !isFullscreen;
         const hitSize = 56;
         // A bit smaller on phones. The hit area stays the same size and the
         // button stays centered in it, so this doesn't move it.
@@ -361,12 +366,12 @@ export function SubtitleOverlay({
             style={{
               right:
                 (activePlayer === 3 ? 3 : 0) +
-                (activePlayer === 2 ? 19 : 0) +
+                (activePlayer === 2 ? (smallVidfast ? -4 : 19) : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0) -
                 (bigOnMobile && activePlayer === 2 ? 10 : 0),
               bottom:
-                (activePlayer === 2 ? 8 : 0) +
+                (activePlayer === 2 ? (smallVidfast ? -4 : 8) : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0) -
                 (bigOnMobile && activePlayer === 2 ? 6 : 0),
