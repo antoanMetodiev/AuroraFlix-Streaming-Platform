@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { HeroSection } from "@/components/home/hero-section";
 import { LazyPricingSection, LazyLastViewedSection, LazyTrendingSection, LazyCheckoutResultOverlay } from "@/components/home/lazy-sections";
 import { Footer } from "@/components/layout/footer";
+import { PopularSection } from "@/components/home/popular-section";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -71,6 +72,11 @@ export default async function Home() {
 			<LazyPricingSection />
 
 			<LazyLastViewedSection />
+
+			{/* Streams in after the hero — see PopularSection's doc comment. */}
+			<Suspense fallback={null}>
+				<PopularSection />
+			</Suspense>
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
 

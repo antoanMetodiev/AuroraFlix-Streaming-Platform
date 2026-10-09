@@ -60,6 +60,8 @@ export const dictionary = {
 
   "home.popularMovies": { en: "Popular Movies", bg: "Популярни филми" },
   "home.popularShows": { en: "Popular Shows", bg: "Популярни сериали" },
+  "home.cultMovies": { en: "Cult Movies", bg: "Култови филми" },
+  "home.cultShows": { en: "Cult Shows", bg: "Култови сериали" },
   "home.trendingAria": { en: "Trending on AuroraFlix", bg: "Тенденции в AuroraFlix" },
   "home.trendingMoviesAria": { en: "Trending movies", bg: "Тенденции при филмите" },
   "home.trendingSeriesAria": { en: "Trending series", bg: "Тенденции при сериалите" },

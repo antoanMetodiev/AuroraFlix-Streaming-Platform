@@ -35,11 +35,14 @@ export function WorkCarousel({
   mode,
   actorName,
   actorImdbId,
+  heading,
 }: {
   items: WorkCardItem[];
-  mode: "latest-works" | "last-viewed";
+  mode: "latest-works" | "last-viewed" | "popular";
   actorName?: string;
   actorImdbId?: string | null;
+  /** Overrides the mode's default title — the homepage's popular carousels pass their own. */
+  heading?: string;
 }) {
   const { t } = useTranslation();
   const { containerRef, canScrollLeft, canScrollRight, scrollBy, dragHandlers } = useHorizontalScroll<HTMLDivElement>([items]);
@@ -89,10 +92,10 @@ export function WorkCarousel({
   if (items.length === 0) return null;
 
   return (
-    <div className={`relative w-full px-4 py-3 sm:px-6 ${mode === "last-viewed" ? "bg-background" : ""}`}>
+    <div className={`relative w-full px-4 py-3 sm:px-6 ${mode === "latest-works" ? "" : "bg-background"}`}>
       <div className="mt-8 mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-light tracking-wide text-foreground sm:text-3xl">
-          {mode === "latest-works" ? t("carousel.latestWorks") : t("carousel.lastViewed")}
+          {heading ?? (mode === "latest-works" ? t("carousel.latestWorks") : t("carousel.lastViewed"))}
         </h2>
 
         {mode === "latest-works" && actorImdbId && (
