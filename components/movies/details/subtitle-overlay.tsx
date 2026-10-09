@@ -214,8 +214,14 @@ export function SubtitleOverlay({
 
       lastFrameRef.current = now;
 
+      // Hidden while the provider reports the video as paused: that's
+      // usually when people open the player's own settings menu, which
+      // opens in the middle of the frame — right where long subtitle lines
+      // would sit on top of it. (Providers don't report the menu itself.)
+      const isPaused = modeRef.current === "telemetry" && telemetryRef.current?.playing === false;
+
       const activeCues = cuesRef.current;
-      const cue = activeCues ? findActiveCue(activeCues, elapsedRef.current) : null;
+      const cue = activeCues && !isPaused ? findActiveCue(activeCues, elapsedRef.current) : null;
       setActiveText(cue?.text ?? null);
 
       rafRef.current = requestAnimationFrame(tick);
@@ -332,13 +338,14 @@ export function SubtitleOverlay({
           people never end up on the one that would hide the subtitles. */}
       {(() => {
         // On mobile in fullscreen, the corner sits a bit further in than on
-        // desktop — this only nudges position, size stays the same as
-        // everywhere else.
+        // desktop — this only nudges position.
         const bigOnMobile = isFullscreen && isMobile;
         const hitSize = 56;
-        const visibleSize = 42;
-        const glowSize = 40;
-        const iconSize = 18;
+        // A bit smaller on phones. The hit area stays the same size and the
+        // button stays centered in it, so this doesn't move it.
+        const visibleSize = isMobile ? 36 : 42;
+        const glowSize = isMobile ? 34 : 40;
+        const iconSize = isMobile ? 16 : 18;
         const label = isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen");
 
         return (
@@ -357,7 +364,7 @@ export function SubtitleOverlay({
                 (activePlayer === 2 ? 19 : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0) -
-                (bigOnMobile && activePlayer === 2 ? 6 : 0),
+                (bigOnMobile && activePlayer === 2 ? 10 : 0),
               bottom:
                 (activePlayer === 2 ? 8 : 0) +
                 (isFullscreen ? 2 : 0) +
