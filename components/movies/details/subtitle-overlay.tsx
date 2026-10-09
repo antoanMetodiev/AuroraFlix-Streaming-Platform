@@ -356,7 +356,7 @@ export function SubtitleOverlay({
                 (activePlayer === 3 ? 3 : 0) +
                 (activePlayer === 2 ? 19 : 0) +
                 (isFullscreen ? 2 : 0) +
-                (bigOnMobile ? 5 : 0) +
+                (bigOnMobile ? 5 : 0) -
                 (bigOnMobile && activePlayer === 2 ? 6 : 0),
               bottom:
                 (activePlayer === 2 ? 8 : 0) +
