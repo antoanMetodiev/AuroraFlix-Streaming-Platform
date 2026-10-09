@@ -18,19 +18,24 @@ import { extractTelemetry, PLAYER_ORIGIN, type PlayerId } from "@/lib/player-tel
 // Coarse pointer + no hover is what actually stays true across rotation.
 const MOBILE_QUERY = "(pointer: coarse), (max-width: 639px)";
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
   );
 
   useEffect(() => {
-    const mql = window.matchMedia(MOBILE_QUERY);
-    const handleChange = () => setIsMobile(mql.matches);
+    const mql = window.matchMedia(query);
+    const handleChange = () => setMatches(mql.matches);
+    handleChange();
     mql.addEventListener("change", handleChange);
     return () => mql.removeEventListener("change", handleChange);
-  }, []);
+  }, [query]);
 
-  return isMobile;
+  return matches;
+}
+
+function useIsMobile() {
+  return useMediaQuery(MOBILE_QUERY);
 }
 
 type SubtitleOverlayProps = {
@@ -85,6 +90,10 @@ export function SubtitleOverlay({
 }: SubtitleOverlayProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const isPortrait = useMediaQuery("(orientation: portrait)");
+  // A phone held upright in our big view: the 16:9 picture sits in a band
+  // across the middle of a tall screen, with black above and below.
+  const portraitBigView = isFullscreen && isMobile && isPortrait;
 
   const [loadError, setLoadError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
@@ -256,7 +265,16 @@ export function SubtitleOverlay({
   return (
     <>
       {visible && activeText && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4 sm:bottom-6">
+        <div
+          className={`pointer-events-none absolute inset-x-0 z-20 flex justify-center px-16 ${portraitBigView ? "" : "bottom-4 sm:bottom-6"}`}
+          // px-16 keeps long lines clear of our fullscreen button in the
+          // bottom-right corner.
+          // The picture is the full width and 16:9, centered — so its bottom
+          // edge is 50% + (100vw * 9/16) / 2 from the top. Sit just above it
+          // instead of at the very bottom of the screen, far from the picture
+          // and on top of the provider's control bar.
+          style={portraitBigView ? { bottom: "calc(50% - 28.125vw + 8px)" } : undefined}
+        >
           <p className="max-w-[92%] whitespace-pre-line rounded-md bg-black/70 px-2.5 py-1 text-center font-semibold text-white shadow-[0_2px_14px_rgba(0,0,0,0.7)] text-[clamp(0.8rem,2.6vw,2.75rem)] leading-tight sm:rounded-lg sm:px-4 sm:py-2">
             {activeText}
           </p>
@@ -340,11 +358,22 @@ export function SubtitleOverlay({
         // On mobile in fullscreen, the corner sits a bit further in than on
         // desktop — this only nudges position.
         const bigOnMobile = isFullscreen && isMobile;
-        // VidFast's bar on a phone (not fullscreen) ends in a picture-in-
-        // picture button, which pushes its settings gear to exactly where
-        // our button sits on desktop — so there it goes right into the
-        // corner instead, over the PiP button.
-        const smallVidfast = isMobile && !isFullscreen;
+
+        // VidFast, per layout (its UI is drawn scaled down — see
+        // VIDFAST_UI_SCALE in player-section — so it needs its own spots).
+        // On a phone, except fullscreen in landscape, its bar ends in a
+        // picture-in-picture button that pushes the settings gear to where
+        // our button would otherwise sit, so ours goes into the corner over
+        // PiP instead.
+        const vidfastSpot = !isMobile
+          ? isFullscreen
+            ? { right: 21, bottom: 10 }
+            : { right: 19, bottom: 8 }
+          : !isFullscreen
+            ? { right: -4, bottom: -4 }
+            : isPortrait
+              ? { right: -2, bottom: -8 }
+              : { right: 20, bottom: 5 };
         const hitSize = 56;
         // A bit smaller on phones. The hit area stays the same size and the
         // button stays centered in it, so this doesn't move it.
@@ -364,17 +393,12 @@ export function SubtitleOverlay({
             // the corner sits a couple px further in once we're actually in
             // the big view, and phones need a bit more still.
             style={{
-              right:
-                (activePlayer === 3 ? 3 : 0) +
-                (activePlayer === 2 ? (smallVidfast ? -4 : 19) : 0) +
-                (isFullscreen ? 2 : 0) +
-                (bigOnMobile ? 5 : 0) -
-                (bigOnMobile && activePlayer === 2 ? 6 : 0),
-              bottom:
-                (activePlayer === 2 ? (smallVidfast ? -4 : 8) : 0) +
-                (isFullscreen ? 2 : 0) +
-                (bigOnMobile ? 5 : 0) -
-                (bigOnMobile && activePlayer === 2 ? 10 : 0),
+              ...(activePlayer === 2
+                ? vidfastSpot
+                : {
+                    right: (activePlayer === 3 ? 3 : 0) + (isFullscreen ? 2 : 0) + (bigOnMobile ? 5 : 0),
+                    bottom: (isFullscreen ? 2 : 0) + (bigOnMobile ? 5 : 0),
+                  }),
               width: hitSize,
               height: hitSize,
             }}
