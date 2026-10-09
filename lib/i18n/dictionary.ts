@@ -179,9 +179,20 @@ export const dictionary = {
   "episodes.checkForNew": { en: "Check for new episodes", bg: "Провери за нови епизоди" },
   "episodes.pleaseWait": { en: "Please wait..", bg: "Моля, изчакай.." },
   "episodes.checking": { en: "Checking.. try again in", bg: "Проверява се.. опитай пак след" },
+  "episodes.newTitle": { en: "Waiting for a new episode?", bg: "Чакаш нов епизод?" },
+  "episodes.newHint": {
+    en: "If the latest episode isn't here yet, check whether it's already out.",
+    bg: "Ако най-новият епизод още го няма тук, провери дали вече е излязъл.",
+  },
 
   "player.pickEpisode": { en: "Pick an episode to start watching", bg: "Избери епизод, за да започнеш гледане" },
   "player.player": { en: "Player", bg: "Плейър" },
+  "player.choose": { en: "Choose a player", bg: "Избери плейър" },
+  "player.hint": {
+    en: "Not loading, slow or no subtitles? Try another player.",
+    bg: "Не тръгва, бави или няма субтитри? Пробвай друг плейър.",
+  },
+  "player.bgSubtitles": { en: "Bulgarian subtitles", bg: "Български субтитри" },
   "player.play": { en: "Play", bg: "Пусни" },
 
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },

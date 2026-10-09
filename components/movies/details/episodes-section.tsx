@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BellRing, Clock, RefreshCw } from "lucide-react";
 import { getSeasonEpisodes, getSeasonOptions, orderEpisodes } from "@/lib/episodes";
 import { checkForNewEpisodes } from "@/lib/api-public";
 import { useInViewOnce } from "@/lib/use-in-view-once";
@@ -79,34 +80,50 @@ export function EpisodesSection({
         inView ? "translate-y-0 opacity-100" : "translate-y-14 opacity-0"
       }`}
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 sm:mb-8">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4 sm:mb-5">
         <SectionHeading className="mb-0">{t("sections.episodes")}</SectionHeading>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {remainingMs > 0 ? (
-            <p className="rounded-lg bg-foreground/5 px-3 py-2 text-xs text-foreground/70 sm:text-sm">
-              {t("episodes.checking")} {minutes}:{seconds.toString().padStart(2, "0")}
-            </p>
-          ) : (
-            <button
-              type="button"
-              onClick={handleCheckForNewEpisodes}
-              disabled={checking}
-              className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2 text-xs text-foreground/70 transition-colors duration-200 hover:bg-foreground/10 hover:text-foreground sm:text-sm"
-            >
-              {checking && <Spinner size={14} />}
-              {checking ? t("episodes.pleaseWait") : t("episodes.checkForNew")}
-            </button>
-          )}
+        {seasons.length > 1 && (
+          <ModernSelect
+            value={selectedSeason}
+            onChange={setSelectedSeason}
+            options={seasons.map((season) => ({ value: season, label: `${t("sections.season")} ${season}` }))}
+          />
+        )}
+      </div>
 
-          {seasons.length > 1 && (
-            <ModernSelect
-              value={selectedSeason}
-              onChange={setSelectedSeason}
-              options={seasons.map((season) => ({ value: season, label: `${t("sections.season")} ${season}` }))}
-            />
-          )}
+      {/*
+       * Its own callout rather than a small grey button next to the season
+       * picker — viewers kept asking whether new episodes were coming without
+       * ever noticing the old button was there.
+       */}
+      <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
+            <BellRing size={20} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white sm:text-base">{t("episodes.newTitle")}</p>
+            <p className="text-xs text-white/60 sm:text-sm">{t("episodes.newHint")}</p>
+          </div>
         </div>
+
+        {remainingMs > 0 ? (
+          <p className="flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white/70 sm:text-sm">
+            <Clock size={16} />
+            {t("episodes.checking")} {minutes}:{seconds.toString().padStart(2, "0")}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleCheckForNewEpisodes}
+            disabled={checking}
+            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-4px_rgba(255,255,255,0.7)] disabled:cursor-wait disabled:opacity-80 disabled:hover:translate-y-0 sm:text-sm"
+          >
+            {checking ? <Spinner size={16} /> : <RefreshCw size={16} />}
+            {checking ? t("episodes.pleaseWait") : t("episodes.checkForNew")}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -2,10 +2,9 @@
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Play } from "lucide-react";
+import { Captions, MonitorPlay, Play } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
-import { ModernSelect } from "@/components/ui/modern-select";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
@@ -511,27 +510,65 @@ export const PlayerSection = forwardRef<
             : "translate-y-14 opacity-0"
         }`}
       >
+        {/*
+         * All players are laid out as one always-visible segmented control
+         * instead of a dropdown — viewers didn't notice the old closed
+         * <ModernSelect> and stayed stuck on player 1 even when it didn't
+         * work for them. With three options there's room to show them all.
+         */}
         {videoUrl && vidsrcRef && playerOrder.length > 1 && (
-          <div className="mb-3 flex w-full max-w-[80rem] justify-end">
-            <ModernSelect
-              value={String(activePlayer)}
-              onChange={(next) => {
-                userChangedPlayerRef.current = true;
-                setActivePlayer(
-                  Number(next) as 1 | 2 | 3
+          <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
+                <MonitorPlay size={20} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white sm:text-base">
+                  {t("player.choose")}
+                </p>
+                <p className="text-xs text-white/60 sm:text-sm">
+                  {t("player.hint")}
+                </p>
+              </div>
+            </div>
+
+            <div
+              role="radiogroup"
+              aria-label={t("player.choose")}
+              className="grid grid-cols-3 gap-2 sm:flex sm:shrink-0"
+            >
+              {playerOrder.map((provider, index) => {
+                const isActive = provider === activePlayer;
+                const hasBgSubtitles = hasOwnSubtitles && provider === 3;
+                return (
+                  <button
+                    key={provider}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    title={hasBgSubtitles ? t("player.bgSubtitles") : undefined}
+                    onClick={() => {
+                      userChangedPlayerRef.current = true;
+                      setActivePlayer(provider);
+                    }}
+                    className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
+                      isActive
+                        ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
+                        : "border-white/20 bg-white/5 text-white/85 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {t("player.player")} {index + 1}
+                    {hasBgSubtitles && (
+                      <Captions
+                        size={16}
+                        aria-label={t("player.bgSubtitles")}
+                        className={isActive ? "text-emerald-600" : "text-emerald-400"}
+                      />
+                    )}
+                  </button>
                 );
-              }}
-              options={
-                playerOrder.map(
-                  (provider, index) => ({
-                    value: String(provider),
-                    label: `${t(
-                      "player.player"
-                    )} ${index + 1}`,
-                  })
-                )
-              }
-            />
+              })}
+            </div>
           </div>
         )}
 
