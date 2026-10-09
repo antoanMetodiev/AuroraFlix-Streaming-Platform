@@ -119,8 +119,9 @@ const DEFAULT_SUBTITLE_LANG = "bg";
 /**
  * vidsrc.icu -> vidsrc2.ru
  *
- * <SubtitleOverlay> is CineSrc-exclusive now (see `hasOwnSubtitles` below),
- * so it never competes with this provider's own bundled subtitle — always
+ * <SubtitleOverlay> never renders on this player (only on VidFast and
+ * CineSrc — see `hasOwnSubtitles` below), so it never competes with this
+ * provider's own bundled subtitle — always
  * ask it to preselect its Bulgarian track instead of leaving the viewer
  * with no subtitles at all when they switch to this player.
  */
@@ -138,29 +139,64 @@ function toPlayableUrl(videoUrl: string): string {
 }
 
 /**
+ * VidFast's own controls are rendered this much smaller — see the iframe
+ * below. Their embed has no size/scale option (documented params: title,
+ * poster, autoPlay, startAt, theme, server, hideServer, fullscreenButton,
+ * chromecast, sub, nextButton, autoNext), and CSS can't reach into a
+ * cross-origin iframe, so the iframe itself is laid out at 1/scale of the
+ * box and scaled back down: the video still fills the frame, everything
+ * drawn on top of it shrinks.
+ */
+const VIDFAST_UI_SCALE = 0.6;
+
+/** VidFast's accent color (their `theme` param, hex without the #). */
+const VIDFAST_THEME = "2980B9";
+
+/**
  * VidFast
  *
- * Same reasoning as vidsrc2.ru above — <SubtitleOverlay> doesn't render on
- * this player, so its own bundled Bulgarian track is always requested.
+ * Always in blue (theme), with the poster shown before playback, and
+ * without their big title overlay and the Chromecast button. For episodes,
+ * also their "next episode" button and auto-advance to the next one.
+ *
+ * When we have our own Bulgarian subtitles, <SubtitleOverlay> renders them
+ * on top of this player (see `vidfastUsesOurSubs` below), so its own
+ * bundled track is left off to avoid two subtitles at once, and so is its
+ * fullscreen button — ours takes its place, and theirs would fullscreen
+ * just the iframe and hide our subtitles.
+ * Otherwise, same as vidsrc2.ru above: ask it to preselect Bulgarian.
  */
-function toVidfastUrl(ref: VidsrcRef): string {
+function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
       : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
 
+  const common = {
+    autoPlay: "true",
+    title: "false",
+    poster: "true",
+    theme: VIDFAST_THEME,
+    chromecast: "false",
+    ...(ref.kind === "tv"
+      ? { nextButton: "true", autoNext: "true" }
+      : {}),
+  };
+
   return appendParams(
     `https://vidfast.vc/${path}`,
-    {
-      autoPlay: "true",
-      sub: DEFAULT_SUBTITLE_LANG,
-      lang: DEFAULT_SUBTITLE_LANG,
-    }
+    withOwnSubtitles
+      ? { ...common, fullscreenButton: "false" }
+      : {
+          ...common,
+          sub: DEFAULT_SUBTITLE_LANG,
+          lang: DEFAULT_SUBTITLE_LANG,
+        }
   );
 }
 
 /**
- * CineSrc — the only player <SubtitleOverlay> renders on.
+ * CineSrc — <SubtitleOverlay> renders on it (and on VidFast).
  *
  * Per the official docs (cinesrc.st/docs), there is no subtitle-related URL
  * parameter or postMessage command at all — `Position` and `subtitlelang`
@@ -217,27 +253,36 @@ export const PlayerSection = forwardRef<
     useState<string | undefined>(undefined);
 
   /**
-   * <SubtitleOverlay> only ever renders on CineSrc (see below), so when we
-   * have our own Bulgarian subtitles it's listed first/default — VidFast
-   * and vidsrc2.ru stay available too, just as fallbacks the viewer can
-   * switch to (with their own bundled subtitles instead of ours).
+   * When we have our own Bulgarian subtitles, VidFast is listed first and
+   * is the default — it plays more reliably than CineSrc. Both get the same
+   * full <SubtitleOverlay> (toggle/download/info + our fullscreen button);
+   * CineSrc just moves to the last slot. vidsrc2.ru stays in the middle
+   * with its own bundled subtitles.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
+
+  /**
+   * Whether VidFast's URL was built without its own subtitle track, i.e.
+   * whether our overlay should render on it. Decided once, when the
+   * subtitle check resolves — and only if the viewer isn't already
+   * watching VidFast by then, since switching its URL would reload the
+   * iframe mid-playback.
+   */
+  const [vidfastUsesOurSubs, setVidfastUsesOurSubs] =
+    useState(false);
 
   const playerOrder = useMemo<
     readonly (1 | 2 | 3)[]
   >(
     () =>
       hasOwnSubtitles
-        ? [3, 1, 2]
+        ? [2, 1, 3]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
 
   const [activePlayer, setActivePlayer] =
-    useState<1 | 2 | 3>(() =>
-      hasOwnSubtitles ? 3 : 1
-    );
+    useState<1 | 2 | 3>(1);
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -251,6 +296,10 @@ export const PlayerSection = forwardRef<
     hasStartedRef.current = hasStarted;
   }, [hasStarted]);
   const userChangedPlayerRef = useRef(false);
+  const activePlayerRef = useRef(activePlayer);
+  useEffect(() => {
+    activePlayerRef.current = activePlayer;
+  }, [activePlayer]);
 
   /**
    * "Big view" — a CSS `fixed inset-0` expansion of our wrapper (iframe +
@@ -295,7 +344,14 @@ export const PlayerSection = forwardRef<
 
       setIsRealFullscreen(false);
 
-      if (current && hasOwnSubtitles && activePlayer === 3) {
+      // Same trick for both players our overlay renders on — CineSrc, and
+      // VidFast once its URL was built without its own subtitle track.
+      const overlayIsOnActivePlayer =
+        hasOwnSubtitles &&
+        (activePlayer === 3 ||
+          (activePlayer === 2 && vidfastUsesOurSubs));
+
+      if (current && overlayIsOnActivePlayer) {
         exitFullscreen();
         setIsBigView(true);
       }
@@ -320,7 +376,7 @@ export const PlayerSection = forwardRef<
         handleFullscreenChange
       );
     };
-  }, [hasOwnSubtitles, activePlayer]);
+  }, [hasOwnSubtitles, activePlayer, vidfastUsesOurSubs]);
 
   /**
    * Escape closes the CSS big view, and the page can't scroll behind it —
@@ -380,8 +436,8 @@ export const PlayerSection = forwardRef<
    * can never block or break the player itself.
    *
    * If it resolves in time — before the viewer has clicked Play or touched
-   * the player selector themselves — the CineSrc-first default is applied
-   * retroactively via setActivePlayer(3), same preference the old
+   * the player selector themselves — the VidFast-first default is applied
+   * retroactively via setActivePlayer(2), same preference the old
    * synchronous check used to set from the start. After either of those,
    * the subtitle track is still available in the player list, just no
    * longer auto-selected — switching mid-playback would be more jarring
@@ -397,8 +453,11 @@ export const PlayerSection = forwardRef<
       .then((res) => {
         if (cancelled || !res.ok) return;
         setSubtitleUrl(url);
+        if (!hasStartedRef.current || activePlayerRef.current !== 2) {
+          setVidfastUsesOurSubs(true);
+        }
         if (!hasStartedRef.current && !userChangedPlayerRef.current) {
-          setActivePlayer(3);
+          setActivePlayer(2);
         }
       })
       .catch(() => {
@@ -414,8 +473,8 @@ export const PlayerSection = forwardRef<
   /**
    * Build all three player URLs.
    *
-   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, only on
-   * top of player 3 (CineSrc) — see the comments on the URL builders above.
+   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, on top
+   * of VidFast and CineSrc — see the comments on the URL builders above.
    */
   const player1Url = useMemo(
     () =>
@@ -428,9 +487,9 @@ export const PlayerSection = forwardRef<
   const player2Url = useMemo(
     () =>
       vidsrcRef
-        ? toVidfastUrl(vidsrcRef)
+        ? toVidfastUrl(vidsrcRef, vidfastUsesOurSubs)
         : null,
-    [vidsrcRef]
+    [vidsrcRef, vidfastUsesOurSubs]
   );
 
   const player3Url = useMemo(
@@ -539,7 +598,9 @@ export const PlayerSection = forwardRef<
             >
               {playerOrder.map((provider, index) => {
                 const isActive = provider === activePlayer;
-                const hasBgSubtitles = hasOwnSubtitles && provider === 3;
+                const hasBgSubtitles =
+                  hasOwnSubtitles &&
+                  (provider === 3 || (provider === 2 && vidfastUsesOurSubs));
                 return (
                   <button
                     key={provider}
@@ -583,7 +644,20 @@ export const PlayerSection = forwardRef<
 
               <iframe
                 key={activeSrc}
-                className="h-full w-full border-0"
+                className={
+                  activePlayer === 2
+                    ? "absolute top-0 left-0 origin-top-left border-0"
+                    : "h-full w-full border-0"
+                }
+                style={
+                  activePlayer === 2
+                    ? {
+                        width: `${100 / VIDFAST_UI_SCALE}%`,
+                        height: `${100 / VIDFAST_UI_SCALE}%`,
+                        transform: `scale(${VIDFAST_UI_SCALE})`,
+                      }
+                    : undefined
+                }
                 src={activeSrc}
                 title={
                   title
@@ -598,13 +672,16 @@ export const PlayerSection = forwardRef<
                 }
               />
 
-              {subtitleUrl && activePlayer === 3 && (
+              {subtitleUrl &&
+                (activePlayer === 3 ||
+                  (activePlayer === 2 && vidfastUsesOurSubs)) && (
                 <SubtitleOverlay
                   subtitleUrl={subtitleUrl}
                   active={hasStarted}
                   activePlayer={activePlayer}
                   isFullscreen={isRealFullscreen || isBigView}
                   onToggleFullscreen={toggleFullscreen}
+                  playerLabel={playerOrder.indexOf(activePlayer) + 1}
                 />
               )}
             </>

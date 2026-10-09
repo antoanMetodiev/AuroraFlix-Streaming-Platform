@@ -40,6 +40,9 @@ type SubtitleOverlayProps = {
   activePlayer: PlayerId;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  /** The number the player picker shows for the active player ("Плейър N"),
+   *  which differs from `activePlayer`'s internal provider id. */
+  playerLabel: number;
 };
 
 const DURATION_PADDING_SECONDS = 8;
@@ -78,6 +81,7 @@ export function SubtitleOverlay({
   activePlayer,
   isFullscreen,
   onToggleFullscreen,
+  playerLabel,
 }: SubtitleOverlayProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -310,7 +314,7 @@ export function SubtitleOverlay({
                   </p>
                   {activePlayer !== 1 && (
                     <p className="mt-2 border-t border-foreground/10 pt-2 text-foreground/70">
-                      {t("subtitles.infoManualTip", { player: String(activePlayer) })}
+                      {t("subtitles.infoManualTip", { player: String(playerLabel) })}
                     </p>
                   )}
                 </div>
@@ -343,14 +347,20 @@ export function SubtitleOverlay({
             aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
             title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
             // CineSrc's own icon sits a hair further left than the other two
-            // providers', the corner sits a couple px further in once we're
-            // actually in the big view, and phones need a bit more still.
+            // providers', VidFast's sits further in on both axes (its UI is
+            // drawn scaled down — see VIDFAST_UI_SCALE in player-section),
+            // the corner sits a couple px further in once we're actually in
+            // the big view, and phones need a bit more still.
             style={{
               right:
                 (activePlayer === 3 ? 3 : 0) +
+                (activePlayer === 2 ? 8 : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0),
-              bottom: (isFullscreen ? 2 : 0) + (bigOnMobile ? 5 : 0),
+              bottom:
+                (activePlayer === 2 ? 6 : 0) +
+                (isFullscreen ? 2 : 0) +
+                (bigOnMobile ? 5 : 0),
               width: hitSize,
               height: hitSize,
             }}
@@ -369,7 +379,6 @@ export function SubtitleOverlay({
           </button>
         );
       })()}
-
     </>
   );
 }
