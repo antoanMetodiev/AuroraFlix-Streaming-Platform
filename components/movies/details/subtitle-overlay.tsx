@@ -373,7 +373,7 @@ export function SubtitleOverlay({
             ? { right: -4, bottom: -4 }
             : isPortrait
               ? { right: -2, bottom: -8 }
-              : { right: 20, bottom: 5 };
+              : { right: 15, bottom: 3 };
         const hitSize = 56;
         // A bit smaller on phones. The hit area stays the same size and the
         // button stays centered in it, so this doesn't move it.
