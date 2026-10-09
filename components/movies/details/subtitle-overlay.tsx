@@ -369,12 +369,12 @@ export function SubtitleOverlay({
                 (activePlayer === 2 ? (smallVidfast ? -4 : 19) : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0) -
-                (bigOnMobile && activePlayer === 2 ? 10 : 0),
+                (bigOnMobile && activePlayer === 2 ? 6 : 0),
               bottom:
                 (activePlayer === 2 ? (smallVidfast ? -4 : 8) : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0) -
-                (bigOnMobile && activePlayer === 2 ? 6 : 0),
+                (bigOnMobile && activePlayer === 2 ? 10 : 0),
               width: hitSize,
               height: hitSize,
             }}
