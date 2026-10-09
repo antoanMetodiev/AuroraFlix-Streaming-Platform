@@ -336,16 +336,16 @@ export function SubtitleOverlay({
         // everywhere else.
         const bigOnMobile = isFullscreen && isMobile;
         const hitSize = 56;
-        const visibleSize = 44;
-        const glowSize = 36;
+        const visibleSize = 42;
+        const glowSize = 40;
         const iconSize = 18;
+        const label = isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen");
 
         return (
           <button
             type="button"
             onClick={onToggleFullscreen}
-            aria-label={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
-            title={isFullscreen ? t("subtitles.exitFullscreen") : t("subtitles.fullscreen")}
+            aria-label={label}
             // CineSrc's own icon sits a hair further left than the other two
             // providers', VidFast's sits further in on both axes (its UI is
             // drawn scaled down — see VIDFAST_UI_SCALE in player-section),
@@ -354,11 +354,11 @@ export function SubtitleOverlay({
             style={{
               right:
                 (activePlayer === 3 ? 3 : 0) +
-                (activePlayer === 2 ? 8 : 0) +
+                (activePlayer === 2 ? 19 : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0),
               bottom:
-                (activePlayer === 2 ? 6 : 0) +
+                (activePlayer === 2 ? 8 : 0) +
                 (isFullscreen ? 2 : 0) +
                 (bigOnMobile ? 5 : 0),
               width: hitSize,
@@ -367,14 +367,18 @@ export function SubtitleOverlay({
             className="group pointer-events-auto absolute z-30 flex items-center justify-center"
           >
             <span
-              className="absolute rounded-full bg-white/25 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100"
+              className="absolute rounded-2xl bg-white/40 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"
               style={{ width: glowSize, height: glowSize }}
             />
             <span
-              className="relative flex items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-200 ease-out group-hover:scale-110 group-hover:border-white/35 group-hover:bg-black/80 group-active:scale-95"
+              className="relative flex items-center justify-center rounded-[14px] bg-gradient-to-b from-white/15 to-white/[0.05] text-white shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] ring-[0.5px] ring-white/15 backdrop-blur-xl transition-all duration-200 ease-out ring-inset group-hover:-translate-y-0.5 group-hover:bg-white group-hover:from-white group-hover:to-white group-hover:text-neutral-900 group-hover:ring-transparent group-active:translate-y-0 group-active:scale-95"
               style={{ width: visibleSize, height: visibleSize }}
             >
-              {isFullscreen ? <Minimize2 size={iconSize} /> : <Maximize2 size={iconSize} />}
+              {isFullscreen ? (
+                <Minimize2 size={iconSize} strokeWidth={2.25} className="transition-transform duration-200 group-hover:scale-90" />
+              ) : (
+                <Maximize2 size={iconSize} strokeWidth={2.25} className="transition-transform duration-200 group-hover:scale-110" />
+              )}
             </span>
           </button>
         );

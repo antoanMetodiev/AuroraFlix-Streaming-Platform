@@ -147,7 +147,7 @@ function toPlayableUrl(videoUrl: string): string {
  * box and scaled back down: the video still fills the frame, everything
  * drawn on top of it shrinks.
  */
-const VIDFAST_UI_SCALE = 0.6;
+const VIDFAST_UI_SCALE = 0.7;
 
 /** VidFast's accent color (their `theme` param, hex without the #). */
 const VIDFAST_THEME = "2980B9";
