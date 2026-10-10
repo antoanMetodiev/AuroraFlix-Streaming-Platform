@@ -199,6 +199,10 @@ export const dictionary = {
     en: "Turn on the Bulgarian subtitles",
     bg: "Включи българските субтитри",
   },
+  "player.autoSwitched": {
+    en: "Player {from} didn't load this title — switched to Player {to}.",
+    bg: "Плейър {from} не зареди това заглавие — превключихме на Плейър {to}.",
+  },
   "player.manualSubsStepsNoServer": {
     en: "Subtitles button → Български.",
     bg: "Бутон Субтитри → Български.",

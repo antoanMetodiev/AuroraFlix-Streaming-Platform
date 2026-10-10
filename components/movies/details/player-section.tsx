@@ -354,11 +354,71 @@ function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
 type ProviderId = 1 | 2 | 3 | 4 | 5;
 
 /**
- * VidLink (listed second) is on trial: as of 2026-10-10 it played
- * Unabomber in 1080p with our subtitles, but Animals never started (their
- * stream host answered 503 every time). Flip this off to drop it again.
+ * VidLink (listed third) is on trial: as of 2026-10-10 it played
+ * Unabomber in 1080p with our subtitles, but Animals and Fall 2 never
+ * started (their stream host answered 503 every time). Flip this off to
+ * drop it again.
  */
 const VIDLINK_ENABLED = true;
+
+/**
+ * VidLink's stream fails often (see above), and when it does its player
+ * just spins forever — no error, no event. It does post documented
+ * `PLAYER_EVENT` messages ("play", "timeupdate", …) once the video really
+ * runs, so if none arrives this long after it's opened, we move the viewer
+ * to vidsrc2.ru (our subtitles switch on there by themselves).
+ */
+const VIDLINK_ORIGIN = "https://vidlink.pro";
+const VIDLINK_START_TIMEOUT_MS = 15_000;
+const VIDLINK_FALLBACK_PLAYER: ProviderId = 1;
+
+/** How long the "switched you to another player" note stays up. */
+const AUTO_SWITCH_NOTICE_MS = 8_000;
+
+function isVidlinkPlaying(event: MessageEvent): boolean {
+  if (event.origin !== VIDLINK_ORIGIN) return false;
+  const message = event.data as
+    | { type?: unknown; data?: { event?: unknown } }
+    | null
+    | undefined;
+  return (
+    message?.type === "PLAYER_EVENT" &&
+    (message.data?.event === "play" ||
+      message.data?.event === "timeupdate")
+  );
+}
+
+function AutoSwitchNotice({ from, to }: { from: number; to: number }) {
+  const { t } = useTranslation();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), AUTO_SWITCH_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-12 z-20 flex justify-center px-3 sm:top-14">
+      <div
+        role="status"
+        className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border border-white/15 bg-black/75 p-3 text-sm text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-4"
+      >
+        <MonitorPlay size={20} className="shrink-0 text-sky-400" />
+        <p className="min-w-0">{t("player.autoSwitched", { from, to })}</p>
+        <button
+          type="button"
+          onClick={() => setVisible(false)}
+          aria-label={t("common.close")}
+          className="-m-1 shrink-0 cursor-pointer rounded-full p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export const PlayerSection = forwardRef<
   HTMLDivElement,
@@ -392,9 +452,10 @@ export const PlayerSection = forwardRef<
   /**
    * Only when we have our own Bulgarian subtitles: EmbedMaster is added
    * first and becomes the default (best picture; our subtitles go into its
-   * own player, switched on by hand — see toEmbedmasterUrl), then VidLink
-   * (same, while VIDLINK_ENABLED), then vidsrc2.ru (our subtitles in its
-   * own player, switched on by itself). VidFast and CineSrc still get
+   * own player, switched on by hand — see toEmbedmasterUrl), then
+   * vidsrc2.ru (ours in its own player, switched on by itself), then
+   * VidLink (switched on by hand, while VIDLINK_ENABLED — and swapped for
+   * vidsrc2.ru automatically when it doesn't start). VidFast and CineSrc still get
    * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as
    * fallbacks.
    *
@@ -429,7 +490,7 @@ export const PlayerSection = forwardRef<
     () =>
       hasOwnSubtitles
         ? VIDLINK_ENABLED
-          ? [5, 4, 1, 2, 3]
+          ? [5, 1, 4, 2, 3]
           : [5, 1, 2, 3]
         : [1, 2, 3],
     [hasOwnSubtitles]
@@ -440,6 +501,12 @@ export const PlayerSection = forwardRef<
 
   const [hasStarted, setHasStarted] =
     useState(false);
+
+  // Set when VidLink didn't start and we moved the viewer off it (see the
+  // watchdog effect below) — drives <AutoSwitchNotice>. Cleared as soon as
+  // they pick a player themselves.
+  const [autoSwitchedFrom, setAutoSwitchedFrom] =
+    useState<ProviderId | null>(null);
 
   // Read inside the subtitle-check effect below without making it re-run
   // (and re-fetch) every time playback starts or the viewer switches
@@ -715,7 +782,55 @@ export const PlayerSection = forwardRef<
    */
   useEffect(() => {
     setHasStarted(false);
+    setAutoSwitchedFrom(null);
   }, [videoUrl]);
+
+  /**
+   * VidLink watchdog — see VIDLINK_START_TIMEOUT_MS. Armed whenever VidLink
+   * is opened (per title/episode, via activeSrc); disarmed for good by its
+   * first "play"/"timeupdate" message.
+   *
+   * A click inside the iframe (e.g. their own play button, when autoplay
+   * was blocked) moves focus into it and blurs our window — that re-arms
+   * the timer instead, so a viewer who's busy starting it by hand isn't
+   * yanked away mid-click.
+   */
+  useEffect(() => {
+    if (!hasStarted || activePlayer !== 4) return;
+
+    let playing = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    function arm() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setAutoSwitchedFrom(4);
+        setActivePlayer(VIDLINK_FALLBACK_PLAYER);
+      }, VIDLINK_START_TIMEOUT_MS);
+    }
+
+    function handleMessage(event: MessageEvent) {
+      if (playing || !isVidlinkPlaying(event)) return;
+      playing = true;
+      clearTimeout(timer);
+    }
+
+    function handleBlur() {
+      if (!playing && document.activeElement instanceof HTMLIFrameElement) {
+        arm();
+      }
+    }
+
+    arm();
+    window.addEventListener("message", handleMessage);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("message", handleMessage);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [hasStarted, activePlayer, activeSrc]);
 
   /**
    * Watching presence.
@@ -812,6 +927,7 @@ export const PlayerSection = forwardRef<
                     title={hasBgSubtitles ? t("player.bgSubtitles") : undefined}
                     onClick={() => {
                       userChangedPlayerRef.current = true;
+                      setAutoSwitchedFrom(null);
                       setActivePlayer(provider);
                     }}
                     className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
@@ -873,6 +989,14 @@ export const PlayerSection = forwardRef<
                   setIsFrameLoading(false)
                 }
               />
+
+              {autoSwitchedFrom !== null &&
+                activePlayer === VIDLINK_FALLBACK_PLAYER && (
+                  <AutoSwitchNotice
+                    from={playerOrder.indexOf(autoSwitchedFrom) + 1}
+                    to={playerOrder.indexOf(activePlayer) + 1}
+                  />
+                )}
 
               {((activePlayer === 5 && player5Url) ||
                 (activePlayer === 4 && player4Url)) && (
