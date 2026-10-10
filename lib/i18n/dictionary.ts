@@ -191,8 +191,8 @@ export const dictionary = {
   "player.player": { en: "Player", bg: "Плейър" },
   "player.choose": { en: "Choose a player", bg: "Избери плейър" },
   "player.hint": {
-    en: "Not loading, slow or no subtitles? Try another player.",
-    bg: "Не тръгва, бави или няма субтитри? Пробвай друг плейър.",
+    en: "Not loading, slow, want better quality or no subtitles? Try another player.",
+    bg: "Не тръгва, бави, търсиш по-добро качество или няма субтитри? Пробвай друг плейър.",
   },
   "player.bgSubtitles": { en: "Bulgarian subtitles", bg: "Български субтитри" },
   "player.manualSubsTitle": {
