@@ -279,7 +279,7 @@ function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
  * <ManualSubtitlesHint> below tells the viewer to do both by hand.
  * `sub_url[]` has to be absolute, same as vidsrc2.ru's `sub_url`.
  */
-function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl?: string): string {
+function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl: string): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
@@ -289,15 +289,8 @@ function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl?: string): string {
     // Our own Play button already stands in for their welcome page.
     welcome_page: "off",
     autoplay: "on",
-    ...(subtitleUrl
-      ? {
-          "sub_url[]": new URL(
-            subtitleUrl,
-            window.location.origin
-          ).toString(),
-          "sub_label[]": "Български",
-        }
-      : {}),
+    "sub_url[]": new URL(subtitleUrl, window.location.origin).toString(),
+    "sub_label[]": "Български",
   });
 }
 
@@ -386,23 +379,26 @@ export const PlayerSection = forwardRef<
     useState<string | undefined>(undefined);
 
   /**
-   * EmbedMaster is first and the default (best picture; our subtitles go
-   * into its own player, switched on by hand — see toEmbedmasterUrl), then
+   * Only when we have our own Bulgarian subtitles: EmbedMaster is added
+   * first and becomes the default (best picture; our subtitles go into its
+   * own player, switched on by hand — see toEmbedmasterUrl), then
    * vidsrc2.ru (our subtitles in its own player, switched on by itself).
    * VidFast and CineSrc still get <SubtitleOverlay> (toggle/download/info +
    * our fullscreen button) as fallbacks, and VidLink — also with our
    * subtitles built into its own player — is added once it's enabled again.
+   *
+   * Without our subtitles it's just vidsrc2.ru, VidFast, CineSrc — each
+   * with its own bundled subtitles.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
 
   /**
-   * Whether EmbedMaster's / vidsrc2.ru's URL carries our subtitle file.
-   * Same rule as `vidfastUsesOurSubs` below: decided once, when the
-   * subtitle check resolves, and only if the viewer isn't already watching
-   * that player by then — adding it would reload the iframe mid-playback.
+   * Whether vidsrc2.ru's URL carries our `sub_url`. Same rule as
+   * `vidfastUsesOurSubs` below: decided once, when the subtitle check
+   * resolves, and only if the viewer isn't already watching vidsrc2.ru by
+   * then — adding it would reload the iframe mid-playback. (EmbedMaster
+   * needs no such flag: it's only ever listed once our subtitles exist.)
    */
-  const [embedmasterUsesOurSubs, setEmbedmasterUsesOurSubs] =
-    useState(false);
   const [vidsrcUsesOurSubs, setVidsrcUsesOurSubs] =
     useState(false);
 
@@ -420,14 +416,16 @@ export const PlayerSection = forwardRef<
     readonly ProviderId[]
   >(
     () =>
-      hasOwnSubtitles && VIDLINK_ENABLED
-        ? [5, 1, 2, 3, 4]
-        : [5, 1, 2, 3],
+      hasOwnSubtitles
+        ? VIDLINK_ENABLED
+          ? [5, 1, 2, 3, 4]
+          : [5, 1, 2, 3]
+        : [1, 2, 3],
     [hasOwnSubtitles]
   );
 
   const [activePlayer, setActivePlayer] =
-    useState<ProviderId>(5);
+    useState<ProviderId>(1);
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -440,6 +438,7 @@ export const PlayerSection = forwardRef<
   useEffect(() => {
     hasStartedRef.current = hasStarted;
   }, [hasStarted]);
+  const userChangedPlayerRef = useRef(false);
   const activePlayerRef = useRef(activePlayer);
   useEffect(() => {
     activePlayerRef.current = activePlayer;
@@ -594,9 +593,11 @@ export const PlayerSection = forwardRef<
    * can never block or break the player itself.
    *
    * If it resolves before the viewer has started playback, our subtitles
-   * are wired into every player. If they're already watching, the player
-   * they're on is left alone (changing its URL would reload it
-   * mid-playback) and only the others get them.
+   * are wired into every player, EmbedMaster is added first and — unless
+   * they've already picked a player themselves — becomes the selected one.
+   * If they're already watching, the player they're on is left alone
+   * (changing its URL would reload it mid-playback) and only the others
+   * get them; EmbedMaster still shows up in the list.
    */
   useEffect(() => {
     if (!vidsrcRef || vidsrcRef.kind !== "movie") return;
@@ -608,14 +609,14 @@ export const PlayerSection = forwardRef<
       .then((res) => {
         if (cancelled || !res.ok) return;
         setSubtitleUrl(url);
-        if (!hasStartedRef.current || activePlayerRef.current !== 5) {
-          setEmbedmasterUsesOurSubs(true);
-        }
         if (!hasStartedRef.current || activePlayerRef.current !== 1) {
           setVidsrcUsesOurSubs(true);
         }
         if (!hasStartedRef.current || activePlayerRef.current !== 2) {
           setVidfastUsesOurSubs(true);
+        }
+        if (!hasStartedRef.current && !userChangedPlayerRef.current) {
+          setActivePlayer(5);
         }
       })
       .catch(() => {
@@ -671,13 +672,10 @@ export const PlayerSection = forwardRef<
 
   const player5Url = useMemo(
     () =>
-      vidsrcRef
-        ? toEmbedmasterUrl(
-            vidsrcRef,
-            embedmasterUsesOurSubs ? subtitleUrl : undefined
-          )
+      vidsrcRef && subtitleUrl
+        ? toEmbedmasterUrl(vidsrcRef, subtitleUrl)
         : null,
-    [vidsrcRef, embedmasterUsesOurSubs, subtitleUrl]
+    [vidsrcRef, subtitleUrl]
   );
 
   /**
@@ -793,7 +791,7 @@ export const PlayerSection = forwardRef<
                   hasOwnSubtitles &&
                   (provider === 3 ||
                     provider === 4 ||
-                    (provider === 5 && embedmasterUsesOurSubs) ||
+                    provider === 5 ||
                     (provider === 1 && vidsrcUsesOurSubs) ||
                     (provider === 2 && vidfastUsesOurSubs));
                 return (
@@ -803,7 +801,10 @@ export const PlayerSection = forwardRef<
                     role="radio"
                     aria-checked={isActive}
                     title={hasBgSubtitles ? t("player.bgSubtitles") : undefined}
-                    onClick={() => setActivePlayer(provider)}
+                    onClick={() => {
+                      userChangedPlayerRef.current = true;
+                      setActivePlayer(provider);
+                    }}
                     className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
                       isActive
                         ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
@@ -864,7 +865,7 @@ export const PlayerSection = forwardRef<
                 }
               />
 
-              {activePlayer === 5 && embedmasterUsesOurSubs && (
+              {activePlayer === 5 && player5Url && (
                 // Keyed so it shows again for each new title/episode — but
                 // not on activeSrc alone, the <iframe> above already is.
                 <ManualSubtitlesHint key={`hint:${activeSrc}`} />
