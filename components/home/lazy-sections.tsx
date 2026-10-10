@@ -12,6 +12,8 @@ export const LazyLastViewedSection = dynamic(() => import("./last-viewed-section
 
 export const LazyTrendingSection = dynamic(() => import("./trending-section").then((mod) => mod.TrendingSection));
 
+export const LazyTrendingShowcase = dynamic(() => import("./trending-showcase").then((mod) => mod.TrendingShowcase));
+
 // Only ever relevant right after a Stripe Checkout redirect — no SEO value,
 // purely post-payment client interactivity — so ssr:false skips it entirely
 // for the other ~100% of homepage visits.

@@ -97,9 +97,46 @@ body {
   animation: marquee-reverse 80s linear infinite;
 }
 
+/* Vertical counterparts — the trending showcase's poster columns. Each list
+   is rendered twice back to back, so -50% lands exactly on its own start.
+   Duration comes from --marquee-duration so neighbouring columns can drift
+   at slightly different speeds. */
+@keyframes marquee-up {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes marquee-down {
+  from {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-marquee-up {
+  animation: marquee-up var(--marquee-duration, 45s) linear infinite;
+}
+
+.animate-marquee-down {
+  animation: marquee-down var(--marquee-duration, 45s) linear infinite;
+}
+/* Fades the bottom of a scroll box — the "there's more below" hint. */
+.edge-fade-bottom {
+  mask-image: linear-gradient(to bottom, black 78%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 78%, transparent);
+}
+
+/* Fades a vertical marquee in/out at the top and bottom edges. */
+.edge-fade-y {
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
-  .animate-marquee-reverse {
+  .animate-marquee-reverse,
+  .animate-marquee-up,
+  .animate-marquee-down {
     animation: none;
   }
 }

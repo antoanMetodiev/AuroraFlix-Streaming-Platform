@@ -60,6 +60,17 @@ export const dictionary = {
 
   "home.popularMovies": { en: "Popular Movies", bg: "Популярни филми" },
   "home.popularShows": { en: "Popular Shows", bg: "Популярни сериали" },
+  "home.trendingMovies": { en: "Trending Movies", bg: "Филми в тренда" },
+  "home.trendingShows": { en: "Trending Series", bg: "Сериали в тренда" },
+  "home.trendingEyebrow": { en: "Trending today", bg: "Днес в тренда" },
+  "home.trendingMoviesText": {
+    en: "The movies everyone is watching right now.",
+    bg: "Филмите, които всички гледат в момента.",
+  },
+  "home.trendingShowsText": {
+    en: "The series everyone is watching right now.",
+    bg: "Сериалите, които всички гледат в момента.",
+  },
   "home.cultMovies": { en: "Cult Movies", bg: "Култови филми" },
   "home.cultShows": { en: "Cult Shows", bg: "Култови сериали" },
   "home.trendingAria": { en: "Trending on AuroraFlix", bg: "Тенденции в AuroraFlix" },
