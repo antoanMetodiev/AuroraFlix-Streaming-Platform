@@ -120,6 +120,7 @@ body {
 .animate-marquee-down {
   animation: marquee-down var(--marquee-duration, 45s) linear infinite;
 }
+
 /* Fades the bottom of a scroll box — the "there's more below" hint. */
 .edge-fade-bottom {
   mask-image: linear-gradient(to bottom, black 78%, transparent);
