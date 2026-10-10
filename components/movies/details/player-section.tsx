@@ -238,6 +238,30 @@ function toCinesrcUrl(ref: VidsrcRef): string {
   });
 }
 
+/**
+ * VidLink — the one provider that takes our own subtitle file directly
+ * (documented `sub_file`: a direct link to a .vtt, plus `sub_label`), so
+ * the subtitles live inside its own player — its own captions menu,
+ * styling and fullscreen — instead of in <SubtitleOverlay> on top of it.
+ * Only offered when we have our own Bulgarian subtitles. `sub_file` has to
+ * be absolute: their player fetches it from its own origin (our
+ * /api/subtitles route already sends CORS headers for that).
+ */
+function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
+  const path =
+    ref.kind === "movie"
+      ? `movie/${ref.tmdbId}`
+      : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+
+  return appendParams(`https://vidlink.pro/${path}`, {
+    autoplay: "true",
+    sub_file: new URL(subtitleUrl, window.location.origin).toString(),
+    sub_label: "Български",
+  });
+}
+
+type ProviderId = 1 | 2 | 3 | 4;
+
 export const PlayerSection = forwardRef<
   HTMLDivElement,
   PlayerSectionProps
@@ -271,8 +295,9 @@ export const PlayerSection = forwardRef<
    * When we have our own Bulgarian subtitles, VidFast is listed first and
    * is the default — it plays more reliably than CineSrc. Both get the same
    * full <SubtitleOverlay> (toggle/download/info + our fullscreen button);
-   * CineSrc just moves to the last slot. vidsrc2.ru stays in the middle
-   * with its own bundled subtitles.
+   * CineSrc moves behind vidsrc2.ru (which keeps its own bundled
+   * subtitles), and VidLink — with our subtitles built into its own player
+   * — is added as a fourth option.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
 
@@ -287,17 +312,17 @@ export const PlayerSection = forwardRef<
     useState(false);
 
   const playerOrder = useMemo<
-    readonly (1 | 2 | 3)[]
+    readonly ProviderId[]
   >(
     () =>
       hasOwnSubtitles
-        ? [2, 1, 3]
+        ? [2, 1, 3, 4]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
 
   const [activePlayer, setActivePlayer] =
-    useState<1 | 2 | 3>(1);
+    useState<ProviderId>(1);
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -500,7 +525,7 @@ export const PlayerSection = forwardRef<
   }, [vidsrcRef]);
 
   /**
-   * Build all three player URLs.
+   * Build all the player URLs.
    *
    * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, on top
    * of VidFast and CineSrc — see the comments on the URL builders above.
@@ -529,6 +554,14 @@ export const PlayerSection = forwardRef<
     [vidsrcRef]
   );
 
+  const player4Url = useMemo(
+    () =>
+      vidsrcRef && subtitleUrl
+        ? toVidlinkUrl(vidsrcRef, subtitleUrl)
+        : null,
+    [vidsrcRef, subtitleUrl]
+  );
+
   /**
    * Select active player.
    */
@@ -537,7 +570,9 @@ export const PlayerSection = forwardRef<
       ? player2Url
       : activePlayer === 3 && player3Url
         ? player3Url
-        : player1Url;
+        : activePlayer === 4 && player4Url
+          ? player4Url
+          : player1Url;
 
   /**
    * Show loader whenever iframe source changes.
@@ -628,13 +663,17 @@ export const PlayerSection = forwardRef<
             <div
               role="radiogroup"
               aria-label={t("player.choose")}
-              className="grid grid-cols-3 gap-2 sm:flex sm:shrink-0"
+              className={`grid gap-2 sm:flex sm:shrink-0 ${
+                playerOrder.length === 4 ? "grid-cols-2" : "grid-cols-3"
+              }`}
             >
               {playerOrder.map((provider, index) => {
                 const isActive = provider === activePlayer;
                 const hasBgSubtitles =
                   hasOwnSubtitles &&
-                  (provider === 3 || (provider === 2 && vidfastUsesOurSubs));
+                  (provider === 3 ||
+                    provider === 4 ||
+                    (provider === 2 && vidfastUsesOurSubs));
                 return (
                   <button
                     key={provider}
