@@ -199,6 +199,10 @@ export const dictionary = {
     en: "Turn on the Bulgarian subtitles",
     bg: "Включи българските субтитри",
   },
+  "player.manualSubsStepsNoServer": {
+    en: "Subtitles button → Български.",
+    bg: "Бутон Субтитри → Български.",
+  },
   "player.manualSubsSteps": {
     en: "Subtitles button → Български. For the best quality: Server (top left) → YesMovies.",
     bg: "Бутон Субтитри → Български. За най-добро качество: Сървър (горе вляво) → YesMovies.",

@@ -245,12 +245,15 @@ function toCinesrcUrl(ref: VidsrcRef): string {
 }
 
 /**
- * VidLink — the one provider that takes our own subtitle file directly
- * (documented `sub_file`: a direct link to a .vtt, plus `sub_label`), so
- * the subtitles live inside its own player — its own captions menu,
- * styling and fullscreen — instead of in <SubtitleOverlay> on top of it.
- * Only offered when we have our own Bulgarian subtitles. `sub_file` has to
- * be absolute: their player fetches it from its own origin (our
+ * VidLink — takes our own subtitle file directly (documented `sub_file`: a
+ * direct link to a .vtt, plus `sub_label`), so the subtitles live inside
+ * its own player — its own captions menu, styling and fullscreen — instead
+ * of in <SubtitleOverlay> on top of it. Same catch as EmbedMaster: it never
+ * turns our track on by itself, so <ManualSubtitlesHint> asks the viewer
+ * to. (It renders cues itself — the <video>'s own <track> for it always
+ * reports an error, which says nothing about whether ours show.) Only
+ * offered when we have our own Bulgarian subtitles. `sub_file` has to be
+ * absolute: their player fetches it from its own origin (our
  * /api/subtitles route already sends CORS headers for that).
  */
 function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
@@ -295,14 +298,15 @@ function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl: string): string {
 }
 
 /**
- * Shown over EmbedMaster once playback starts with our subtitles in it —
- * the viewer has to switch them on (and pick the best server) themselves,
- * see toEmbedmasterUrl above. Only the card itself takes clicks; it hides
- * on its own after a while, or with its close button.
+ * Shown over EmbedMaster and VidLink once playback starts with our
+ * subtitles in them — the viewer has to switch them on (and, on
+ * EmbedMaster, pick the best server) themselves, see the URL builders
+ * above. Only the card itself takes clicks; it hides on its own after a
+ * while, or with its close button.
  */
 const MANUAL_SUBS_HINT_MS = 15_000;
 
-function ManualSubtitlesHint() {
+function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(true);
 
@@ -323,7 +327,11 @@ function ManualSubtitlesHint() {
         <div className="min-w-0">
           <p className="text-sm font-semibold">{t("player.manualSubsTitle")}</p>
           <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
-            {t("player.manualSubsSteps")}
+            {t(
+              withServerTip
+                ? "player.manualSubsSteps"
+                : "player.manualSubsStepsNoServer"
+            )}
           </p>
         </div>
         <button
@@ -342,12 +350,11 @@ function ManualSubtitlesHint() {
 type ProviderId = 1 | 2 | 3 | 4 | 5;
 
 /**
- * VidLink (player 4) is hidden for now: as of 2026-10-10 its streams fail
- * (503 on every title tried) and its in-player fetch of our sub_file fails
- * too, even though the same URL loads fine from its page. Flip this back on
- * once a title actually plays there with our subtitles showing.
+ * VidLink (listed second) is on trial: as of 2026-10-10 it played
+ * Unabomber in 1080p with our subtitles, but Animals never started (their
+ * stream host answered 503 every time). Flip this off to drop it again.
  */
-const VIDLINK_ENABLED = false;
+const VIDLINK_ENABLED = true;
 
 export const PlayerSection = forwardRef<
   HTMLDivElement,
@@ -381,11 +388,11 @@ export const PlayerSection = forwardRef<
   /**
    * Only when we have our own Bulgarian subtitles: EmbedMaster is added
    * first and becomes the default (best picture; our subtitles go into its
-   * own player, switched on by hand — see toEmbedmasterUrl), then
-   * vidsrc2.ru (our subtitles in its own player, switched on by itself).
-   * VidFast and CineSrc still get <SubtitleOverlay> (toggle/download/info +
-   * our fullscreen button) as fallbacks, and VidLink — also with our
-   * subtitles built into its own player — is added once it's enabled again.
+   * own player, switched on by hand — see toEmbedmasterUrl), then VidLink
+   * (same, while VIDLINK_ENABLED), then vidsrc2.ru (our subtitles in its
+   * own player, switched on by itself). VidFast and CineSrc still get
+   * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as
+   * fallbacks.
    *
    * Without our subtitles it's just vidsrc2.ru, VidFast, CineSrc — each
    * with its own bundled subtitles.
@@ -418,7 +425,7 @@ export const PlayerSection = forwardRef<
     () =>
       hasOwnSubtitles
         ? VIDLINK_ENABLED
-          ? [5, 1, 2, 3, 4]
+          ? [5, 4, 1, 2, 3]
           : [5, 1, 2, 3]
         : [1, 2, 3],
     [hasOwnSubtitles]
@@ -865,10 +872,14 @@ export const PlayerSection = forwardRef<
                 }
               />
 
-              {activePlayer === 5 && player5Url && (
+              {((activePlayer === 5 && player5Url) ||
+                (activePlayer === 4 && player4Url)) && (
                 // Keyed so it shows again for each new title/episode — but
                 // not on activeSrc alone, the <iframe> above already is.
-                <ManualSubtitlesHint key={`hint:${activeSrc}`} />
+                <ManualSubtitlesHint
+                  key={`hint:${activeSrc}`}
+                  withServerTip={activePlayer === 5}
+                />
               )}
 
               {subtitleUrl &&
