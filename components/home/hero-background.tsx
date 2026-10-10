@@ -14,38 +14,106 @@ function extractYouTubeId(url?: string | null) {
     return match ? match[1] : "";
 }
 
+/** How often the trailer's playback position is reported to the parent. */
+const PROGRESS_POLL_MS = 250;
+
+/**
+ * Runs one call against the YouTube player, swallowing what it throws.
+ * The player's methods throw outright once its iframe is gone (e.g. a call
+ * landing just as this trailer is swapped for the next one — seen as
+ * "Cannot read properties of null (reading 'src')" from mute()), and from
+ * inside an effect that would take the whole homepage down with it.
+ */
+function withPlayer<T>(player: YouTubePlayer | null, call: (player: YouTubePlayer) => T): T | undefined {
+    if (!player) return undefined;
+    try {
+        return call(player);
+    } catch {
+        return undefined;
+    }
+}
+
 export function HeroBackground({
     record,
     muted,
+    volume,
     onEnded,
     onReady,
+    onProgress,
 }: {
     record: HeroItem["record"];
     muted: boolean;
+    /** 0–100, applied while unmuted (YouTube's own scale). */
+    volume: number;
     onEnded: () => void;
     // Fires once the player has actually started (after the same delay
     // videoReady itself uses) — lets the parent's mute/unmute button stay
     // disabled until there's a real player to mute/unmute, instead of
     // queuing a toggle against a not-yet-ready (or still-buffering) iframe.
     onReady?: () => void;
+    /** 0–1 share of the trailer played so far, every PROGRESS_POLL_MS. */
+    onProgress?: (fraction: number) => void;
 }) {
     const videoId = extractYouTubeId(record.trailerVideoURL);
     const playerRef = useRef<YouTubePlayer | null>(null);
     const [videoReady, setVideoReady] = useState(false);
 
+    // Latest callbacks, read from the timers below without restarting them
+    // every time the parent re-renders with new function identities.
+    const onReadyRef = useRef(onReady);
+    const onProgressRef = useRef(onProgress);
     useEffect(() => {
-        if (!playerRef.current || !videoReady) return;
-        if (muted) {
-            playerRef.current.mute();
-        } else {
-            playerRef.current.unMute();
-            // Several mobile browsers (iOS Safari in particular) pause
-            // playback as a side effect of unMute() on an iframe that
-            // autoplayed muted, instead of just unmuting it — nudge it back
-            // into play to counteract that instead of leaving it paused.
-            playerRef.current.playVideo();
-        }
+        onReadyRef.current = onReady;
+        onProgressRef.current = onProgress;
+    }, [onReady, onProgress]);
+
+    // The reveal timer from onReady below — cleared on unmount so it can't
+    // fire into a trailer that's already been swapped out.
+    const revealTimerRef = useRef<number | undefined>(undefined);
+    useEffect(() => {
+        return () => {
+            window.clearTimeout(revealTimerRef.current);
+            playerRef.current = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!videoReady) return;
+        withPlayer(playerRef.current, (player) => {
+            if (muted) {
+                player.mute();
+            } else {
+                player.unMute();
+                // Several mobile browsers (iOS Safari in particular) pause
+                // playback as a side effect of unMute() on an iframe that
+                // autoplayed muted, instead of just unmuting it — nudge it back
+                // into play to counteract that instead of leaving it paused.
+                player.playVideo();
+            }
+        });
     }, [muted, videoReady]);
+
+    // Kept apart from the mute effect above so dragging the volume doesn't
+    // re-run its playVideo() nudge on every step. (iOS ignores setVolume —
+    // volume there is the hardware buttons' — so the parent only offers the
+    // slider on mouse/trackpad devices.)
+    useEffect(() => {
+        if (!videoReady) return;
+        withPlayer(playerRef.current, (player) => player.setVolume(volume));
+    }, [volume, videoReady]);
+
+    useEffect(() => {
+        if (!videoReady) return;
+        const timer = window.setInterval(() => {
+            const fraction = withPlayer(playerRef.current, (player) => {
+                const duration = Number(player.getDuration());
+                const current = Number(player.getCurrentTime());
+                return duration > 0 && Number.isFinite(current) ? Math.min(current / duration, 1) : undefined;
+            });
+            if (fraction !== undefined) onProgressRef.current?.(fraction);
+        }, PROGRESS_POLL_MS);
+        return () => window.clearInterval(timer);
+    }, [videoReady]);
 
     // Same background-preload-then-swap strategy as the movie/series details
     // header and the image lightbox: paint the fast w1280 render immediately,
@@ -57,7 +125,8 @@ export function HeroBackground({
     );
 
     return (
-        <div className="absolute inset-0 -z-10 overflow-hidden bg-black">
+        // Remounted per title (keyed by the parent), so this fade plays on every switch.
+        <div className="animate-hero-bg-in absolute inset-0 -z-10 overflow-hidden bg-black">
             {backgroundSrc && (
                 <Image
                     key={backgroundSrc}
@@ -102,14 +171,14 @@ export function HeroBackground({
 
                             // The `mute=1` playerVar is undocumented and not reliably honored,
                             // so mute explicitly as soon as the player exists.
-                            if (muted) event.target.mute();
+                            if (muted) withPlayer(event.target, (player) => player.mute());
 
                             // Reveal the video first — nothing below this line may throw and
                             // block the fade-in (quality-level APIs are effectively deprecated
                             // by YouTube and can hang or reject).
-                            window.setTimeout(() => {
+                            revealTimerRef.current = window.setTimeout(() => {
                                 setVideoReady(true);
-                                onReady?.();
+                                onReadyRef.current?.();
                             }, 1200);
                         }}
                         onEnd={onEnded}

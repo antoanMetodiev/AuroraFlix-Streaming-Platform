@@ -121,6 +121,67 @@ body {
   animation: marquee-down var(--marquee-duration, 45s) linear infinite;
 }
 
+/* Homepage hero: every trailer switch fades the new backdrop in and lifts
+   the new title's details into place (both remount per title). */
+@keyframes hero-bg-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes hero-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.animate-hero-bg-in {
+  animation: hero-bg-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-hero-content-in {
+  animation: hero-content-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-bg-in,
+  .animate-hero-content-in {
+    animation: none;
+  }
+}
+
+/* Hero volume slider — a native range input, restyled. The filled part of
+   the track comes from the inline background gradient (--fill). */
+.hero-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #fff var(--fill, 0%), rgba(255, 255, 255, 0.25) var(--fill, 0%));
+  cursor: pointer;
+}
+
+.hero-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.hero-volume::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
 /* Fades the bottom of a scroll box — the "there's more below" hint. */
 .edge-fade-bottom {
   mask-image: linear-gradient(to bottom, black 78%, transparent);
