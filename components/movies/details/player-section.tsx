@@ -262,6 +262,14 @@ function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
 
 type ProviderId = 1 | 2 | 3 | 4;
 
+/**
+ * VidLink (player 4) is hidden for now: as of 2026-10-10 its streams fail
+ * (503 on every title tried) and its in-player fetch of our sub_file fails
+ * too, even though the same URL loads fine from its page. Flip this back on
+ * once a title actually plays there with our subtitles showing.
+ */
+const VIDLINK_ENABLED = false;
+
 export const PlayerSection = forwardRef<
   HTMLDivElement,
   PlayerSectionProps
@@ -316,7 +324,9 @@ export const PlayerSection = forwardRef<
   >(
     () =>
       hasOwnSubtitles
-        ? [2, 1, 3, 4]
+        ? VIDLINK_ENABLED
+          ? [2, 1, 3, 4]
+          : [2, 1, 3]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
