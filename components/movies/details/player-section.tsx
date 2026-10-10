@@ -298,15 +298,46 @@ function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl: string): string {
 }
 
 /**
- * Shown over EmbedMaster and VidLink once playback starts with our
- * subtitles in them — the viewer has to switch them on (and, on
- * EmbedMaster, pick the best server) themselves, see the URL builders
- * above. Only the card itself takes clicks; it hides on its own after a
- * while, or with its close button.
+ * VaPlayer (VidAPI) — takes our own subtitle file (documented `sub_url`,
+ * fetched by *their* server, so no CORS involved) and, with
+ * `sub_default`, selects it by itself. Verified 2026-10-10: on Animals
+ * and Fall 2 ours came up on its own; on Unabomber the stream's own
+ * English-SDH track won anyway (neither `ds_lang` nor `sub_default=1`
+ * changed that), so <ManualSubtitlesHint> still says where to find ours.
+ */
+function toVaplayerUrl(ref: VidsrcRef, subtitleUrl: string): string {
+  const path =
+    ref.kind === "movie"
+      ? `movie/${ref.tmdbId}`
+      : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+
+  return appendParams(`https://vaplayer.ru/embed/${path}`, {
+    sub_url: new URL(subtitleUrl, window.location.origin).toString(),
+    sub_label: "Български",
+    sub_lang: DEFAULT_SUBTITLE_LANG,
+    sub_default: "true",
+  });
+}
+
+/**
+ * Shown over EmbedMaster, VaPlayer and VidLink once playback starts with
+ * our subtitles in them:
+ * - "server": EmbedMaster — switch ours on, and pick the best server;
+ * - "manual": VidLink — switch ours on;
+ * - "fallback": VaPlayer — ours are usually on already, so only a
+ *   reminder of where to find them when they aren't.
+ * Only the card itself takes clicks; it hides on its own after a while,
+ * or with its close button.
  */
 const MANUAL_SUBS_HINT_MS = 15_000;
 
-function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
+type ManualSubtitlesHintVariant = "server" | "manual" | "fallback";
+
+function ManualSubtitlesHint({
+  variant,
+}: {
+  variant: ManualSubtitlesHintVariant;
+}) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(true);
 
@@ -325,10 +356,16 @@ function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
       >
         <Captions size={20} className="mt-0.5 shrink-0 text-emerald-400" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold">{t("player.manualSubsTitle")}</p>
+          <p className="text-sm font-semibold">
+            {t(
+              variant === "fallback"
+                ? "player.missingSubsTitle"
+                : "player.manualSubsTitle"
+            )}
+          </p>
           <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
             {t(
-              withServerTip
+              variant === "server"
                 ? "player.manualSubsSteps"
                 : "player.manualSubsStepsNoServer"
             )}
@@ -347,7 +384,7 @@ function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
   );
 }
 
-type ProviderId = 1 | 2 | 3 | 4 | 5;
+type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
 
 /**
  * VidLink (listed second) is on trial: as of 2026-10-10 it played
@@ -388,9 +425,10 @@ export const PlayerSection = forwardRef<
   /**
    * Only when we have our own Bulgarian subtitles: EmbedMaster is added
    * first and becomes the default (best picture; our subtitles go into its
-   * own player, switched on by hand — see toEmbedmasterUrl), then VidLink
-   * (same, while VIDLINK_ENABLED), then vidsrc2.ru (our subtitles in its
-   * own player, switched on by itself). VidFast and CineSrc still get
+   * own player, switched on by hand — see toEmbedmasterUrl), then
+   * VaPlayer (ours in its own player, usually switched on by itself), then
+   * VidLink (switched on by hand, while VIDLINK_ENABLED), then vidsrc2.ru
+   * (ours in its own player, switched on by itself). VidFast and CineSrc still get
    * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as
    * fallbacks.
    *
@@ -425,8 +463,8 @@ export const PlayerSection = forwardRef<
     () =>
       hasOwnSubtitles
         ? VIDLINK_ENABLED
-          ? [5, 4, 1, 2, 3]
-          : [5, 1, 2, 3]
+          ? [5, 6, 4, 1, 2, 3]
+          : [5, 6, 1, 2, 3]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
@@ -677,6 +715,14 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
+  const player6Url = useMemo(
+    () =>
+      vidsrcRef && subtitleUrl
+        ? toVaplayerUrl(vidsrcRef, subtitleUrl)
+        : null,
+    [vidsrcRef, subtitleUrl]
+  );
+
   const player5Url = useMemo(
     () =>
       vidsrcRef && subtitleUrl
@@ -688,16 +734,15 @@ export const PlayerSection = forwardRef<
   /**
    * Select active player.
    */
-  const activeSrc =
-    activePlayer === 5 && player5Url
-      ? player5Url
-      : activePlayer === 2 && player2Url
-      ? player2Url
-      : activePlayer === 3 && player3Url
-        ? player3Url
-        : activePlayer === 4 && player4Url
-          ? player4Url
-          : player1Url;
+  const playerUrls: Record<ProviderId, string | null> = {
+    1: player1Url,
+    2: player2Url,
+    3: player3Url,
+    4: player4Url,
+    5: player5Url,
+    6: player6Url,
+  };
+  const activeSrc = playerUrls[activePlayer] || player1Url;
 
   /**
    * Show loader whenever iframe source changes.
@@ -799,6 +844,7 @@ export const PlayerSection = forwardRef<
                   (provider === 3 ||
                     provider === 4 ||
                     provider === 5 ||
+                    provider === 6 ||
                     (provider === 1 && vidsrcUsesOurSubs) ||
                     (provider === 2 && vidfastUsesOurSubs));
                 return (
@@ -873,12 +919,19 @@ export const PlayerSection = forwardRef<
               />
 
               {((activePlayer === 5 && player5Url) ||
+                (activePlayer === 6 && player6Url) ||
                 (activePlayer === 4 && player4Url)) && (
                 // Keyed so it shows again for each new title/episode — but
                 // not on activeSrc alone, the <iframe> above already is.
                 <ManualSubtitlesHint
                   key={`hint:${activeSrc}`}
-                  withServerTip={activePlayer === 5}
+                  variant={
+                    activePlayer === 5
+                      ? "server"
+                      : activePlayer === 6
+                        ? "fallback"
+                        : "manual"
+                  }
                 />
               )}
 

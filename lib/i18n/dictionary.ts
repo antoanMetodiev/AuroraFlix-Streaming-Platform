@@ -199,6 +199,10 @@ export const dictionary = {
     en: "Turn on the Bulgarian subtitles",
     bg: "Включи българските субтитри",
   },
+  "player.missingSubsTitle": {
+    en: "No Bulgarian subtitles on screen?",
+    bg: "Не виждаш български субтитри?",
+  },
   "player.manualSubsStepsNoServer": {
     en: "Subtitles button → Български.",
     bg: "Бутон Субтитри → Български.",
