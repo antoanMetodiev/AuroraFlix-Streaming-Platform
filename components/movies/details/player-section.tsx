@@ -134,13 +134,16 @@ const DEFAULT_SUBTITLE_LANG = "bg";
 /**
  * vidsrc.icu -> vidsrc2.ru
  *
- * <SubtitleOverlay> never renders on this player (only on VidFast and
- * CineSrc — see `hasOwnSubtitles` below), so it never competes with this
- * provider's own bundled subtitle — always
- * ask it to preselect its Bulgarian track instead of leaving the viewer
- * with no subtitles at all when they switch to this player.
+ * <SubtitleOverlay> never renders on this player. When we have our own
+ * Bulgarian subtitles, they go straight into its own player via `sub_url`
+ * (shows up as "Custom subtitle" in its captions menu, preselected) — so
+ * they work with its own fullscreen and rotation on every device, no
+ * overlay needed. Verified 2026-10-10 on Inception (27205). `sub_url` has
+ * to be absolute: their player fetches it from its own origin (our
+ * /api/subtitles route already sends CORS headers for that).
+ * Otherwise, ask it to preselect its own bundled Bulgarian track.
  */
-function toPlayableUrl(videoUrl: string): string {
+function toPlayableUrl(videoUrl: string, subtitleUrl?: string): string {
   const playableUrl = videoUrl.replace(
     "vidsrc.icu",
     "vidsrc2.ru"
@@ -150,6 +153,9 @@ function toPlayableUrl(videoUrl: string): string {
     autoplay: "1",
     sub: DEFAULT_SUBTITLE_LANG,
     ds_lang: DEFAULT_SUBTITLE_LANG,
+    sub_url: subtitleUrl
+      ? new URL(subtitleUrl, window.location.origin).toString()
+      : undefined,
   });
 }
 
@@ -300,14 +306,23 @@ export const PlayerSection = forwardRef<
     useState<string | undefined>(undefined);
 
   /**
-   * When we have our own Bulgarian subtitles, VidFast is listed first and
-   * is the default — it plays more reliably than CineSrc. Both get the same
-   * full <SubtitleOverlay> (toggle/download/info + our fullscreen button);
-   * CineSrc moves behind vidsrc2.ru (which keeps its own bundled
-   * subtitles), and VidLink — with our subtitles built into its own player
-   * — is added as a fourth option.
+   * When we have our own Bulgarian subtitles, vidsrc2.ru stays first and
+   * the default — it takes them directly into its own player (`sub_url`),
+   * no overlay. VidFast and CineSrc still get <SubtitleOverlay>
+   * (toggle/download/info + our fullscreen button) as fallbacks, and
+   * VidLink — also with our subtitles built into its own player — is added
+   * as a fourth option once it's enabled again.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
+
+  /**
+   * Whether vidsrc2.ru's URL carries our `sub_url`. Same rule as
+   * `vidfastUsesOurSubs` below: decided once, when the subtitle check
+   * resolves, and only if the viewer isn't already watching vidsrc2.ru by
+   * then — adding it would reload the iframe mid-playback.
+   */
+  const [vidsrcUsesOurSubs, setVidsrcUsesOurSubs] =
+    useState(false);
 
   /**
    * Whether VidFast's URL was built without its own subtitle track, i.e.
@@ -323,10 +338,8 @@ export const PlayerSection = forwardRef<
     readonly ProviderId[]
   >(
     () =>
-      hasOwnSubtitles
-        ? VIDLINK_ENABLED
-          ? [2, 1, 3, 4]
-          : [2, 1, 3]
+      hasOwnSubtitles && VIDLINK_ENABLED
+        ? [1, 2, 3, 4]
         : [1, 2, 3],
     [hasOwnSubtitles]
   );
@@ -345,7 +358,6 @@ export const PlayerSection = forwardRef<
   useEffect(() => {
     hasStartedRef.current = hasStarted;
   }, [hasStarted]);
-  const userChangedPlayerRef = useRef(false);
   const activePlayerRef = useRef(activePlayer);
   useEffect(() => {
     activePlayerRef.current = activePlayer;
@@ -499,13 +511,10 @@ export const PlayerSection = forwardRef<
    * this session, exactly like a genuine "not found" already behaves; it
    * can never block or break the player itself.
    *
-   * If it resolves in time — before the viewer has clicked Play or touched
-   * the player selector themselves — the VidFast-first default is applied
-   * retroactively via setActivePlayer(2), same preference the old
-   * synchronous check used to set from the start. After either of those,
-   * the subtitle track is still available in the player list, just no
-   * longer auto-selected — switching mid-playback would be more jarring
-   * than helpful.
+   * If it resolves before the viewer has started playback, our subtitles
+   * are wired into every player. If they're already watching, the player
+   * they're on is left alone (changing its URL would reload it
+   * mid-playback) and only the others get them.
    */
   useEffect(() => {
     if (!vidsrcRef || vidsrcRef.kind !== "movie") return;
@@ -517,11 +526,11 @@ export const PlayerSection = forwardRef<
       .then((res) => {
         if (cancelled || !res.ok) return;
         setSubtitleUrl(url);
+        if (!hasStartedRef.current || activePlayerRef.current !== 1) {
+          setVidsrcUsesOurSubs(true);
+        }
         if (!hasStartedRef.current || activePlayerRef.current !== 2) {
           setVidfastUsesOurSubs(true);
-        }
-        if (!hasStartedRef.current && !userChangedPlayerRef.current) {
-          setActivePlayer(2);
         }
       })
       .catch(() => {
@@ -543,9 +552,12 @@ export const PlayerSection = forwardRef<
   const player1Url = useMemo(
     () =>
       videoUrl
-        ? toPlayableUrl(videoUrl)
+        ? toPlayableUrl(
+            videoUrl,
+            vidsrcUsesOurSubs ? subtitleUrl : undefined
+          )
         : "",
-    [videoUrl]
+    [videoUrl, vidsrcUsesOurSubs, subtitleUrl]
   );
 
   const player2Url = useMemo(
@@ -683,6 +695,7 @@ export const PlayerSection = forwardRef<
                   hasOwnSubtitles &&
                   (provider === 3 ||
                     provider === 4 ||
+                    (provider === 1 && vidsrcUsesOurSubs) ||
                     (provider === 2 && vidfastUsesOurSubs));
                 return (
                   <button
@@ -691,10 +704,7 @@ export const PlayerSection = forwardRef<
                     role="radio"
                     aria-checked={isActive}
                     title={hasBgSubtitles ? t("player.bgSubtitles") : undefined}
-                    onClick={() => {
-                      userChangedPlayerRef.current = true;
-                      setActivePlayer(provider);
-                    }}
+                    onClick={() => setActivePlayer(provider)}
                     className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
                       isActive
                         ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
