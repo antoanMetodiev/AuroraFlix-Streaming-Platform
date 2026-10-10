@@ -15,6 +15,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Primary"
+      data-site-chrome
       className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-0.5 rounded-3xl border border-foreground/10 bg-surface/90 px-1.5 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-[0_20px_45px_-8px_rgba(0,0,0,0.55)] backdrop-blur-xl md:hidden"
     >
       {NAV_LINKS.map(({ href, labelKey, icon: Icon }) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Captions, MonitorPlay, Play } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
@@ -104,6 +103,22 @@ function getFullscreenElement(): Element | null {
 function requestFullscreen(el: HTMLElement) {
   const target = el as PrefixedFullscreenElement;
   return (target.requestFullscreen ?? target.webkitRequestFullscreen)?.call(target);
+}
+
+/**
+ * iPhone Safari (and every iPhone browser, since they're all WebKit) has no
+ * Fullscreen API for anything but a bare <video> — `requestFullscreen` and
+ * `webkitRequestFullscreen` simply don't exist on other elements there.
+ */
+function canRequestFullscreen(el: HTMLElement): boolean {
+  const doc = document as PrefixedFullscreenDocument & {
+    webkitFullscreenEnabled?: boolean;
+  };
+  const target = el as PrefixedFullscreenElement;
+  return Boolean(
+    (document.fullscreenEnabled || doc.webkitFullscreenEnabled) &&
+      (target.requestFullscreen || target.webkitRequestFullscreen)
+  );
 }
 
 function exitFullscreen() {
@@ -391,10 +406,15 @@ export const PlayerSection = forwardRef<
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Hides the site header and the mobile tab bar (see globals.css). The
+    // big view sits inside the details page's `isolate` wrapper, so no
+    // z-index can lift it above those two — they're simply taken away.
+    document.documentElement.setAttribute("data-player-big-view", "");
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.documentElement.removeAttribute("data-player-big-view");
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isBigView]);
@@ -407,11 +427,20 @@ export const PlayerSection = forwardRef<
 
     if (getFullscreenElement()) {
       exitFullscreen();
-    } else if (containerRef.current) {
-      requestFullscreen(
-        containerRef.current
-      )?.catch(() => {});
+      return;
     }
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    // No real fullscreen for our wrapper here (iPhone) — fall back to the
+    // CSS big view, which still covers the screen *with* our subtitles.
+    // Same if the browser turns the request down for any other reason.
+    if (!canRequestFullscreen(container)) {
+      setIsBigView(true);
+      return;
+    }
+    requestFullscreen(container)?.catch(() => setIsBigView(true));
   }
 
   const vidsrcRef = useMemo(
@@ -563,10 +592,15 @@ export const PlayerSection = forwardRef<
     <div ref={forwardedRef}>
       <section
         ref={ref}
+        // While in the big view the section carries no `translate` at all:
+        // any transform on an ancestor becomes the containing block for
+        // `position: fixed`, which would shrink the big view to this section.
         className={`mx-auto flex max-w-[80rem] flex-col items-center px-4 py-16 transition-all duration-700 sm:px-6 sm:py-20 ${
-          inView
-            ? "translate-y-0 opacity-100"
-            : "translate-y-14 opacity-0"
+          isBigView
+            ? "opacity-100"
+            : inView
+              ? "translate-y-0 opacity-100"
+              : "translate-y-14 opacity-0"
         }`}
       >
         {/*
@@ -687,33 +721,20 @@ export const PlayerSection = forwardRef<
             </>
           );
 
-          if (
-            isBigView &&
-            typeof document !== "undefined"
-          ) {
-            /**
-             * The fade-in-on-scroll animation above sets `translate-y-*` on
-             * the ancestor <section> — any CSS transform on an ancestor
-             * becomes the containing block for `position: fixed`
-             * descendants, so a plain fixed box here would size itself to
-             * that section instead of the viewport. Portalling straight to
-             * <body> sidesteps that ancestor chain entirely.
-             */
-            return createPortal(
-              <div
-                ref={containerRef}
-                className="animate-big-view-in fixed inset-0 z-[100] bg-black"
-              >
-                {playerBody}
-              </div>,
-              document.body
-            );
-          }
-
+          /**
+           * The same element in both modes, just restyled for the big view —
+           * it used to be portalled to <body> instead, which remounted the
+           * iframe and reloaded the provider's player on every switch (and on
+           * iPhone, where autoplay with sound is blocked, left it stopped).
+           */
           return (
             <div
               ref={containerRef}
-              className="relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]"
+              className={
+                isBigView
+                  ? "animate-big-view-in fixed inset-0 z-[100] overflow-hidden bg-black"
+                  : "relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]"
+              }
             >
               {videoUrl ? (
                 hasStarted ? (

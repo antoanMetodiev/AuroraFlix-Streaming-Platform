@@ -374,3 +374,8 @@ body {
     animation: none;
   }
 }
+
+/* The player's CSS "big view" (player-section.tsx) — site chrome out of the way. */
+html[data-player-big-view] [data-site-chrome] {
+  display: none;
+}
