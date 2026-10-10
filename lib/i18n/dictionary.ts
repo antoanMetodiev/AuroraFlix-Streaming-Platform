@@ -195,7 +195,14 @@ export const dictionary = {
     bg: "Не тръгва, бави или няма субтитри? Пробвай друг плейър.",
   },
   "player.bgSubtitles": { en: "Bulgarian subtitles", bg: "Български субтитри" },
-  "player.play": { en: "Play", bg: "Пусни" },
+  "player.manualSubsTitle": {
+    en: "Turn on the Bulgarian subtitles",
+    bg: "Включи българските субтитри",
+  },
+  "player.manualSubsSteps": {
+    en: "Subtitles button → Български. For the best quality: Server (top left) → YesMovies.",
+    bg: "Бутон Субтитри → Български. За най-добро качество: Сървър (горе вляво) → YesMovies.",
+  },  "player.play": { en: "Play", bg: "Пусни" },
 
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
   "subtitles.retry": { en: "Retry", bg: "Опитай пак" },

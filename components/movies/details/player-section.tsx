@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Captions, MonitorPlay, Play } from "lucide-react";
+import { Captions, MonitorPlay, Play, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -266,7 +266,87 @@ function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
   });
 }
 
-type ProviderId = 1 | 2 | 3 | 4;
+/**
+ * EmbedMaster — the best picture we've found (several servers per title,
+ * YesMovies often 4K), and it takes our own subtitle file directly
+ * (documented `sub_url[]` + `sub_label[]`), so it lands in its own captions
+ * menu — no <SubtitleOverlay>, its own fullscreen just works.
+ *
+ * Two catches, verified 2026-10-10 on Inception, Unabomber and Animals:
+ * it never turns our track on by itself (despite their docs saying it does),
+ * and it opens on whatever server it picks first (often 720p). Neither can
+ * be set from outside — no URL param, no postMessage command — so
+ * <ManualSubtitlesHint> below tells the viewer to do both by hand.
+ * `sub_url[]` has to be absolute, same as vidsrc2.ru's `sub_url`.
+ */
+function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl?: string): string {
+  const path =
+    ref.kind === "movie"
+      ? `movie/${ref.tmdbId}`
+      : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+
+  return appendParams(`https://embedmaster.link/${path}`, {
+    // Our own Play button already stands in for their welcome page.
+    welcome_page: "off",
+    autoplay: "on",
+    ...(subtitleUrl
+      ? {
+          "sub_url[]": new URL(
+            subtitleUrl,
+            window.location.origin
+          ).toString(),
+          "sub_label[]": "Български",
+        }
+      : {}),
+  });
+}
+
+/**
+ * Shown over EmbedMaster once playback starts with our subtitles in it —
+ * the viewer has to switch them on (and pick the best server) themselves,
+ * see toEmbedmasterUrl above. Only the card itself takes clicks; it hides
+ * on its own after a while, or with its close button.
+ */
+const MANUAL_SUBS_HINT_MS = 15_000;
+
+function ManualSubtitlesHint() {
+  const { t } = useTranslation();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), MANUAL_SUBS_HINT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-12 z-20 flex justify-center px-3 sm:top-14">
+      <div
+        role="status"
+        className="pointer-events-auto flex max-w-md items-start gap-3 rounded-2xl border border-white/15 bg-black/75 p-3 text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-4"
+      >
+        <Captions size={20} className="mt-0.5 shrink-0 text-emerald-400" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{t("player.manualSubsTitle")}</p>
+          <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
+            {t("player.manualSubsSteps")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setVisible(false)}
+          aria-label={t("common.close")}
+          className="-m-1 shrink-0 cursor-pointer rounded-full p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type ProviderId = 1 | 2 | 3 | 4 | 5;
 
 /**
  * VidLink (player 4) is hidden for now: as of 2026-10-10 its streams fail
@@ -306,21 +386,23 @@ export const PlayerSection = forwardRef<
     useState<string | undefined>(undefined);
 
   /**
-   * When we have our own Bulgarian subtitles, vidsrc2.ru stays first and
-   * the default — it takes them directly into its own player (`sub_url`),
-   * no overlay. VidFast and CineSrc still get <SubtitleOverlay>
-   * (toggle/download/info + our fullscreen button) as fallbacks, and
-   * VidLink — also with our subtitles built into its own player — is added
-   * as a fourth option once it's enabled again.
+   * EmbedMaster is first and the default (best picture; our subtitles go
+   * into its own player, switched on by hand — see toEmbedmasterUrl), then
+   * vidsrc2.ru (our subtitles in its own player, switched on by itself).
+   * VidFast and CineSrc still get <SubtitleOverlay> (toggle/download/info +
+   * our fullscreen button) as fallbacks, and VidLink — also with our
+   * subtitles built into its own player — is added once it's enabled again.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
 
   /**
-   * Whether vidsrc2.ru's URL carries our `sub_url`. Same rule as
-   * `vidfastUsesOurSubs` below: decided once, when the subtitle check
-   * resolves, and only if the viewer isn't already watching vidsrc2.ru by
-   * then — adding it would reload the iframe mid-playback.
+   * Whether EmbedMaster's / vidsrc2.ru's URL carries our subtitle file.
+   * Same rule as `vidfastUsesOurSubs` below: decided once, when the
+   * subtitle check resolves, and only if the viewer isn't already watching
+   * that player by then — adding it would reload the iframe mid-playback.
    */
+  const [embedmasterUsesOurSubs, setEmbedmasterUsesOurSubs] =
+    useState(false);
   const [vidsrcUsesOurSubs, setVidsrcUsesOurSubs] =
     useState(false);
 
@@ -339,13 +421,13 @@ export const PlayerSection = forwardRef<
   >(
     () =>
       hasOwnSubtitles && VIDLINK_ENABLED
-        ? [1, 2, 3, 4]
-        : [1, 2, 3],
+        ? [5, 1, 2, 3, 4]
+        : [5, 1, 2, 3],
     [hasOwnSubtitles]
   );
 
   const [activePlayer, setActivePlayer] =
-    useState<ProviderId>(1);
+    useState<ProviderId>(5);
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -526,6 +608,9 @@ export const PlayerSection = forwardRef<
       .then((res) => {
         if (cancelled || !res.ok) return;
         setSubtitleUrl(url);
+        if (!hasStartedRef.current || activePlayerRef.current !== 5) {
+          setEmbedmasterUsesOurSubs(true);
+        }
         if (!hasStartedRef.current || activePlayerRef.current !== 1) {
           setVidsrcUsesOurSubs(true);
         }
@@ -584,11 +669,24 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
+  const player5Url = useMemo(
+    () =>
+      vidsrcRef
+        ? toEmbedmasterUrl(
+            vidsrcRef,
+            embedmasterUsesOurSubs ? subtitleUrl : undefined
+          )
+        : null,
+    [vidsrcRef, embedmasterUsesOurSubs, subtitleUrl]
+  );
+
   /**
    * Select active player.
    */
   const activeSrc =
-    activePlayer === 2 && player2Url
+    activePlayer === 5 && player5Url
+      ? player5Url
+      : activePlayer === 2 && player2Url
       ? player2Url
       : activePlayer === 3 && player3Url
         ? player3Url
@@ -695,6 +793,7 @@ export const PlayerSection = forwardRef<
                   hasOwnSubtitles &&
                   (provider === 3 ||
                     provider === 4 ||
+                    (provider === 5 && embedmasterUsesOurSubs) ||
                     (provider === 1 && vidsrcUsesOurSubs) ||
                     (provider === 2 && vidfastUsesOurSubs));
                 return (
@@ -764,6 +863,12 @@ export const PlayerSection = forwardRef<
                   setIsFrameLoading(false)
                 }
               />
+
+              {activePlayer === 5 && embedmasterUsesOurSubs && (
+                // Keyed so it shows again for each new title/episode — but
+                // not on activeSrc alone, the <iframe> above already is.
+                <ManualSubtitlesHint key={`hint:${activeSrc}`} />
+              )}
 
               {subtitleUrl &&
                 (activePlayer === 3 ||
