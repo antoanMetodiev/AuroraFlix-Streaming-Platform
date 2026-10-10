@@ -375,18 +375,36 @@ const VIDLINK_FALLBACK_PLAYER: ProviderId = 1;
 /** How long the "switched you to another player" note stays up. */
 const AUTO_SWITCH_NOTICE_MS = 8_000;
 
-function isVidlinkPlaying(event: MessageEvent): boolean {
-  if (event.origin !== VIDLINK_ORIGIN) return false;
+/**
+ * The playback position in one of VidLink's `PLAYER_EVENT` "timeupdate"
+ * messages, or null for anything else. A single "timeupdate" proves
+ * nothing — it also fires while their player restores saved progress on a
+ * video that never actually starts (seen on Unabomber, stuck at 0:00) —
+ * so the watchdog below waits for the position to really move.
+ */
+function vidlinkTimeupdate(event: MessageEvent): number | null {
+  if (event.origin !== VIDLINK_ORIGIN) return null;
   const message = event.data as
-    | { type?: unknown; data?: { event?: unknown } }
+    | { type?: unknown; data?: { event?: unknown; currentTime?: unknown } }
     | null
     | undefined;
-  return (
-    message?.type === "PLAYER_EVENT" &&
-    (message.data?.event === "play" ||
-      message.data?.event === "timeupdate")
-  );
+  const currentTime = message?.data?.currentTime;
+  return message?.type === "PLAYER_EVENT" &&
+    message.data?.event === "timeupdate" &&
+    typeof currentTime === "number" &&
+    Number.isFinite(currentTime)
+    ? currentTime
+    : null;
 }
+
+/**
+ * How much real playback VidLink has to report to count as playing: the
+ * sum of small forward steps between consecutive "timeupdate"s. A bigger
+ * jump (in either direction) is a seek — e.g. restoring saved progress —
+ * and doesn't count.
+ */
+const VIDLINK_PROGRESS_PROOF_S = 1;
+const VIDLINK_MAX_PLAYBACK_STEP_S = 5;
 
 function AutoSwitchNotice({ from, to }: { from: number; to: number }) {
   const { t } = useTranslation();
@@ -787,8 +805,9 @@ export const PlayerSection = forwardRef<
 
   /**
    * VidLink watchdog — see VIDLINK_START_TIMEOUT_MS. Armed whenever VidLink
-   * is opened (per title/episode, via activeSrc); disarmed for good by its
-   * first "play"/"timeupdate" message.
+   * is opened (per title/episode, via activeSrc); disarmed for good once
+   * its "timeupdate" messages show the position actually advancing (see
+   * vidlinkTimeupdate).
    *
    * A click inside the iframe (e.g. their own play button, when autoplay
    * was blocked) moves focus into it and blurs our window — that re-arms
@@ -799,6 +818,8 @@ export const PlayerSection = forwardRef<
     if (!hasStarted || activePlayer !== 4) return;
 
     let playing = false;
+    let lastPosition: number | null = null;
+    let playedSeconds = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     function arm() {
@@ -810,7 +831,17 @@ export const PlayerSection = forwardRef<
     }
 
     function handleMessage(event: MessageEvent) {
-      if (playing || !isVidlinkPlaying(event)) return;
+      if (playing) return;
+      const position = vidlinkTimeupdate(event);
+      if (position === null) return;
+      if (lastPosition !== null) {
+        const step = position - lastPosition;
+        if (step > 0 && step <= VIDLINK_MAX_PLAYBACK_STEP_S) {
+          playedSeconds += step;
+        }
+      }
+      lastPosition = position;
+      if (playedSeconds < VIDLINK_PROGRESS_PROOF_S) return;
       playing = true;
       clearTimeout(timer);
     }
