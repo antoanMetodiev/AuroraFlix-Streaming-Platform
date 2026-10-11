@@ -230,11 +230,11 @@ export const dictionary = {
     en: "Subtitles button → Български. For the best quality: Server (top left) → YesMovies.",
     bg: "Бутон Субтитри → Български. За най-добро качество: Сървър (горе вляво) → YesMovies.",
   },
-  "player.cinesrcSubsSteps": {
-    en: "The player turns on Bulgarian by itself when it has them. Missing or out of sync? Download ours, then Subtitles button → Upload Subtitle.",
-    bg: "Плейърът сам включва български, ако ги има. Липсват или не пасват? Свали нашите, после бутон Субтитри → Upload Subtitle.",
+  "player.uploadSubsSteps": {
+    en: "The player turns on Bulgarian by itself when it has them. Missing or out of sync? Download ours, then Subtitles button → {button}.",
+    bg: "Плейърът сам включва български, ако ги има. Липсват или не пасват? Свали нашите, после бутон Субтитри → {button}.",
   },
-  "player.cinesrcSubsDownload": {
+  "player.uploadSubsDownload": {
     en: "Download Bulgarian subtitles",
     bg: "Свали българските субтитри",
   },

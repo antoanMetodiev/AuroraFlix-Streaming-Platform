@@ -325,7 +325,9 @@ const MANUAL_SUBS_HINT_MS = 15_000;
 
 type ManualSubtitlesHintProps =
   | { variant: "embedmaster" | "vidlink" }
-  | { variant: "cinesrc"; subtitleUrl: string };
+  /** Players with an upload button for subtitle files (CineSrc, nxsha):
+   *  offers our .vtt for download and names the button to upload it with. */
+  | { variant: "upload"; subtitleUrl: string; uploadButton: string };
 
 function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
   const { t } = useTranslation();
@@ -348,28 +350,28 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
         <div className="min-w-0">
           <p className="text-sm font-semibold">
             {t(
-              props.variant === "cinesrc"
+              props.variant === "upload"
                 ? "player.bgSubtitles"
                 : "player.manualSubsTitle"
             )}
           </p>
           <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
-            {t(
-              props.variant === "cinesrc"
-                ? "player.cinesrcSubsSteps"
-                : props.variant === "embedmaster"
-                  ? "player.manualSubsSteps"
-                  : "player.manualSubsStepsNoServer"
-            )}
+            {props.variant === "upload"
+              ? t("player.uploadSubsSteps", { button: props.uploadButton })
+              : t(
+                  props.variant === "embedmaster"
+                    ? "player.manualSubsSteps"
+                    : "player.manualSubsStepsNoServer"
+                )}
           </p>
-          {props.variant === "cinesrc" && (
+          {props.variant === "upload" && (
             <a
               href={props.subtitleUrl}
               download="Bulgarian.vtt"
               className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-white/85 sm:text-sm"
             >
               <Download size={14} />
-              {t("player.cinesrcSubsDownload")}
+              {t("player.uploadSubsDownload")}
             </a>
           )}
         </div>
@@ -395,64 +397,46 @@ type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
 const TEST_PLAYER_SLOT = 6 satisfies ProviderId;
 
 /**
- * PrimeSrc — on trial (2026-10-11), sandboxed, to see whether it plays
- * there and what ads it still shows. An aggregator of file hosts; each of
- * them gets its own test button (`whitelistServers` keeps PrimeSrc to that
- * one), since some refuse to start inside a sandbox (Voe did). Not every
- * host has every title. Reads our subtitle file from `sub_url` (seen it
- * fetch it; not yet seen it actually show it). Absolute URL, same as
- * vidsrc2.ru's.
+ * PrimeSrc — on trial (2026-10-11), sandboxed. An aggregator of file
+ * hosts, kept to one with `whitelistServers`. Of all its hosts (Filemoon,
+ * Voe, Dood, Streamtape, Luluvdoo, Streamwish, Vidmoly, Mixdrop, Filelions,
+ * Savefiles, VidsST, Streamplay, Vinovo, Vidara) only Streamplay played
+ * ad-free inside a sandbox (tested on production, 2026-10-11) — the rest
+ * refused the sandbox, had nothing, or still showed ads inside the frame.
+ *
+ * No way in for our subtitles: PrimeSrc itself doesn't read `sub_url` (an
+ * earlier probe saw *something* on its page fetch our file, but not its
+ * player), and it hands the host nothing but the link.
  */
-const PRIMESRC_SERVERS = [
-  "Filemoon",
-  "Voe",
-  "Dood",
-  "Streamtape",
-  "Luluvdoo",
-  "Streamwish",
-  "Vidmoly",
-  "Mixdrop",
-  "Filelions",
-  "Savefiles",
-  "VidsST",
-  "Streamplay",
-  "Vinovo",
-  "Vidara",
-] as const;
-
-function toPrimesrcUrl(
-  ref: VidsrcRef,
-  server: string,
-  subtitleUrl?: string
-): string {
+function toPrimesrcUrl(ref: VidsrcRef, server: string): string {
   const base =
     ref.kind === "movie"
       ? `https://primesrc.me/embed/movie?tmdb=${ref.tmdbId}`
       : `https://primesrc.me/embed/tv?tmdb=${ref.tmdbId}&season=${ref.season}&episode=${ref.episode}`;
 
-  return appendParams(base, {
-    whitelistServers: server,
-    sub_url: subtitleUrl
-      ? new URL(subtitleUrl, window.location.origin).toString()
-      : undefined,
-  });
+  return appendParams(base, { whitelistServers: server });
 }
 
 /**
- * EmbedWave — on trial (2026-10-11), sandboxed, same as PrimeSrc above.
- * Played Animals ad-free. It loads its actual player from web.nxsha.app and
- * only passes `server` on to it, so our subtitles can't reach it through
- * embedwave.cc — the "+ subs" variant embeds web.nxsha.app directly
- * instead, which does read `sub_url` (seen it fetch it). Its default server
- * there is the one EmbedWave itself picks.
+ * EmbedWave — on trial (2026-10-11), sandboxed, played ad-free. Its actual
+ * player is web.nxsha.app, and embedwave.cc only passes `server` on to it.
+ *
+ * The "+ subs" variant embeds web.nxsha.app directly to get at the two
+ * things it does have (read from its bundle, 2026-10-11):
+ * - `sub` — preselects a subtitle track in that language from its own
+ *   catalogue (like CineSrc's `subtitlelang`). Not a URL — it takes no
+ *   subtitle file from outside (`sub_url` isn't read at all).
+ * - a "Load Subtitle (.vtt, .srt)" button in its subtitles menu, for a file
+ *   by hand — <ManualSubtitlesHint> offers our .vtt for that.
+ * `server=AwsPly` is the one embedwave.cc itself picks.
  */
-function toEmbedwaveUrl(ref: VidsrcRef, subtitleUrl?: string): string {
+function toEmbedwaveUrl(ref: VidsrcRef, direct = false): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
       : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
 
-  if (!subtitleUrl) {
+  if (!direct) {
     return appendParams(`https://embedwave.cc/embed/${path}`, {
       autoplay: "1",
     });
@@ -460,21 +444,22 @@ function toEmbedwaveUrl(ref: VidsrcRef, subtitleUrl?: string): string {
 
   return appendParams(`https://web.nxsha.app/embed/${path}`, {
     server: "AwsPly",
-    sub_url: new URL(subtitleUrl, window.location.origin).toString(),
+    sub: DEFAULT_SUBTITLE_LANG,
   });
 }
 
 /**
  * Shown in their own row under the main picker, for checking by hand
- * whether they play inside a sandbox, which ads get through and whether our
- * subtitles show up. Drop an entry to take it off again.
+ * whether they play inside a sandbox and which ads get through. Drop an
+ * entry to take it off again.
  */
 type TestPlayer = {
   key: string;
   label: string;
-  url: (ref: VidsrcRef, subtitleUrl?: string) => string;
-  /** Only listed when we have our own subtitles for the title. */
-  needsOwnSubtitles?: boolean;
+  url: (ref: VidsrcRef) => string;
+  /** Name of the player's own button for uploading a subtitle file, if it
+   *  has one — <ManualSubtitlesHint> then offers our .vtt for it. */
+  uploadButton?: string;
 };
 
 const TEST_PLAYERS: readonly TestPlayer[] = [
@@ -482,16 +467,14 @@ const TEST_PLAYERS: readonly TestPlayer[] = [
   {
     key: "embedwave-subs",
     label: "EmbedWave + субс",
-    url: toEmbedwaveUrl,
-    needsOwnSubtitles: true,
+    url: (ref) => toEmbedwaveUrl(ref, true),
+    uploadButton: "Load Subtitle",
   },
-  ...PRIMESRC_SERVERS.map(
-    (server): TestPlayer => ({
-      key: `primesrc:${server}`,
-      label: `PrimeSrc · ${server}`,
-      url: (ref, subtitleUrl) => toPrimesrcUrl(ref, server, subtitleUrl),
-    })
-  ),
+  {
+    key: "primesrc:Streamplay",
+    label: "PrimeSrc · Streamplay",
+    url: (ref) => toPrimesrcUrl(ref, "Streamplay"),
+  },
 ];
 
 /**
@@ -964,20 +947,16 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
-  const testPlayers = useMemo(
-    () =>
-      TEST_PLAYERS.filter(
-        (player) => !player.needsOwnSubtitles || hasOwnSubtitles
-      ),
-    [hasOwnSubtitles]
+  const testPlayer = TEST_PLAYERS.find(
+    (entry) => entry.key === activeTestPlayer
   );
 
   const testPlayerUrl = useMemo(() => {
-    const player = testPlayers.find(
+    const player = TEST_PLAYERS.find(
       (entry) => entry.key === activeTestPlayer
     );
-    return vidsrcRef && player ? player.url(vidsrcRef, subtitleUrl) : null;
-  }, [testPlayers, activeTestPlayer, vidsrcRef, subtitleUrl]);
+    return vidsrcRef && player ? player.url(vidsrcRef) : null;
+  }, [activeTestPlayer, vidsrcRef]);
 
   /**
    * Select active player.
@@ -1226,7 +1205,7 @@ export const PlayerSection = forwardRef<
           </div>
         )}
 
-        {videoUrl && vidsrcRef && testPlayers.length > 0 && (
+        {videoUrl && vidsrcRef && TEST_PLAYERS.length > 0 && (
           <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-dashed border-amber-300/30 bg-amber-300/[0.04] p-3 sm:p-4">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-amber-200 sm:text-base">
@@ -1242,7 +1221,7 @@ export const PlayerSection = forwardRef<
               aria-label={t("player.testPlayers")}
               className="flex flex-wrap gap-2"
             >
-              {testPlayers.map(({ key, label }) => {
+              {TEST_PLAYERS.map(({ key, label }) => {
                 const isActive =
                   activePlayer === TEST_PLAYER_SLOT && key === activeTestPlayer;
                 return (
@@ -1336,10 +1315,22 @@ export const PlayerSection = forwardRef<
               {activePlayer === 3 && subtitleUrl && player3Url && (
                 <ManualSubtitlesHint
                   key={`hint:${activeSrc}`}
-                  variant="cinesrc"
+                  variant="upload"
                   subtitleUrl={subtitleUrl}
+                  uploadButton="Upload Subtitle"
                 />
               )}
+
+              {activePlayer === TEST_PLAYER_SLOT &&
+                subtitleUrl &&
+                testPlayer?.uploadButton && (
+                  <ManualSubtitlesHint
+                    key={`hint:${activeSrc}`}
+                    variant="upload"
+                    subtitleUrl={subtitleUrl}
+                    uploadButton={testPlayer.uploadButton}
+                  />
+                )}
 
               {/*
                * CINESRC_OVERLAY_PARKED — CineSrc (provider 3) used to get
