@@ -238,6 +238,11 @@ export const dictionary = {
     en: "Download Bulgarian subtitles",
     bg: "Свали българските субтитри",
   },
+  "player.testPlayers": { en: "Test players", bg: "Тестови плейъри" },
+  "player.testPlayersHint": {
+    en: "On trial, in a sandbox — check whether they play, if any ads get through and if our subtitles show up.",
+    bg: "В тест, в sandbox — провери дали тръгват, дали минават реклами и дали излизат нашите субтитри.",
+  },
   "player.play": { en: "Play", bg: "Пусни" },
 
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
