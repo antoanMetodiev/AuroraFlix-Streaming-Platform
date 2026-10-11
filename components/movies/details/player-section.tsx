@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Captions, MonitorPlay, Play, X } from "lucide-react";
+import { Captions, Download, MonitorPlay, Play, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -217,15 +217,21 @@ function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
 }
 
 /**
- * CineSrc — <SubtitleOverlay> renders on it (and on VidFast).
+ * CineSrc — subtitles live inside its own player, like players 1–3 in the
+ * picker (EmbedMaster, vidsrc2.ru, VidLink) — no <SubtitleOverlay> on it
+ * any more (parked, see CINESRC_OVERLAY_PARKED below).
  *
- * Per the official docs (cinesrc.st/docs), there is no subtitle-related URL
- * parameter or postMessage command at all — `Position` and `subtitlelang`
- * (previously sent here) aren't real parameters and had no effect. CineSrc
- * shows its own default subtitle track (usually English) with no
- * documented way to turn it off or select a language, which is why it can
- * still appear alongside <SubtitleOverlay>'s — a genuine platform
- * limitation, not something a query param can fix.
+ * Unlike those three, it can't be handed our own file: checked its player
+ * bundle 2026-10-11 — no URL param or postMessage command takes a subtitle
+ * URL. Its docs list no subtitle params at all, but the player does read
+ * two undocumented ones:
+ * - `subtitlelang` — preselects a track in that language from its own
+ *   catalogue (its bundled tracks + OpenSubtitles via its own search) and
+ *   switches it on by itself. Has Bulgarian for e.g. Inception, but not for
+ *   every title (none for The Dark Knight).
+ * - `subtitles` — "auto" / "off".
+ * The only way in for *our* file is its "Upload Subtitle" button (CC menu),
+ * by hand — <ManualSubtitlesHint> offers our .vtt for that.
  */
 function toCinesrcUrl(ref: VidsrcRef): string {
   const path =
@@ -235,6 +241,8 @@ function toCinesrcUrl(ref: VidsrcRef): string {
 
   return appendParams(`https://cinesrc.st/embed/${path}`, {
     autoplay: "true",
+    subtitles: "auto",
+    subtitlelang: DEFAULT_SUBTITLE_LANG,
     ...(ref.kind === "tv"
       ? {
           s: ref.season,
@@ -307,10 +315,19 @@ function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl: string): string {
  * (VaPlayer / vaplayer.ru was tried here too, 2026-10-10 — it does take
  * our file and usually selects it by itself, but too often showed "all
  * servers failed", so it was dropped.)
+ *
+ * On CineSrc it's a different note: the player turns on Bulgarian from its
+ * own catalogue by itself when it has any (see toCinesrcUrl), and our own
+ * file can only go in through its "Upload Subtitle" button — so the card
+ * carries a download link for it.
  */
 const MANUAL_SUBS_HINT_MS = 15_000;
 
-function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
+type ManualSubtitlesHintProps =
+  | { variant: "embedmaster" | "vidlink" }
+  | { variant: "cinesrc"; subtitleUrl: string };
+
+function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(true);
 
@@ -329,14 +346,32 @@ function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
       >
         <Captions size={20} className="mt-0.5 shrink-0 text-emerald-400" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold">{t("player.manualSubsTitle")}</p>
-          <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
+          <p className="text-sm font-semibold">
             {t(
-              withServerTip
-                ? "player.manualSubsSteps"
-                : "player.manualSubsStepsNoServer"
+              props.variant === "cinesrc"
+                ? "player.bgSubtitles"
+                : "player.manualSubsTitle"
             )}
           </p>
+          <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
+            {t(
+              props.variant === "cinesrc"
+                ? "player.cinesrcSubsSteps"
+                : props.variant === "embedmaster"
+                  ? "player.manualSubsSteps"
+                  : "player.manualSubsStepsNoServer"
+            )}
+          </p>
+          {props.variant === "cinesrc" && (
+            <a
+              href={props.subtitleUrl}
+              download="Bulgarian.vtt"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-white/85 sm:text-sm"
+            >
+              <Download size={14} />
+              {t("player.cinesrcSubsDownload")}
+            </a>
+          )}
         </div>
         <button
           type="button"
@@ -352,6 +387,48 @@ function ManualSubtitlesHint({ withServerTip }: { withServerTip: boolean }) {
 }
 
 type ProviderId = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Pop-up / redirect ads. They run inside the provider's cross-origin
+ * iframe, so nothing on our page can intercept them — except the iframe's
+ * `sandbox` attribute: without `allow-popups` it can't open new tabs, and
+ * without `allow-top-navigation` it can't send this tab to another site.
+ *
+ * Only CineSrc (3) plays inside a sandbox. Checked 2026-10-11 on
+ * Inception: vidsrc2.ru ("can't be embedded in a sandboxed frame"),
+ * VidFast and VidLink ("Please Disable Sandbox") and EmbedMaster
+ * ("Sandbox detected") all refuse to start. Those get the
+ * `beforeunload` guard in PlayerSection instead.
+ */
+const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3]);
+
+const PLAYER_SANDBOX =
+  "allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock allow-pointer-lock";
+
+/** Above the player while a sandboxed (ad-free) one is selected. */
+function NoAdsBanner() {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      role="status"
+      className="mb-4 flex w-full max-w-[80rem] items-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-500/15 via-emerald-400/[0.07] to-transparent p-3 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.45)] backdrop-blur-md sm:p-4"
+    >
+      <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30">
+        <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/20 [animation-iteration-count:2]" />
+        <ShieldCheck size={20} className="relative" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-emerald-200 sm:text-base">
+          {t("player.noAds")}
+        </p>
+        <p className="text-xs text-white/70 sm:text-sm">
+          {t("player.noAdsDetail")}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * VidLink (listed third) is on trial: as of 2026-10-10 it played
@@ -473,9 +550,10 @@ export const PlayerSection = forwardRef<
    * own player, switched on by hand — see toEmbedmasterUrl), then
    * vidsrc2.ru (ours in its own player, switched on by itself), then
    * VidLink (switched on by hand, while VIDLINK_ENABLED — and swapped for
-   * vidsrc2.ru automatically when it doesn't start). VidFast and CineSrc still get
-   * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as
-   * fallbacks.
+   * vidsrc2.ru automatically when it doesn't start). VidFast still gets
+   * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as a
+   * fallback; CineSrc picks Bulgarian from its own catalogue and offers
+   * ours for upload (see toCinesrcUrl).
    *
    * Without our subtitles it's just vidsrc2.ru, VidFast, CineSrc — each
    * with its own bundled subtitles.
@@ -583,12 +661,11 @@ export const PlayerSection = forwardRef<
 
       setIsRealFullscreen(false);
 
-      // Same trick for both players our overlay renders on — CineSrc, and
-      // VidFast once its URL was built without its own subtitle track.
+      // Only for the player our overlay renders on — VidFast, once its URL
+      // was built without its own subtitle track. (CineSrc used to be in
+      // here too — see CINESRC_OVERLAY_PARKED.)
       const overlayIsOnActivePlayer =
-        hasOwnSubtitles &&
-        (activePlayer === 3 ||
-          (activePlayer === 2 && vidfastUsesOurSubs));
+        hasOwnSubtitles && activePlayer === 2 && vidfastUsesOurSubs;
 
       if (current && overlayIsOnActivePlayer) {
         exitFullscreen();
@@ -728,8 +805,8 @@ export const PlayerSection = forwardRef<
   /**
    * Build all the player URLs.
    *
-   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below, on top
-   * of VidFast and CineSrc — see the comments on the URL builders above.
+   * Our Bulgarian subtitles are rendered by <SubtitleOverlay> below only on
+   * top of VidFast — see the comments on the URL builders above.
    */
   const player1Url = useMemo(
     () =>
@@ -785,6 +862,36 @@ export const PlayerSection = forwardRef<
     5: player5Url,
   };
   const activeSrc = playerUrls[activePlayer] || player1Url;
+
+  // Only when activeSrc really is that provider's URL, not the player 1
+  // fallback above.
+  const isSandboxed =
+    SANDBOXED_PLAYERS.has(activePlayer) &&
+    Boolean(playerUrls[activePlayer]);
+
+  /**
+   * Redirect ads on the players that can't be sandboxed (see
+   * SANDBOXED_PLAYERS): a click inside their iframe can navigate this
+   * whole tab to an ad site. While someone is watching one of them, the
+   * browser asks "Leave site?" first, so they can stay. Our own links are
+   * client-side navigations and never trigger it — only leaving the page
+   * for real does (incl. reload / closing the tab while watching).
+   * New-tab pop-ups from those players can't be stopped from here at all;
+   * that's what <AdblockPrompt> is for.
+   */
+  useEffect(() => {
+    if (!hasStarted || isSandboxed) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Still required by older Chrome/Safari to show the dialog.
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () =>
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasStarted, isSandboxed]);
 
   /**
    * Show loader whenever iframe source changes.
@@ -961,7 +1068,7 @@ export const PlayerSection = forwardRef<
                       setAutoSwitchedFrom(null);
                       setActivePlayer(provider);
                     }}
-                    className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
+                    className={`relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
                       isActive
                         ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
                         : "border-white/20 bg-white/5 text-white/85 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:text-white"
@@ -975,11 +1082,23 @@ export const PlayerSection = forwardRef<
                         className={isActive ? "text-emerald-600" : "text-emerald-400"}
                       />
                     )}
+                    {SANDBOXED_PLAYERS.has(provider) && (
+                      // Small tag sitting on the button's top edge, so the
+                      // button itself stays the same size as the others.
+                      <span className="pointer-events-none absolute -top-2 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[9px] leading-tight font-bold tracking-wide text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
+                        <ShieldCheck size={10} />
+                        {t("player.noAds")}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
+        )}
+
+        {videoUrl && isSandboxed && (
+          <NoAdsBanner key={activeSrc} />
         )}
 
         {(() => {
@@ -1015,6 +1134,7 @@ export const PlayerSection = forwardRef<
                 }
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                sandbox={isSandboxed ? PLAYER_SANDBOX : undefined}
                 scrolling="no"
                 onLoad={() =>
                   setIsFrameLoading(false)
@@ -1035,13 +1155,43 @@ export const PlayerSection = forwardRef<
                 // not on activeSrc alone, the <iframe> above already is.
                 <ManualSubtitlesHint
                   key={`hint:${activeSrc}`}
-                  withServerTip={activePlayer === 5}
+                  variant={activePlayer === 5 ? "embedmaster" : "vidlink"}
                 />
               )}
 
+              {activePlayer === 3 && subtitleUrl && player3Url && (
+                <ManualSubtitlesHint
+                  key={`hint:${activeSrc}`}
+                  variant="cinesrc"
+                  subtitleUrl={subtitleUrl}
+                />
+              )}
+
+              {/*
+               * CINESRC_OVERLAY_PARKED — CineSrc (provider 3) used to get
+               * <SubtitleOverlay> (our own subtitle layer + toggle/download/
+               * info cluster + our fullscreen button) on top of its iframe,
+               * synced through its `cinesrc:timeupdate` messages (see
+               * lib/player-telemetry.ts, still in place). Taken off
+               * 2026-10-11 in favour of the player's own subtitles (see
+               * toCinesrcUrl). To bring it back:
+               * 1. render condition below:
+               *      subtitleUrl &&
+               *        (activePlayer === 3 ||
+               *          (activePlayer === 2 && vidfastUsesOurSubs))
+               * 2. fullscreen handler above, `overlayIsOnActivePlayer`:
+               *      hasOwnSubtitles &&
+               *        (activePlayer === 3 ||
+               *          (activePlayer === 2 && vidfastUsesOurSubs))
+               * 3. drop the CineSrc <ManualSubtitlesHint> above, and
+               *    `subtitles`/`subtitlelang` from toCinesrcUrl (else its
+               *    own Bulgarian track shows under ours).
+               * subtitle-overlay.tsx still has CineSrc's fullscreen-button
+               * offset (`activePlayer === 3 ? 3 : 0`), untouched.
+               */}
               {subtitleUrl &&
-                (activePlayer === 3 ||
-                  (activePlayer === 2 && vidfastUsesOurSubs)) && (
+                activePlayer === 2 &&
+                vidfastUsesOurSubs && (
                 <SubtitleOverlay
                   subtitleUrl={subtitleUrl}
                   active={hasStarted}

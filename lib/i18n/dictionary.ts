@@ -209,6 +209,11 @@ export const dictionary = {
     bg: "Не тръгва, бави, търсиш по-добро качество или няма субтитри? Пробвай друг плейър.",
   },
   "player.bgSubtitles": { en: "Bulgarian subtitles", bg: "Български субтитри" },
+  "player.noAds": { en: "No ads", bg: "Без реклами" },
+  "player.noAdsDetail": {
+    en: "No pop-ups and no redirects to other sites — just the movie.",
+    bg: "Без изскачащи прозорци и пренасочвания към други сайтове — само филмът.",
+  },
   "player.manualSubsTitle": {
     en: "Turn on the Bulgarian subtitles",
     bg: "Включи българските субтитри",
@@ -224,7 +229,16 @@ export const dictionary = {
   "player.manualSubsSteps": {
     en: "Subtitles button → Български. For the best quality: Server (top left) → YesMovies.",
     bg: "Бутон Субтитри → Български. За най-добро качество: Сървър (горе вляво) → YesMovies.",
-  },  "player.play": { en: "Play", bg: "Пусни" },
+  },
+  "player.cinesrcSubsSteps": {
+    en: "The player turns on Bulgarian by itself when it has them. Missing or out of sync? Download ours, then Subtitles button → Upload Subtitle.",
+    bg: "Плейърът сам включва български, ако ги има. Липсват или не пасват? Свали нашите, после бутон Субтитри → Upload Subtitle.",
+  },
+  "player.cinesrcSubsDownload": {
+    en: "Download Bulgarian subtitles",
+    bg: "Свали българските субтитри",
+  },
+  "player.play": { en: "Play", bg: "Пусни" },
 
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
   "subtitles.retry": { en: "Retry", bg: "Опитай пак" },
