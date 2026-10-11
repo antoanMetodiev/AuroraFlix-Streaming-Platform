@@ -231,7 +231,7 @@ function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
  *   every title (none for The Dark Knight).
  * - `subtitles` — "auto" / "off".
  * The only way in for *our* file is its "Upload Subtitle" button (CC menu),
- * by hand — <ManualSubtitlesHint> offers our .vtt for that.
+ * by hand — <UploadSubtitlesGuide> walks the viewer through it.
  */
 function toCinesrcUrl(ref: VidsrcRef): string {
   const path =
@@ -315,19 +315,10 @@ function toEmbedmasterUrl(ref: VidsrcRef, subtitleUrl: string): string {
  * (VaPlayer / vaplayer.ru was tried here too, 2026-10-10 — it does take
  * our file and usually selects it by itself, but too often showed "all
  * servers failed", so it was dropped.)
- *
- * On CineSrc it's a different note: the player turns on Bulgarian from its
- * own catalogue by itself when it has any (see toCinesrcUrl), and our own
- * file can only go in through its "Upload Subtitle" button — so the card
- * carries a download link for it.
  */
 const MANUAL_SUBS_HINT_MS = 15_000;
 
-type ManualSubtitlesHintProps =
-  | { variant: "embedmaster" | "vidlink" }
-  /** Players with an upload button for subtitle files (CineSrc):
-   *  offers our .vtt for download and names the button to upload it with. */
-  | { variant: "upload"; subtitleUrl: string; uploadButton: string };
+type ManualSubtitlesHintProps = { variant: "embedmaster" | "vidlink" };
 
 function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
   const { t } = useTranslation();
@@ -348,32 +339,14 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
       >
         <Captions size={20} className="mt-0.5 shrink-0 text-emerald-400" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold">
+          <p className="text-sm font-semibold">{t("player.manualSubsTitle")}</p>
+          <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
             {t(
-              props.variant === "upload"
-                ? "player.bgSubtitles"
-                : "player.manualSubsTitle"
+              props.variant === "embedmaster"
+                ? "player.manualSubsSteps"
+                : "player.manualSubsStepsNoServer"
             )}
           </p>
-          <p className="mt-0.5 text-xs text-white/75 sm:text-sm">
-            {props.variant === "upload"
-              ? t("player.uploadSubsSteps", { button: props.uploadButton })
-              : t(
-                  props.variant === "embedmaster"
-                    ? "player.manualSubsSteps"
-                    : "player.manualSubsStepsNoServer"
-                )}
-          </p>
-          {props.variant === "upload" && (
-            <a
-              href={props.subtitleUrl}
-              download="Bulgarian.vtt"
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-white/85 sm:text-sm"
-            >
-              <Download size={14} />
-              {t("player.uploadSubsDownload")}
-            </a>
-          )}
         </div>
         <button
           type="button"
@@ -389,40 +362,119 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
 }
 
 /**
- * 6 is the slot every test player plays in (see TEST_PLAYERS) — which one
- * is in `activeTestPlayer` in PlayerSection. Not part of the main picker.
+ * Above VidSpark and CineSrc, while we have our own Bulgarian subtitles:
+ * neither can be handed them (see toVidsparkUrl / toCinesrcUrl), so this
+ * spells out, step by step, how to load ours through the player's own
+ * upload item (`uploadButton` — its exact label there). Deliberately outside
+ * the player rather than on top of it — visible before Play is pressed,
+ * never covers the picture, doesn't fade out by itself. Closing it leaves a
+ * small button to bring it back.
  */
-type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
+function UploadSubtitlesGuide({
+  subtitleUrl,
+  uploadButton,
+}: {
+  subtitleUrl: string;
+  uploadButton: string;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(true);
 
-const TEST_PLAYER_SLOT = 6 satisfies ProviderId;
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mb-4 inline-flex cursor-pointer items-center gap-2 self-start rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20"
+      >
+        <Captions size={16} />
+        {t("player.uploadGuideReopen")}
+      </button>
+    );
+  }
 
-/**
- * Players on trial (2026-10-11): each of them did load inside our sandbox
- * (no "sandbox not allowed" screen) — whether they actually play, show ads
- * inside the frame or have Bulgarian subtitles is being checked by hand.
- * moviesapi.to, VidSpark and vidsrc.pm run the very same player. Shown in
- * their own row under the main picker; drop an entry to take it off again.
- */
-type TestPlayer = {
-  key: string;
-  label: string;
-  url: (ref: VidsrcRef) => string;
-};
+  const steps = [
+    t("player.uploadGuideStep1"),
+    t("player.uploadGuideStep2"),
+    t("player.uploadGuideStep3", { button: uploadButton }),
+  ];
 
-/** "movie/{id}" or "tv/{id}/{season}/{episode}". */
-function tmdbPath(ref: VidsrcRef): string {
-  return ref.kind === "movie"
-    ? `movie/${ref.tmdbId}`
-    : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+  return (
+    <div
+      role="region"
+      aria-label={t("player.uploadGuideTitle")}
+      className="mb-4 w-full max-w-[80rem] rounded-2xl border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-500/20 via-emerald-500/[0.08] to-transparent p-4 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.55)] sm:p-5"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-300/40">
+          <Captions size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold text-white sm:text-lg">
+            {t("player.uploadGuideTitle")}
+          </p>
+          <p className="text-xs text-white/70 sm:text-sm">
+            {t("player.uploadGuideIntro")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label={t("common.close")}
+          className="-m-1 shrink-0 cursor-pointer rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+        {steps.map((step, index) => (
+          <li
+            key={step}
+            className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-3"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-neutral-950">
+              {index + 1}
+            </span>
+            <div className="min-w-0 text-sm text-white/90">
+              <p>{step}</p>
+              {index === 0 && (
+                <a
+                  href={subtitleUrl}
+                  download="Bulgarian.vtt"
+                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-sm font-bold text-neutral-950 shadow-[0_4px_16px_rgba(16,185,129,0.45)] transition-colors hover:bg-emerald-300"
+                >
+                  <Download size={16} />
+                  {t("player.uploadSubsDownload")}
+                </a>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
-const TEST_PLAYERS: readonly TestPlayer[] = [
-  {
-    key: "vidspark",
-    label: "VidSpark",
-    url: (ref) => `https://vidspark.to/${tmdbPath(ref)}`,
-  },
-];
+type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * VidSpark — plays inside our sandbox (no sandbox checks anywhere in its
+ * player; its pop-under ad script can't open anything there), so no ads.
+ *
+ * Takes no subtitle file of ours from outside — checked its bundle and
+ * server 2026-10-11: only `v`, `startAt`, `t` and `theme` are read from the
+ * URL, the page comes back byte-for-byte the same with any `sub_url` /
+ * `sub_file` / `sub` added, and its postMessage commands are playback only.
+ * Its own subtitles come from its own backend. What it does have is an
+ * "Upload Subtitles" item in its Captions menu (.srt/.vtt/.ass/.ssa) —
+ * <UploadSubtitlesGuide> walks the viewer through putting ours in there.
+ */
+function toVidsparkUrl(ref: VidsrcRef): string {
+  return ref.kind === "movie"
+    ? `https://vidspark.to/movie/${ref.tmdbId}`
+    : `https://vidspark.to/tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+}
 
 /**
  * Pop-up / redirect ads. They run inside the provider's cross-origin
@@ -430,16 +482,15 @@ const TEST_PLAYERS: readonly TestPlayer[] = [
  * `sandbox` attribute: without `allow-popups` it can't open new tabs, and
  * without `allow-top-navigation` it can't send this tab to another site.
  *
- * Only CineSrc (3) plays inside a sandbox. Checked 2026-10-11 on
+ * Only CineSrc (3) and VidSpark (6, see below) play inside a sandbox. Checked 2026-10-11 on
  * Inception: vidsrc2.ru ("can't be embedded in a sandboxed frame"),
  * VidFast and VidLink ("Please Disable Sandbox") and EmbedMaster
  * ("Sandbox detected") all refuse to start. Those get the
  * `beforeunload` guard in PlayerSection instead.
  *
- * The test players (slot 6) are sandboxed too — that's what they're on
- * trial for.
+ * VidSpark (6) plays inside a sandbox too.
  */
-const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3, TEST_PLAYER_SLOT]);
+const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3, 6]);
 
 const PLAYER_SANDBOX =
   "allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock allow-pointer-lock";
@@ -591,11 +642,12 @@ export const PlayerSection = forwardRef<
    * VidLink (switched on by hand, while VIDLINK_ENABLED — and swapped for
    * vidsrc2.ru automatically when it doesn't start). VidFast still gets
    * <SubtitleOverlay> (toggle/download/info + our fullscreen button) as a
-   * fallback; CineSrc picks Bulgarian from its own catalogue and offers
-   * ours for upload (see toCinesrcUrl).
+   * fallback; CineSrc and VidSpark (Players 5 and 6 then) — both ad-free in
+   * a sandbox — offer ours for upload into their own menus (see
+   * toCinesrcUrl / toVidsparkUrl).
    *
-   * Without our subtitles it's just vidsrc2.ru, VidFast, CineSrc — each
-   * with its own bundled subtitles.
+   * Without our subtitles it's just vidsrc2.ru, VidFast, CineSrc, VidSpark —
+   * each with its own bundled subtitles.
    */
   const hasOwnSubtitles = Boolean(subtitleUrl);
 
@@ -625,18 +677,15 @@ export const PlayerSection = forwardRef<
     () =>
       hasOwnSubtitles
         ? VIDLINK_ENABLED
-          ? [5, 1, 4, 2, 3]
-          : [5, 1, 2, 3]
-        : [1, 2, 3],
+          ? [5, 1, 4, 2, 3, 6]
+          : [5, 1, 2, 3, 6]
+        : [1, 2, 3, 6],
     [hasOwnSubtitles]
   );
 
   const [activePlayer, setActivePlayer] =
     useState<ProviderId>(1);
 
-  // Which entry of TEST_PLAYERS plays while activePlayer is the test slot.
-  const [activeTestPlayer, setActiveTestPlayer] =
-    useState<string>(TEST_PLAYERS[0].key);
 
 
   const [hasStarted, setHasStarted] =
@@ -705,14 +754,11 @@ export const PlayerSection = forwardRef<
 
       setIsRealFullscreen(false);
 
-      // Only for the players our overlay renders on — VidFast, once its URL
-      // was built without its own subtitle track, and the test player
-      // (VidSpark). (CineSrc used to be in here too — see
-      // CINESRC_OVERLAY_PARKED.)
+      // Only for the player our overlay renders on — VidFast, once its URL
+      // was built without its own subtitle track. (CineSrc used to be in
+      // here too — see CINESRC_OVERLAY_PARKED.)
       const overlayIsOnActivePlayer =
-        hasOwnSubtitles &&
-        ((activePlayer === 2 && vidfastUsesOurSubs) ||
-          activePlayer === TEST_PLAYER_SLOT);
+        hasOwnSubtitles && activePlayer === 2 && vidfastUsesOurSubs;
 
       if (current && overlayIsOnActivePlayer) {
         exitFullscreen();
@@ -898,12 +944,13 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
-  const testPlayerUrl = useMemo(() => {
-    const player = TEST_PLAYERS.find(
-      (entry) => entry.key === activeTestPlayer
-    );
-    return vidsrcRef && player ? player.url(vidsrcRef) : null;
-  }, [activeTestPlayer, vidsrcRef]);
+  const player6Url = useMemo(
+    () =>
+      vidsrcRef
+        ? toVidsparkUrl(vidsrcRef)
+        : null,
+    [vidsrcRef]
+  );
 
   /**
    * Select active player.
@@ -914,7 +961,7 @@ export const PlayerSection = forwardRef<
     3: player3Url,
     4: player4Url,
     5: player5Url,
-    6: testPlayerUrl,
+    6: player6Url,
   };
   const activeSrc = playerUrls[activePlayer] || player1Url;
 
@@ -1109,6 +1156,7 @@ export const PlayerSection = forwardRef<
                   (provider === 3 ||
                     provider === 4 ||
                     provider === 5 ||
+                    provider === 6 ||
                     (provider === 1 && vidsrcUsesOurSubs) ||
                     (provider === 2 && vidfastUsesOurSubs));
                 return (
@@ -1152,53 +1200,22 @@ export const PlayerSection = forwardRef<
           </div>
         )}
 
-        {videoUrl && vidsrcRef && TEST_PLAYERS.length > 0 && (
-          <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-dashed border-amber-300/30 bg-amber-300/[0.04] p-3 sm:p-4">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-amber-200 sm:text-base">
-                {t("player.testPlayers")}
-              </p>
-              <p className="text-xs text-white/60 sm:text-sm">
-                {t("player.testPlayersHint")}
-              </p>
-            </div>
-
-            <div
-              role="radiogroup"
-              aria-label={t("player.testPlayers")}
-              className="flex flex-wrap gap-2"
-            >
-              {TEST_PLAYERS.map(({ key, label }) => {
-                const isActive =
-                  activePlayer === TEST_PLAYER_SLOT && key === activeTestPlayer;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    role="radio"
-                    aria-checked={isActive}
-                    onClick={() => {
-                      userChangedPlayerRef.current = true;
-                      setAutoSwitchedFrom(null);
-                      setActiveTestPlayer(key);
-                      setActivePlayer(TEST_PLAYER_SLOT);
-                    }}
-                    className={`flex cursor-pointer items-center justify-center rounded-full border px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-4 sm:text-sm ${
-                      isActive
-                        ? "border-transparent bg-amber-200 text-neutral-900"
-                        : "border-amber-200/30 bg-white/5 text-white/85 hover:border-amber-200/60 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {videoUrl && isSandboxed && (
+          <NoAdsBanner key={activeSrc} />
         )}
 
-        {videoUrl && isSandboxed && activePlayer !== TEST_PLAYER_SLOT && (
-          <NoAdsBanner key={activeSrc} />
+        {videoUrl && activePlayer === 6 && player6Url && subtitleUrl && (
+          <UploadSubtitlesGuide
+            subtitleUrl={subtitleUrl}
+            uploadButton="Upload Subtitles"
+          />
+        )}
+
+        {videoUrl && activePlayer === 3 && player3Url && subtitleUrl && (
+          <UploadSubtitlesGuide
+            subtitleUrl={subtitleUrl}
+            uploadButton="Upload Subtitle"
+          />
         )}
 
         {(() => {
@@ -1259,15 +1276,6 @@ export const PlayerSection = forwardRef<
                 />
               )}
 
-              {activePlayer === 3 && subtitleUrl && player3Url && (
-                <ManualSubtitlesHint
-                  key={`hint:${activeSrc}`}
-                  variant="upload"
-                  subtitleUrl={subtitleUrl}
-                  uploadButton="Upload Subtitle"
-                />
-              )}
-
               {/*
                * CINESRC_OVERLAY_PARKED — CineSrc (provider 3) used to get
                * <SubtitleOverlay> (our own subtitle layer + toggle/download/
@@ -1284,32 +1292,22 @@ export const PlayerSection = forwardRef<
                *      hasOwnSubtitles &&
                *        (activePlayer === 3 ||
                *          (activePlayer === 2 && vidfastUsesOurSubs))
-               * 3. drop the CineSrc <ManualSubtitlesHint> above, and
+               * 3. drop the CineSrc <UploadSubtitlesGuide> above the player, and
                *    `subtitles`/`subtitlelang` from toCinesrcUrl (else its
                *    own Bulgarian track shows under ours).
                * subtitle-overlay.tsx still has CineSrc's fullscreen-button
                * offset (`activePlayer === 3 ? 3 : 0`), untouched.
                */}
               {subtitleUrl &&
-                ((activePlayer === 2 && vidfastUsesOurSubs) ||
-                  activePlayer === TEST_PLAYER_SLOT) && (
-                // On VidSpark (the test player) it syncs to its documented
-                // "timeupdate" messages — see lib/player-telemetry.ts. It
-                // takes no subtitle file of ours (only v/startAt/t/theme are
-                // read, checked 2026-10-11), so this is the only way in.
+                activePlayer === 2 &&
+                vidfastUsesOurSubs && (
                 <SubtitleOverlay
                   subtitleUrl={subtitleUrl}
                   active={hasStarted}
                   activePlayer={activePlayer}
                   isFullscreen={isRealFullscreen || isBigView}
                   onToggleFullscreen={toggleFullscreen}
-                  playerLabel={
-                    activePlayer === TEST_PLAYER_SLOT
-                      ? (TEST_PLAYERS.find(
-                          (entry) => entry.key === activeTestPlayer
-                        )?.label ?? "")
-                      : playerOrder.indexOf(activePlayer) + 1
-                  }
+                  playerLabel={playerOrder.indexOf(activePlayer) + 1}
                 />
               )}
             </>

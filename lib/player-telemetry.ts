@@ -1,15 +1,11 @@
 /**
- * These embed providers broadcast their real playback
- * position via `postMessage` to the parent window — mostly undocumented, but
+ * All three embed providers turn out to broadcast their real playback
+ * position via `postMessage` to the parent window — undocumented, but
  * confirmed by capturing what each one actually sends:
  *
  *  - vidsrc2.ru: {type:"PLAYER_EVENT", data:{player_status, player_progress, player_duration}}
  *  - vidfast.vc: {type:"PLAYER_EVENT", data:{event, currentTime, duration, playing}}
  *  - cinesrc.st: {type:"cinesrc:timeupdate"|"cinesrc:play"|"cinesrc:pause"|"cinesrc:seeking"|"cinesrc:seeked", currentTime, duration}
- *  - vidspark.to (6, the test-player slot in player-section — VidSpark is
- *    the only one there): {source:"vidspark-player", event:"timeupdate"|"play"|"pause"|"seeked"|"ended", currentTime, duration}
- *    — this one is documented (vidspark.to, "postMessage API"); its
- *    currentTime is floored to whole seconds.
  *
  * This lets the subtitle overlay track the *real* video position instead of
  * a guessed clock — automatic sync, seeks included, no manual nudging.
@@ -18,7 +14,7 @@
  * see subtitle-overlay.tsx.
  */
 
-export type PlayerId = 1 | 2 | 3 | 6;
+export type PlayerId = 1 | 2 | 3;
 
 export type TelemetryUpdate = {
   currentTime?: number;
@@ -31,7 +27,6 @@ export const PLAYER_ORIGIN: Record<PlayerId, string> = {
   1: "https://vidsrc2.ru",
   2: "https://vidfast.vc",
   3: "https://cinesrc.st",
-  6: "https://vidspark.to",
 };
 
 function numberOrUndefined(value: unknown): number | undefined {
@@ -73,23 +68,6 @@ export function extractTelemetry(player: PlayerId, raw: unknown): TelemetryUpdat
     if (currentTime !== undefined) update.currentTime = currentTime;
     if (duration !== undefined) update.duration = duration;
     if (typeof data.playing === "boolean") update.playing = data.playing;
-
-    return Object.keys(update).length ? update : null;
-  }
-
-  if (player === 6) {
-    if (message.source !== "vidspark-player") return null;
-
-    const update: TelemetryUpdate = {};
-    const currentTime = numberOrUndefined(message.currentTime);
-    const duration = numberOrUndefined(message.duration);
-    // Floored by the player — the real position is half a second further
-    // on average, otherwise our cues would run that much late.
-    if (currentTime !== undefined) update.currentTime = currentTime + 0.5;
-    if (duration !== undefined) update.duration = duration;
-    if (message.event === "play" || message.event === "timeupdate") update.playing = true;
-    if (message.event === "pause" || message.event === "ended") update.playing = false;
-    if (typeof message.paused === "boolean") update.playing = !message.paused;
 
     return Object.keys(update).length ? update : null;
   }

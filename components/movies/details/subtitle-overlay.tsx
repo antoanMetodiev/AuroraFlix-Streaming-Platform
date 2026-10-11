@@ -46,9 +46,8 @@ type SubtitleOverlayProps = {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   /** The number the player picker shows for the active player ("Плейър N"),
-   *  which differs from `activePlayer`'s internal provider id — or a name,
-   *  for a test player that isn't numbered. */
-  playerLabel: number | string;
+   *  which differs from `activePlayer`'s internal provider id. */
+  playerLabel: number;
 };
 
 const DURATION_PADDING_SECONDS = 8;

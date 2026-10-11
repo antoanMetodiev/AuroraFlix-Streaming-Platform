@@ -230,18 +230,33 @@ export const dictionary = {
     en: "Subtitles button → Български. For the best quality: Server (top left) → YesMovies.",
     bg: "Бутон Субтитри → Български. За най-добро качество: Сървър (горе вляво) → YesMovies.",
   },
-  "player.uploadSubsSteps": {
-    en: "The player turns on Bulgarian by itself when it has them. Missing or out of sync? Download ours, then Subtitles button → {button}.",
-    bg: "Плейърът сам включва български, ако ги има. Липсват или не пасват? Свали нашите, после бутон Субтитри → {button}.",
-  },
   "player.uploadSubsDownload": {
     en: "Download Bulgarian subtitles",
     bg: "Свали българските субтитри",
   },
-  "player.testPlayers": { en: "Test players", bg: "Тестови плейъри" },
-  "player.testPlayersHint": {
-    en: "On trial, in a sandbox — check whether they play, if any ads get through and if they have Bulgarian subtitles.",
-    bg: "В тест, в sandbox — провери дали тръгват, дали минават реклами и дали имат български субтитри.",
+  "player.uploadGuideTitle": {
+    en: "Add Bulgarian subtitles in 3 steps",
+    bg: "Добави българските субтитри в 3 стъпки",
+  },
+  "player.uploadGuideIntro": {
+    en: "This player has no ads, but it can't load our subtitles by itself — adding them by hand takes 10 seconds.",
+    bg: "Този плейър е без реклами, но не може сам да зареди нашите субтитри — добавят се на ръка за 10 секунди.",
+  },
+  "player.uploadGuideStep1": {
+    en: "Download the Bulgarian subtitles to your device.",
+    bg: "Свали българските субтитри на устройството си.",
+  },
+  "player.uploadGuideStep2": {
+    en: "Start the movie and tap the subtitles icon (CC) in the player's bottom bar.",
+    bg: "Пусни филма и натисни иконата за субтитри (CC) в долната лента на плейъра.",
+  },
+  "player.uploadGuideStep3": {
+    en: "Pick “{button}” and choose the downloaded Bulgarian.vtt file.",
+    bg: "Избери „{button}“ и посочи сваления файл Bulgarian.vtt.",
+  },
+  "player.uploadGuideReopen": {
+    en: "How do I add Bulgarian subtitles?",
+    bg: "Как да добавя български субтитри?",
   },
   "player.play": { en: "Play", bg: "Пусни" },
 
