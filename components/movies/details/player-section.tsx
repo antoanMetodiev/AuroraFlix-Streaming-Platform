@@ -388,7 +388,41 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
   );
 }
 
-type ProviderId = 1 | 2 | 3 | 4 | 5;
+/**
+ * 6 is the slot every test player plays in (see TEST_PLAYERS) — which one
+ * is in `activeTestPlayer` in PlayerSection. Not part of the main picker.
+ */
+type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
+
+const TEST_PLAYER_SLOT = 6 satisfies ProviderId;
+
+/**
+ * Players on trial (2026-10-11): each of them did load inside our sandbox
+ * (no "sandbox not allowed" screen) — whether they actually play, show ads
+ * inside the frame or have Bulgarian subtitles is being checked by hand.
+ * moviesapi.to, VidSpark and vidsrc.pm run the very same player. Shown in
+ * their own row under the main picker; drop an entry to take it off again.
+ */
+type TestPlayer = {
+  key: string;
+  label: string;
+  url: (ref: VidsrcRef) => string;
+};
+
+/** "movie/{id}" or "tv/{id}/{season}/{episode}". */
+function tmdbPath(ref: VidsrcRef): string {
+  return ref.kind === "movie"
+    ? `movie/${ref.tmdbId}`
+    : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+}
+
+const TEST_PLAYERS: readonly TestPlayer[] = [
+  {
+    key: "vidspark",
+    label: "VidSpark",
+    url: (ref) => `https://vidspark.to/${tmdbPath(ref)}`,
+  },
+];
 
 /**
  * Pop-up / redirect ads. They run inside the provider's cross-origin
@@ -401,8 +435,11 @@ type ProviderId = 1 | 2 | 3 | 4 | 5;
  * VidFast and VidLink ("Please Disable Sandbox") and EmbedMaster
  * ("Sandbox detected") all refuse to start. Those get the
  * `beforeunload` guard in PlayerSection instead.
+ *
+ * The test players (slot 6) are sandboxed too — that's what they're on
+ * trial for.
  */
-const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3]);
+const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3, TEST_PLAYER_SLOT]);
 
 const PLAYER_SANDBOX =
   "allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock allow-pointer-lock";
@@ -597,6 +634,10 @@ export const PlayerSection = forwardRef<
   const [activePlayer, setActivePlayer] =
     useState<ProviderId>(1);
 
+  // Which entry of TEST_PLAYERS plays while activePlayer is the test slot.
+  const [activeTestPlayer, setActiveTestPlayer] =
+    useState<string>(TEST_PLAYERS[0].key);
+
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -664,11 +705,14 @@ export const PlayerSection = forwardRef<
 
       setIsRealFullscreen(false);
 
-      // Only for the player our overlay renders on — VidFast, once its URL
-      // was built without its own subtitle track. (CineSrc used to be in
-      // here too — see CINESRC_OVERLAY_PARKED.)
+      // Only for the players our overlay renders on — VidFast, once its URL
+      // was built without its own subtitle track, and the test player
+      // (VidSpark). (CineSrc used to be in here too — see
+      // CINESRC_OVERLAY_PARKED.)
       const overlayIsOnActivePlayer =
-        hasOwnSubtitles && activePlayer === 2 && vidfastUsesOurSubs;
+        hasOwnSubtitles &&
+        ((activePlayer === 2 && vidfastUsesOurSubs) ||
+          activePlayer === TEST_PLAYER_SLOT);
 
       if (current && overlayIsOnActivePlayer) {
         exitFullscreen();
@@ -854,6 +898,13 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
+  const testPlayerUrl = useMemo(() => {
+    const player = TEST_PLAYERS.find(
+      (entry) => entry.key === activeTestPlayer
+    );
+    return vidsrcRef && player ? player.url(vidsrcRef) : null;
+  }, [activeTestPlayer, vidsrcRef]);
+
   /**
    * Select active player.
    */
@@ -863,6 +914,7 @@ export const PlayerSection = forwardRef<
     3: player3Url,
     4: player4Url,
     5: player5Url,
+    6: testPlayerUrl,
   };
   const activeSrc = playerUrls[activePlayer] || player1Url;
 
@@ -1100,7 +1152,52 @@ export const PlayerSection = forwardRef<
           </div>
         )}
 
-        {videoUrl && isSandboxed && (
+        {videoUrl && vidsrcRef && TEST_PLAYERS.length > 0 && (
+          <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-dashed border-amber-300/30 bg-amber-300/[0.04] p-3 sm:p-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-amber-200 sm:text-base">
+                {t("player.testPlayers")}
+              </p>
+              <p className="text-xs text-white/60 sm:text-sm">
+                {t("player.testPlayersHint")}
+              </p>
+            </div>
+
+            <div
+              role="radiogroup"
+              aria-label={t("player.testPlayers")}
+              className="flex flex-wrap gap-2"
+            >
+              {TEST_PLAYERS.map(({ key, label }) => {
+                const isActive =
+                  activePlayer === TEST_PLAYER_SLOT && key === activeTestPlayer;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() => {
+                      userChangedPlayerRef.current = true;
+                      setAutoSwitchedFrom(null);
+                      setActiveTestPlayer(key);
+                      setActivePlayer(TEST_PLAYER_SLOT);
+                    }}
+                    className={`flex cursor-pointer items-center justify-center rounded-full border px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-4 sm:text-sm ${
+                      isActive
+                        ? "border-transparent bg-amber-200 text-neutral-900"
+                        : "border-amber-200/30 bg-white/5 text-white/85 hover:border-amber-200/60 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {videoUrl && isSandboxed && activePlayer !== TEST_PLAYER_SLOT && (
           <NoAdsBanner key={activeSrc} />
         )}
 
@@ -1194,15 +1291,25 @@ export const PlayerSection = forwardRef<
                * offset (`activePlayer === 3 ? 3 : 0`), untouched.
                */}
               {subtitleUrl &&
-                activePlayer === 2 &&
-                vidfastUsesOurSubs && (
+                ((activePlayer === 2 && vidfastUsesOurSubs) ||
+                  activePlayer === TEST_PLAYER_SLOT) && (
+                // On VidSpark (the test player) it syncs to its documented
+                // "timeupdate" messages — see lib/player-telemetry.ts. It
+                // takes no subtitle file of ours (only v/startAt/t/theme are
+                // read, checked 2026-10-11), so this is the only way in.
                 <SubtitleOverlay
                   subtitleUrl={subtitleUrl}
                   active={hasStarted}
                   activePlayer={activePlayer}
                   isFullscreen={isRealFullscreen || isBigView}
                   onToggleFullscreen={toggleFullscreen}
-                  playerLabel={playerOrder.indexOf(activePlayer) + 1}
+                  playerLabel={
+                    activePlayer === TEST_PLAYER_SLOT
+                      ? (TEST_PLAYERS.find(
+                          (entry) => entry.key === activeTestPlayer
+                        )?.label ?? "")
+                      : playerOrder.indexOf(activePlayer) + 1
+                  }
                 />
               )}
             </>
