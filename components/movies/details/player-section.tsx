@@ -6,6 +6,7 @@ import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
@@ -521,6 +522,26 @@ function NoAdsBanner() {
 }
 
 /**
+ * How our Bulgarian subtitles get into each player — a small tag on the
+ * picker button's bottom edge (the "no ads" one sits on its top edge), so
+ * viewers know up front what, if anything, they'll have to do. Only while
+ * we have our own subtitles for the title:
+ * - "select": in the player's own captions menu, switched on by hand
+ *   (EmbedMaster, vidsrc2.ru once its URL carries them)
+ * - "builtin": built into the player (VidLink)
+ * - "download": download ours and upload them into the player
+ *   (CineSrc, VidSpark — see <UploadSubtitlesGuide>)
+ * VidFast (our own overlay) gets none.
+ */
+type SubtitlesMode = "select" | "builtin" | "download";
+
+const SUBTITLES_MODE_LABEL: Record<SubtitlesMode, TranslationKey> = {
+  select: "player.subsModeSelect",
+  builtin: "player.subsModeBuiltin",
+  download: "player.subsModeDownload",
+};
+
+/**
  * VidLink (listed third) is on trial: as of 2026-10-10 it played
  * Unabomber in 1080p with our subtitles, but Animals and Fall 2 never
  * started (their stream host answered 503 every time). Flip this off to
@@ -971,6 +992,16 @@ export const PlayerSection = forwardRef<
     SANDBOXED_PLAYERS.has(activePlayer) &&
     Boolean(playerUrls[activePlayer]);
 
+  // See SUBTITLES_MODE_LABEL — by provider, not by its number in the
+  // picker, and only for a player that really carries ours right now.
+  function subtitlesModeFor(provider: ProviderId): SubtitlesMode | null {
+    if (!hasOwnSubtitles || !playerUrls[provider]) return null;
+    if (provider === 5 || (provider === 1 && vidsrcUsesOurSubs)) return "select";
+    if (provider === 4) return "builtin";
+    if (provider === 3 || provider === 6) return "download";
+    return null;
+  }
+
   /**
    * Redirect ads on the players that can't be sandboxed (see
    * SANDBOXED_PLAYERS): a click inside their iframe can navigate this
@@ -1145,12 +1176,13 @@ export const PlayerSection = forwardRef<
             <div
               role="radiogroup"
               aria-label={t("player.choose")}
-              className={`grid gap-2 sm:flex sm:shrink-0 ${
+              className={`grid gap-x-2 gap-y-12 pt-10 sm:flex sm:shrink-0 ${
                 playerOrder.length === 4 ? "grid-cols-2" : "grid-cols-3"
               }`}
             >
               {playerOrder.map((provider, index) => {
                 const isActive = provider === activePlayer;
+                const subtitlesMode = subtitlesModeFor(provider);
                 const hasBgSubtitles =
                   hasOwnSubtitles &&
                   (provider === 3 ||
@@ -1171,7 +1203,7 @@ export const PlayerSection = forwardRef<
                       setAutoSwitchedFrom(null);
                       setActivePlayer(provider);
                     }}
-                    className={`relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
+                    className={`relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:min-w-[8.5rem] sm:px-5 sm:text-sm ${
                       isActive
                         ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
                         : "border-white/20 bg-white/5 text-white/85 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:text-white"
@@ -1185,12 +1217,24 @@ export const PlayerSection = forwardRef<
                         className={isActive ? "text-emerald-600" : "text-emerald-400"}
                       />
                     )}
-                    {SANDBOXED_PLAYERS.has(provider) && (
-                      // Small tag sitting on the button's top edge, so the
+                    {(subtitlesMode || SANDBOXED_PLAYERS.has(provider)) && (
+                      // Small tags stacked on the button's top edge — "no
+                      // ads" first, how the subtitles work under it — so the
                       // button itself stays the same size as the others.
-                      <span className="pointer-events-none absolute -top-2 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[9px] leading-tight font-bold tracking-wide text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
-                        <ShieldCheck size={10} />
-                        {t("player.noAds")}
+                      // One line each; the buttons are a bit wider (sm up)
+                      // so the subtitles one fits over its own button.
+                      <span className="pointer-events-none absolute bottom-[calc(100%-0.5rem)] left-1/2 flex -translate-x-1/2 flex-col items-center gap-0.5">
+                        {SANDBOXED_PLAYERS.has(provider) && (
+                          <span className="flex items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[9px] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
+                            <ShieldCheck size={10} />
+                            {t("player.noAds")}
+                          </span>
+                        )}
+                        {subtitlesMode && (
+                          <span className="rounded-full bg-[#ca8a04] px-2 py-px text-[10px] leading-tight font-bold whitespace-nowrap text-white shadow-[0_2px_8px_rgba(202,138,4,0.5)] [text-shadow:0_1px_1px_rgba(0,0,0,0.35)] sm:text-[11px]">
+                            {t(SUBTITLES_MODE_LABEL[subtitlesMode])}
+                          </span>
+                        )}
                       </span>
                     )}
                   </button>

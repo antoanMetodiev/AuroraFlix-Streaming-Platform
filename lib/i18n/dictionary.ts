@@ -234,6 +234,18 @@ export const dictionary = {
     en: "Download Bulgarian subtitles",
     bg: "Свали българските субтитри",
   },
+  "player.subsModeSelect": {
+    en: "Pick BG subs",
+    bg: "Избери БГ субс",
+  },
+  "player.subsModeBuiltin": {
+    en: "Built-in BG subs",
+    bg: "Вградени БГ субс",
+  },
+  "player.subsModeDownload": {
+    en: "Download BG subs",
+    bg: "Изтегли БГ субс",
+  },
   "player.uploadGuideTitle": {
     en: "Add Bulgarian subtitles in 3 steps",
     bg: "Добави българските субтитри в 3 стъпки",
