@@ -325,7 +325,7 @@ const MANUAL_SUBS_HINT_MS = 15_000;
 
 type ManualSubtitlesHintProps =
   | { variant: "embedmaster" | "vidlink" }
-  /** Players with an upload button for subtitle files (CineSrc, nxsha):
+  /** Players with an upload button for subtitle files (CineSrc):
    *  offers our .vtt for download and names the button to upload it with. */
   | { variant: "upload"; subtitleUrl: string; uploadButton: string };
 
@@ -388,94 +388,7 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
   );
 }
 
-/**
- * 6 is the slot every test player plays in (see TEST_PLAYERS) — which one
- * is in `activeTestPlayer` in PlayerSection. Not part of the main picker.
- */
-type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
-
-const TEST_PLAYER_SLOT = 6 satisfies ProviderId;
-
-/**
- * PrimeSrc — on trial (2026-10-11), sandboxed. An aggregator of file
- * hosts, kept to one with `whitelistServers`. Of all its hosts (Filemoon,
- * Voe, Dood, Streamtape, Luluvdoo, Streamwish, Vidmoly, Mixdrop, Filelions,
- * Savefiles, VidsST, Streamplay, Vinovo, Vidara) only Streamplay played
- * ad-free inside a sandbox (tested on production, 2026-10-11) — the rest
- * refused the sandbox, had nothing, or still showed ads inside the frame.
- *
- * No way in for our subtitles: PrimeSrc itself doesn't read `sub_url` (an
- * earlier probe saw *something* on its page fetch our file, but not its
- * player), and it hands the host nothing but the link.
- */
-function toPrimesrcUrl(ref: VidsrcRef, server: string): string {
-  const base =
-    ref.kind === "movie"
-      ? `https://primesrc.me/embed/movie?tmdb=${ref.tmdbId}`
-      : `https://primesrc.me/embed/tv?tmdb=${ref.tmdbId}&season=${ref.season}&episode=${ref.episode}`;
-
-  return appendParams(base, { whitelistServers: server });
-}
-
-/**
- * EmbedWave — on trial (2026-10-11), sandboxed, played ad-free. Its actual
- * player is web.nxsha.app, and embedwave.cc only passes `server` on to it.
- *
- * The "+ subs" variant embeds web.nxsha.app directly to get at the two
- * things it does have (read from its bundle, 2026-10-11):
- * - `sub` — preselects a subtitle track in that language from its own
- *   catalogue (like CineSrc's `subtitlelang`). Not a URL — it takes no
- *   subtitle file from outside (`sub_url` isn't read at all).
- * - a "Load Subtitle (.vtt, .srt)" button in its subtitles menu, for a file
- *   by hand — <ManualSubtitlesHint> offers our .vtt for that.
- * `server=AwsPly` is the one embedwave.cc itself picks.
- */
-function toEmbedwaveUrl(ref: VidsrcRef, direct = false): string {
-  const path =
-    ref.kind === "movie"
-      ? `movie/${ref.tmdbId}`
-      : `tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
-
-  if (!direct) {
-    return appendParams(`https://embedwave.cc/embed/${path}`, {
-      autoplay: "1",
-    });
-  }
-
-  return appendParams(`https://web.nxsha.app/embed/${path}`, {
-    server: "AwsPly",
-    sub: DEFAULT_SUBTITLE_LANG,
-  });
-}
-
-/**
- * Shown in their own row under the main picker, for checking by hand
- * whether they play inside a sandbox and which ads get through. Drop an
- * entry to take it off again.
- */
-type TestPlayer = {
-  key: string;
-  label: string;
-  url: (ref: VidsrcRef) => string;
-  /** Name of the player's own button for uploading a subtitle file, if it
-   *  has one — <ManualSubtitlesHint> then offers our .vtt for it. */
-  uploadButton?: string;
-};
-
-const TEST_PLAYERS: readonly TestPlayer[] = [
-  { key: "embedwave", label: "EmbedWave", url: (ref) => toEmbedwaveUrl(ref) },
-  {
-    key: "embedwave-subs",
-    label: "EmbedWave + субс",
-    url: (ref) => toEmbedwaveUrl(ref, true),
-    uploadButton: "Load Subtitle",
-  },
-  {
-    key: "primesrc:Streamplay",
-    label: "PrimeSrc · Streamplay",
-    url: (ref) => toPrimesrcUrl(ref, "Streamplay"),
-  },
-];
+type ProviderId = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Pop-up / redirect ads. They run inside the provider's cross-origin
@@ -488,11 +401,8 @@ const TEST_PLAYERS: readonly TestPlayer[] = [
  * VidFast and VidLink ("Please Disable Sandbox") and EmbedMaster
  * ("Sandbox detected") all refuse to start. Those get the
  * `beforeunload` guard in PlayerSection instead.
- *
- * The test players (slot 6) are sandboxed too — that's what they're on trial
- * for.
  */
-const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3, TEST_PLAYER_SLOT]);
+const SANDBOXED_PLAYERS: ReadonlySet<ProviderId> = new Set([3]);
 
 const PLAYER_SANDBOX =
   "allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock allow-pointer-lock";
@@ -687,9 +597,6 @@ export const PlayerSection = forwardRef<
   const [activePlayer, setActivePlayer] =
     useState<ProviderId>(1);
 
-  // Which entry of TEST_PLAYERS plays while activePlayer is the test slot.
-  const [activeTestPlayer, setActiveTestPlayer] =
-    useState<string>(TEST_PLAYERS[0].key);
 
   const [hasStarted, setHasStarted] =
     useState(false);
@@ -947,17 +854,6 @@ export const PlayerSection = forwardRef<
     [vidsrcRef, subtitleUrl]
   );
 
-  const testPlayer = TEST_PLAYERS.find(
-    (entry) => entry.key === activeTestPlayer
-  );
-
-  const testPlayerUrl = useMemo(() => {
-    const player = TEST_PLAYERS.find(
-      (entry) => entry.key === activeTestPlayer
-    );
-    return vidsrcRef && player ? player.url(vidsrcRef) : null;
-  }, [activeTestPlayer, vidsrcRef]);
-
   /**
    * Select active player.
    */
@@ -967,7 +863,6 @@ export const PlayerSection = forwardRef<
     3: player3Url,
     4: player4Url,
     5: player5Url,
-    6: testPlayerUrl,
   };
   const activeSrc = playerUrls[activePlayer] || player1Url;
 
@@ -1205,52 +1100,7 @@ export const PlayerSection = forwardRef<
           </div>
         )}
 
-        {videoUrl && vidsrcRef && TEST_PLAYERS.length > 0 && (
-          <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-dashed border-amber-300/30 bg-amber-300/[0.04] p-3 sm:p-4">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-amber-200 sm:text-base">
-                {t("player.testPlayers")}
-              </p>
-              <p className="text-xs text-white/60 sm:text-sm">
-                {t("player.testPlayersHint")}
-              </p>
-            </div>
-
-            <div
-              role="radiogroup"
-              aria-label={t("player.testPlayers")}
-              className="flex flex-wrap gap-2"
-            >
-              {TEST_PLAYERS.map(({ key, label }) => {
-                const isActive =
-                  activePlayer === TEST_PLAYER_SLOT && key === activeTestPlayer;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    role="radio"
-                    aria-checked={isActive}
-                    onClick={() => {
-                      userChangedPlayerRef.current = true;
-                      setAutoSwitchedFrom(null);
-                      setActiveTestPlayer(key);
-                      setActivePlayer(TEST_PLAYER_SLOT);
-                    }}
-                    className={`flex cursor-pointer items-center justify-center rounded-full border px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-4 sm:text-sm ${
-                      isActive
-                        ? "border-transparent bg-amber-200 text-neutral-900"
-                        : "border-amber-200/30 bg-white/5 text-white/85 hover:border-amber-200/60 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {videoUrl && isSandboxed && activePlayer !== TEST_PLAYER_SLOT && (
+        {videoUrl && isSandboxed && (
           <NoAdsBanner key={activeSrc} />
         )}
 
@@ -1321,17 +1171,6 @@ export const PlayerSection = forwardRef<
                 />
               )}
 
-              {activePlayer === TEST_PLAYER_SLOT &&
-                subtitleUrl &&
-                testPlayer?.uploadButton && (
-                  <ManualSubtitlesHint
-                    key={`hint:${activeSrc}`}
-                    variant="upload"
-                    subtitleUrl={subtitleUrl}
-                    uploadButton={testPlayer.uploadButton}
-                  />
-                )}
-
               {/*
                * CINESRC_OVERLAY_PARKED — CineSrc (provider 3) used to get
                * <SubtitleOverlay> (our own subtitle layer + toggle/download/
@@ -1381,7 +1220,10 @@ export const PlayerSection = forwardRef<
               className={
                 isBigView
                   ? "animate-big-view-in fixed inset-0 z-[100] overflow-hidden bg-black"
-                  : "relative aspect-video w-full max-w-[80rem] overflow-hidden rounded-2xl bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)]"
+                  : // On phones it runs edge to edge, past the section's
+                    // px-4, for a bigger picture and bigger provider
+                    // controls; from sm up it's the rounded card again.
+                    "relative -mx-4 aspect-video w-[calc(100%+2rem)] max-w-none overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)] sm:mx-0 sm:w-full sm:max-w-[80rem] sm:rounded-2xl"
               }
             >
               {videoUrl ? (
