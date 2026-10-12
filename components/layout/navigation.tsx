@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bookmark, Clapperboard, Crown, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
-import { FaLinkedin } from "react-icons/fa";
+import { Bookmark, Clapperboard, Crown, Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
+import { FaAndroid, FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
@@ -24,6 +24,9 @@ export const NAV_LINKS = [
   { href: "/playlists", labelKey: "nav.playlists", icon: ListVideo },
   { href: "/order", labelKey: "nav.order", icon: PlusCircle },
 ] as const satisfies { href: string; labelKey: TranslationKey; icon: unknown }[];
+
+// The Android app (sideloaded — not on Google Play); see mobile-front-end/.
+const ANDROID_APK_URL = "/downloads/auroraflix.apk";
 
 export function isLinkActive(pathname: string | null, href: string) {
   return href === "/" ? pathname === "/" : (pathname?.startsWith(href) ?? false);
@@ -89,17 +92,19 @@ export function Navigation() {
         </Link>
       </div>
 
-      <span className="hidden items-center gap-1 pl-1 text-xs whitespace-nowrap text-foreground/40 lg:flex">
-        {t("nav.madeBy")}
-        <a
-          href="https://www.linkedin.com/in/antoan-metodiev-875518303"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-foreground/60 underline-offset-2 transition-colors hover:text-foreground hover:underline"
-        >
-          A.M
-        </a>
-      </span>
+      <a
+        href={ANDROID_APK_URL}
+        download
+        aria-label={t("nav.androidDownloadAria")}
+        title={t("nav.androidOnly")}
+        className="group hidden items-center gap-2 rounded-full border border-[#3DDC84]/30 bg-[#3DDC84]/10 py-1.5 pr-3.5 pl-2 text-xs font-semibold whitespace-nowrap text-foreground/85 shadow-[0_0_24px_-8px_rgba(61,220,132,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/60 hover:bg-[#3DDC84]/15 hover:text-foreground lg:flex"
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3DDC84] text-neutral-900">
+          <FaAndroid size={14} />
+        </span>
+        {t("nav.androidApp")}
+        <Download size={13} className="text-[#3DDC84] transition-transform duration-300 group-hover:translate-y-0.5" />
+      </a>
 
       {/* Pushes search/language/LinkedIn/hamburger to the far right, keeping links left-aligned */}
       <div className="flex-1" />
@@ -184,18 +189,22 @@ export function Navigation() {
           LinkedIn
         </a>
 
-        <span className="flex items-center gap-1 px-4 pb-1 text-xs text-foreground/40">
-          {t("nav.madeBy")}
-          <a
-            href="https://www.linkedin.com/in/antoan-metodiev-875518303"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setIsOpen(false)}
-            className="font-medium text-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
-          >
-            A.M
-          </a>
-        </span>
+        <a
+          href={ANDROID_APK_URL}
+          download
+          onClick={() => setIsOpen(false)}
+          aria-label={t("nav.androidDownloadAria")}
+          className="mx-1 mt-1 mb-1 flex items-center gap-3 rounded-xl border border-[#3DDC84]/30 bg-[#3DDC84]/10 px-3 py-2.5 transition-colors hover:border-[#3DDC84]/60 hover:bg-[#3DDC84]/15"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3DDC84] text-neutral-900 shadow-[0_0_18px_-4px_rgba(61,220,132,0.7)]">
+            <FaAndroid size={19} />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-sm font-semibold text-foreground">{t("nav.androidApp")}</span>
+            <span className="text-[11px] text-foreground/55">{t("nav.androidOnly")}</span>
+          </span>
+          <Download size={16} className="shrink-0 text-[#3DDC84]" />
+        </a>
       </div>
     </nav>
   );

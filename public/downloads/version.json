@@ -1,9 +1,9 @@
 {
-  "versionCode": 5,
-  "versionName": "0.2.1",
+  "versionCode": 6,
+  "versionName": "0.3.0",
   "url": "https://auroraflix.cloud/downloads/auroraflix.apk",
   "notes": {
-    "bg": "Иконка с логото на AuroraFlix, черен стартов екран и автоматични обновления.",
-    "en": "AuroraFlix logo icon, dark launch screen and automatic updates."
+    "bg": "AI асистент, управление на акаунта и абонамент (Stripe) в приложението.",
+    "en": "AI assistant, account management and subscription (Stripe) in the app."
   }
 }
