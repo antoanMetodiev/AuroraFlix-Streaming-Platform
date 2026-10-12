@@ -374,9 +374,14 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
 function UploadSubtitlesGuide({
   subtitleUrl,
   uploadButton,
+  stepImages = {},
 }: {
   subtitleUrl: string;
   uploadButton: string;
+  /** Cropped screenshots of the player's own UI, with what to click ringed
+   *  in yellow (public/images/player-guide/, taken 2026-10-11) — by step
+   *  number. A step without one just shows its text. */
+  stepImages?: Partial<Record<2 | 3, string>>;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -434,16 +439,25 @@ function UploadSubtitlesGuide({
             key={step}
             className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-3"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-neutral-950">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
               {index + 1}
             </span>
             <div className="min-w-0 text-sm text-white/90">
               <p>{step}</p>
+              {stepImages[(index + 1) as 2 | 3] && (
+                // eslint-disable-next-line @next/next/no-img-element -- tiny static hint, nothing to optimise
+                <img
+                  src={stepImages[(index + 1) as 2 | 3]}
+                  alt=""
+                  loading="lazy"
+                  className="mt-2 w-full max-w-[18rem] rounded-lg border border-white/15"
+                />
+              )}
               {index === 0 && (
                 <a
                   href={subtitleUrl}
                   download="Bulgarian.vtt"
-                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-sm font-bold text-neutral-950 shadow-[0_4px_16px_rgba(16,185,129,0.45)] transition-colors hover:bg-emerald-300"
+                  className="mt-2 inline-flex items-center gap-2 rounded-full border-2 border-white bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_16px_rgba(16,185,129,0.45)] transition-colors hover:bg-emerald-500"
                 >
                   <Download size={16} />
                   {t("player.uploadSubsDownload")}
@@ -1252,6 +1266,10 @@ export const PlayerSection = forwardRef<
           <UploadSubtitlesGuide
             subtitleUrl={subtitleUrl}
             uploadButton="Upload Subtitles"
+            stepImages={{
+              2: "/images/player-guide/vidspark-cc.webp",
+              3: "/images/player-guide/vidspark-upload.webp",
+            }}
           />
         )}
 
@@ -1259,6 +1277,7 @@ export const PlayerSection = forwardRef<
           <UploadSubtitlesGuide
             subtitleUrl={subtitleUrl}
             uploadButton="Upload Subtitle"
+            stepImages={{ 2: "/images/player-guide/cinesrc-cc.webp" }}
           />
         )}
 
