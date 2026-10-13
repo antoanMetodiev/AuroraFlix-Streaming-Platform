@@ -1,9 +1,9 @@
 {
-  "versionCode": 6,
-  "versionName": "0.3.0",
+  "versionCode": 7,
+  "versionName": "0.3.1",
   "url": "https://auroraflix.cloud/downloads/auroraflix.apk",
   "notes": {
-    "bg": "AI асистент, управление на акаунта и абонамент (Stripe) в приложението.",
-    "en": "AI assistant, account management and subscription (Stripe) in the app."
+    "bg": "Поправки: известията (камбанката), превъртане на трейлърите и плейърите, по-чисти снимки. Плащанията и AI асистентът са изключени засега.",
+    "en": "Fixes: notifications (bell), seeking in trailers and players, cleaner image viewer. Payments and the AI assistant are off for now."
   }
 }

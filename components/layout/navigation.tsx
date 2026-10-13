@@ -13,6 +13,7 @@ import { AuthNav } from "@/components/layout/auth-nav";
 import { FriendsNavButton } from "@/components/friends/friends-nav-button";
 import { NotificationsBell } from "@/components/friends/notifications-bell";
 // ASSISTANT DISABLED: import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
+import { AndroidInstallDialog } from "@/components/layout/android-install-dialog";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
@@ -51,6 +52,8 @@ export function Navigation() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  // The APK download also opens install steps (Play Protect warning help).
+  const [installHelpOpen, setInstallHelpOpen] = useState(false);
   // IOS DISABLED: the iPhone icon's "coming soon" hint.
   // const [iosHintOpen, setIosHintOpen] = useState(false);
   //
@@ -82,6 +85,7 @@ export function Navigation() {
           download
           aria-label={t("nav.androidDownloadAria")}
           title={t("nav.androidOnly")}
+          onClick={() => setInstallHelpOpen(true)}
           className="group relative flex h-9 w-9 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/70 hover:bg-[#3DDC84] hover:text-neutral-900 active:bg-[#3DDC84] active:text-neutral-900"
         >
           <FaAndroid size={17} />
@@ -247,7 +251,10 @@ export function Navigation() {
         <a
           href={ANDROID_APK_URL}
           download
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            setInstallHelpOpen(true);
+          }}
           aria-label={t("nav.androidDownloadAria")}
           className="mx-1 mt-1 mb-1 flex items-center gap-3 rounded-xl border border-[#3DDC84]/30 bg-[#3DDC84]/10 px-3 py-2.5 transition-colors hover:border-[#3DDC84]/60 hover:bg-[#3DDC84]/15"
         >
@@ -261,6 +268,8 @@ export function Navigation() {
           <Download size={16} className="shrink-0 text-[#3DDC84]" />
         </a>
       </div>
+
+      {installHelpOpen && <AndroidInstallDialog apkUrl={ANDROID_APK_URL} onClose={() => setInstallHelpOpen(false)} />}
     </nav>
   );
 }
