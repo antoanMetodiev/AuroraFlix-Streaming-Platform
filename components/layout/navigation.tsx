@@ -73,6 +73,46 @@ export function Navigation() {
     // narrow screens, forcing the whole sticky header (and the page) wider
     // than the viewport instead of letting its children wrap/truncate.
     <nav className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+      {/* The app download icons, right after the logo (hidden on tablet widths, where the links need the room). */}
+      <div className="flex shrink-0 items-center gap-1.5 md:hidden lg:flex">
+        <a
+          href={ANDROID_APK_URL}
+          download
+          aria-label={t("nav.androidDownloadAria")}
+          title={t("nav.androidOnly")}
+          className="group relative flex h-9 w-9 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/70 hover:bg-[#3DDC84] hover:text-neutral-900 active:bg-[#3DDC84] active:text-neutral-900"
+        >
+          <FaAndroid size={17} />
+          <span className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-[#3DDC84] text-neutral-900">
+            <Download size={9} strokeWidth={3} className="transition-transform duration-300 group-hover:translate-y-px" />
+          </span>
+        </a>
+
+        {/* No iPhone build yet — a tap just says it's coming. */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIosHintOpen((prev) => !prev)}
+            aria-label={t("nav.iosSoon")}
+            aria-expanded={iosHintOpen}
+            title={t("nav.iosSoon")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/15 bg-foreground/5 text-foreground/80 transition-all duration-300 hover:-translate-y-0.5 hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15"
+          >
+            <FaApple size={17} />
+          </button>
+          <span
+            role="status"
+            className={`pointer-events-none absolute top-11 left-0 z-40 rounded-xl border border-foreground/10 bg-surface px-3 py-2 text-xs font-semibold whitespace-nowrap text-foreground/80 shadow-[0_12px_30px_rgba(0,0,0,0.35)] transition-all duration-200 ${
+              iosHintOpen ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+            }`}
+          >
+            {iosHintOpen ? t("nav.iosSoon") : ""}
+          </span>
+        </div>
+      </div>
+
+      <span className="hidden h-5 w-px bg-foreground/15 lg:block" />
+
       {/* Desktop: plain row of links, left-aligned right after the logo */}
       <div className="hidden items-center gap-1 md:flex">
         {NAV_LINKS.map(({ href, labelKey, icon: Icon }) => {
@@ -105,21 +145,6 @@ export function Navigation() {
         */}
       </div>
 
-      <a
-        href={ANDROID_APK_URL}
-        download
-        aria-label={t("nav.androidDownloadAria")}
-        title={t("nav.androidOnly")}
-        // Icon-only, so it never squeezes the links next to it (the full
-        // label is in the tooltip and the mobile menu).
-        className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/70 hover:bg-[#3DDC84] hover:text-neutral-900 lg:flex"
-      >
-        <FaAndroid size={17} />
-        <span className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-[#3DDC84] text-neutral-900">
-          <Download size={9} strokeWidth={3} className="transition-transform duration-300 group-hover:translate-y-px" />
-        </span>
-      </a>
-
       {/* Pushes search/language/LinkedIn/hamburger to the far right, keeping links left-aligned */}
       <div className="flex-1" />
 
@@ -133,43 +158,9 @@ export function Navigation() {
       <AssistantLauncher className="hidden md:flex" />
       */}
 
-      {/* On phones the language toggle lives in the menu (next to the
-          account), and the app download icons take its place here. */}
+      {/* On phones the language toggle lives in the menu, next to the account. */}
       <div className="hidden md:block">
         <LanguageToggle />
-      </div>
-
-      <div className="flex shrink-0 items-center gap-1.5 md:hidden">
-        <a
-          href={ANDROID_APK_URL}
-          download
-          aria-label={t("nav.androidDownloadAria")}
-          title={t("nav.androidOnly")}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-colors active:bg-[#3DDC84] active:text-neutral-900"
-        >
-          <FaAndroid size={17} />
-        </a>
-
-        {/* No iPhone build yet — a tap just says it's coming. */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIosHintOpen((prev) => !prev)}
-            aria-label={t("nav.iosSoon")}
-            aria-expanded={iosHintOpen}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/15 bg-foreground/5 text-foreground/80 transition-colors active:bg-foreground/15"
-          >
-            <FaApple size={17} />
-          </button>
-          <span
-            role="status"
-            className={`pointer-events-none absolute top-11 right-0 z-40 rounded-xl border border-foreground/10 bg-surface px-3 py-2 text-xs font-semibold whitespace-nowrap text-foreground/80 shadow-[0_12px_30px_rgba(0,0,0,0.35)] transition-all duration-200 ${
-              iosHintOpen ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
-            }`}
-          >
-            {iosHintOpen ? t("nav.iosSoon") : ""}
-          </span>
-        </div>
       </div>
 
       <AuthNav className="hidden md:block" />
