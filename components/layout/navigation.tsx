@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 // PAYMENTS DISABLED: Crown (the Pricing links' icon) is back with them.
 import { Bookmark, Clapperboard, /* Crown, */ Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
-import { FaAndroid, FaApple, FaLinkedin } from "react-icons/fa";
+// IOS DISABLED: FaApple (the iPhone icon) is back with it.
+import { FaAndroid, /* FaApple, */ FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
@@ -50,13 +51,14 @@ export function Navigation() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [iosHintOpen, setIosHintOpen] = useState(false);
-
-  useEffect(() => {
-    if (!iosHintOpen) return;
-    const timer = setTimeout(() => setIosHintOpen(false), 2500);
-    return () => clearTimeout(timer);
-  }, [iosHintOpen]);
+  // IOS DISABLED: the iPhone icon's "coming soon" hint.
+  // const [iosHintOpen, setIosHintOpen] = useState(false);
+  //
+  // useEffect(() => {
+  //   if (!iosHintOpen) return;
+  //   const timer = setTimeout(() => setIosHintOpen(false), 2500);
+  //   return () => clearTimeout(timer);
+  // }, [iosHintOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -88,7 +90,11 @@ export function Navigation() {
           </span>
         </a>
 
-        {/* No iPhone build yet — a tap just says it's coming. */}
+        {/* IOS DISABLED — hidden until there's a way to ship the iPhone app
+            (Apple allows no website installs). Uncomment this, the state +
+            effect above and the FaApple import to bring it back.
+
+        No iPhone build yet — a tap just says it's coming.
         <div className="relative">
           <button
             type="button"
@@ -109,6 +115,7 @@ export function Navigation() {
             {iosHintOpen ? t("nav.iosSoon") : ""}
           </span>
         </div>
+        */}
       </div>
 
       <span className="hidden h-5 w-px bg-foreground/15 lg:block" />
