@@ -20,6 +20,8 @@ export const dictionary = {
   "nav.androidApp": { en: "Android app", bg: "Android приложение" },
   "nav.androidOnly": { en: "Android phones only, for now", bg: "Само за Android телефони засега" },
   "nav.androidDownloadAria": { en: "Download the AuroraFlix app for Android", bg: "Изтегли приложението AuroraFlix за Android" },
+  "nav.iosApp": { en: "iPhone app", bg: "iPhone приложение" },
+  "nav.iosSoon": { en: "iPhone app — coming soon", bg: "iPhone приложение — скоро" },
   "nav.openMenu": { en: "Open menu", bg: "Отвори менюто" },
   "nav.closeMenu": { en: "Close menu", bg: "Затвори менюто" },
   "nav.openSearch": { en: "Open search", bg: "Отвори търсенето" },

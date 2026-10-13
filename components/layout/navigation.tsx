@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 // PAYMENTS DISABLED: Crown (the Pricing links' icon) is back with them.
 import { Bookmark, Clapperboard, /* Crown, */ Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
-import { FaAndroid, FaLinkedin } from "react-icons/fa";
+import { FaAndroid, FaApple, FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
 import { FriendsNavButton } from "@/components/friends/friends-nav-button";
 import { NotificationsBell } from "@/components/friends/notifications-bell";
-import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
+// ASSISTANT DISABLED: import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
@@ -50,6 +50,13 @@ export function Navigation() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [iosHintOpen, setIosHintOpen] = useState(false);
+
+  useEffect(() => {
+    if (!iosHintOpen) return;
+    const timer = setTimeout(() => setIosHintOpen(false), 2500);
+    return () => clearTimeout(timer);
+  }, [iosHintOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -122,9 +129,48 @@ export function Navigation() {
 
       <FriendsNavButton />
       <NotificationsBell />
+      {/* ASSISTANT DISABLED — off for now, in the app too.
       <AssistantLauncher className="hidden md:flex" />
+      */}
 
-      <LanguageToggle />
+      {/* On phones the language toggle lives in the menu (next to the
+          account), and the app download icons take its place here. */}
+      <div className="hidden md:block">
+        <LanguageToggle />
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+        <a
+          href={ANDROID_APK_URL}
+          download
+          aria-label={t("nav.androidDownloadAria")}
+          title={t("nav.androidOnly")}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-colors active:bg-[#3DDC84] active:text-neutral-900"
+        >
+          <FaAndroid size={17} />
+        </a>
+
+        {/* No iPhone build yet — a tap just says it's coming. */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIosHintOpen((prev) => !prev)}
+            aria-label={t("nav.iosSoon")}
+            aria-expanded={iosHintOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/15 bg-foreground/5 text-foreground/80 transition-colors active:bg-foreground/15"
+          >
+            <FaApple size={17} />
+          </button>
+          <span
+            role="status"
+            className={`pointer-events-none absolute top-11 right-0 z-40 rounded-xl border border-foreground/10 bg-surface px-3 py-2 text-xs font-semibold whitespace-nowrap text-foreground/80 shadow-[0_12px_30px_rgba(0,0,0,0.35)] transition-all duration-200 ${
+              iosHintOpen ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+            }`}
+          >
+            {iosHintOpen ? t("nav.iosSoon") : ""}
+          </span>
+        </div>
+      </div>
 
       <AuthNav className="hidden md:block" />
 
@@ -176,11 +222,13 @@ export function Navigation() {
         </Link>
         */}
 
+        {/* ASSISTANT DISABLED
         <div onClick={() => setIsOpen(false)}>
           <AssistantLauncher asMenuItem className="w-full" />
         </div>
 
         <span className="my-1 h-px w-full bg-foreground/10" />
+        */}
 
         <div className="flex items-center justify-between gap-2 px-2 py-1">
           <AuthNav />
