@@ -60,6 +60,7 @@ type ClientMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
   // Also accepts the mobile app's tokens (see getSessionAuthAllowingApp).
+  const auth = await getSessionAuthAllowingApp(request);
   if (!auth.userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   if (isRateLimited(auth.userId)) {
