@@ -74,7 +74,7 @@ export function Navigation() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                 isActive
                   ? "bg-white text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.5)]"
                   : "text-foreground/65 hover:bg-foreground/10 hover:text-foreground"
@@ -103,13 +103,14 @@ export function Navigation() {
         download
         aria-label={t("nav.androidDownloadAria")}
         title={t("nav.androidOnly")}
-        className="group hidden items-center gap-2 rounded-full border border-[#3DDC84]/30 bg-[#3DDC84]/10 py-1.5 pr-3.5 pl-2 text-xs font-semibold whitespace-nowrap text-foreground/85 shadow-[0_0_24px_-8px_rgba(61,220,132,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/60 hover:bg-[#3DDC84]/15 hover:text-foreground lg:flex"
+        // Icon-only, so it never squeezes the links next to it (the full
+        // label is in the tooltip and the mobile menu).
+        className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3DDC84]/35 bg-[#3DDC84]/10 text-[#3DDC84] shadow-[0_0_18px_-6px_rgba(61,220,132,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3DDC84]/70 hover:bg-[#3DDC84] hover:text-neutral-900 lg:flex"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3DDC84] text-neutral-900">
-          <FaAndroid size={14} />
+        <FaAndroid size={17} />
+        <span className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-[#3DDC84] text-neutral-900">
+          <Download size={9} strokeWidth={3} className="transition-transform duration-300 group-hover:translate-y-px" />
         </span>
-        {t("nav.androidApp")}
-        <Download size={13} className="text-[#3DDC84] transition-transform duration-300 group-hover:translate-y-0.5" />
       </a>
 
       {/* Pushes search/language/LinkedIn/hamburger to the far right, keeping links left-aligned */}

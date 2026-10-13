@@ -29,6 +29,30 @@ export async function getSessionAuth(request: Request) {
   return requestState.toAuth() ?? { userId: null, getToken: async () => null };
 }
 
+// The mobile app's session tokens come from Clerk's native Frontend API,
+// which mints them without an `azp` claim (an app sends no Origin), and
+// authorizedParties rejects a missing azp. azp only matters for browser
+// cookies, so a Bearer token that has none is still accepted — signature,
+// expiry and issuer are verified as usual. Opt-in per route: only
+// /api/assistant uses it.
+function hasBearerTokenWithoutAzp(request: Request): boolean {
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return false;
+  try {
+    const payload = header.slice("Bearer ".length).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "="))) as { azp?: unknown };
+    return claims.azp === undefined;
+  } catch {
+    return false;
+  }
+}
+
+export async function getSessionAuthAllowingApp(request: Request) {
+  if (!hasBearerTokenWithoutAzp(request)) return getSessionAuth(request);
+  const requestState = await clerkClient.authenticateRequest(request);
+  return requestState.toAuth() ?? { userId: null, getToken: async () => null };
+}
+
 export async function getClerkUser(request: Request) {
   const auth = await getSessionAuth(request);
   if (!auth.userId) return null;

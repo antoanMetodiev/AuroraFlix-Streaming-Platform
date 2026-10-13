@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionAuth } from "@/lib/clerk-auth";
+import { getSessionAuthAllowingApp } from "@/lib/clerk-auth";
 import { geminiChat, GeminiRateLimitError, type GeminiMessage } from "@/lib/gemini";
 import { fetchLibrarySummary, fetchRandomGeminiApiKey, resolveNamedTitles, type NamedTitle } from "@/lib/assistant-tools";
 
@@ -59,7 +59,7 @@ Output format — respond with ONLY a JSON object of this exact shape, no other 
 type ClientMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
-  const auth = await getSessionAuth(request);
+  // Also accepts the mobile app's tokens (see getSessionAuthAllowingApp).
   if (!auth.userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   if (isRateLimited(auth.userId)) {
