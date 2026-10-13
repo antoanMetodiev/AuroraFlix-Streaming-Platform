@@ -1,11 +1,10 @@
 import { Suspense } from "react";
 import { HeroSection } from "@/components/home/hero-section";
 import {
-	LazyPricingSection,
+	// PAYMENTS DISABLED: LazyPricingSection, LazyCheckoutResultOverlay
 	LazyLastViewedSection,
 	LazyTrendingSection,
 	LazyTrendingShowcase,
-	LazyCheckoutResultOverlay,
 } from "@/components/home/lazy-sections";
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
@@ -87,16 +86,20 @@ export default async function Home() {
 
 	return (
 		<main className="bg-black">
-			{/* useSearchParams (to read ?checkout=success&session_id=...) needs a
+			{/* PAYMENTS DISABLED — nobody is charged for now; uncomment the
+			    checkout overlay and the pricing section (and their imports).
+
+			    useSearchParams (to read ?checkout=success&session_id=...) needs a
 			    Suspense boundary here, or Next.js opts the whole route out of static
-			    rendering. */}
+			    rendering.
 			<Suspense fallback={null}>
 				<LazyCheckoutResultOverlay />
 			</Suspense>
+			*/}
 
 			<HeroSection items={heroItems} />
 
-			<LazyPricingSection />
+			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
 
 			<LazyLastViewedSection />
 

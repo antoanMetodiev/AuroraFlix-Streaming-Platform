@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bookmark, Clapperboard, Crown, Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
+// PAYMENTS DISABLED: Crown (the Pricing links' icon) is back with them.
+import { Bookmark, Clapperboard, /* Crown, */ Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
 import { FaAndroid, FaLinkedin } from "react-icons/fa";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
@@ -32,15 +33,18 @@ export function isLinkActive(pathname: string | null, href: string) {
   return href === "/" ? pathname === "/" : (pathname?.startsWith(href) ?? false);
 }
 
-// Always scrolls to the pricing cards when clicked. If we're already on the
-// homepage, the URL hash alone won't change (so the browser won't scroll on
-// its own) — jump there manually. Otherwise let the Link navigate normally;
-// Next.js scrolls to the #pricing element once the homepage has loaded.
-function handlePricingClick(pathname: string | null, event: React.MouseEvent) {
-  if (pathname !== "/") return;
-  event.preventDefault();
-  document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+// PAYMENTS DISABLED — nobody is charged for now, so the Pricing links are
+// hidden. Uncomment this and the two links below to bring them back.
+//
+// // Always scrolls to the pricing cards when clicked. If we're already on the
+// // homepage, the URL hash alone won't change (so the browser won't scroll on
+// // its own) — jump there manually. Otherwise let the Link navigate normally;
+// // Next.js scrolls to the #pricing element once the homepage has loaded.
+// function handlePricingClick(pathname: string | null, event: React.MouseEvent) {
+//   if (pathname !== "/") return;
+//   event.preventDefault();
+//   document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth", block: "start" });
+// }
 
 export function Navigation() {
   const pathname = usePathname();
@@ -82,6 +86,7 @@ export function Navigation() {
           );
         })}
 
+        {/* PAYMENTS DISABLED
         <Link
           href="/#pricing"
           onClick={(event) => handlePricingClick(pathname, event)}
@@ -90,6 +95,7 @@ export function Navigation() {
           <Crown size={15} />
           {t("nav.pricing")}
         </Link>
+        */}
       </div>
 
       <a
@@ -155,6 +161,7 @@ export function Navigation() {
           isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >
+        {/* PAYMENTS DISABLED
         <Link
           href="/#pricing"
           onClick={(event) => {
@@ -166,6 +173,7 @@ export function Navigation() {
           <Crown size={17} />
           {t("nav.pricing")}
         </Link>
+        */}
 
         <div onClick={() => setIsOpen(false)}>
           <AssistantLauncher asMenuItem className="w-full" />

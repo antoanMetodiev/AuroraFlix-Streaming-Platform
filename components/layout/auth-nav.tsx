@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
-import { CreditCard } from "lucide-react";
+// PAYMENTS DISABLED: import { CreditCard } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 // Client-side (useUser, not the server-only <Show>) so this can be reused freely
@@ -18,9 +18,11 @@ export function AuthNav({ className = "" }: { className?: string }) {
     return (
       <div className={className}>
         <UserButton>
+          {/* PAYMENTS DISABLED
           <UserButton.MenuItems>
             <UserButton.Link label={t("nav.subscription")} labelIcon={<CreditCard size={16} />} href="/account/subscription" />
           </UserButton.MenuItems>
+          */}
         </UserButton>
       </div>
     );
