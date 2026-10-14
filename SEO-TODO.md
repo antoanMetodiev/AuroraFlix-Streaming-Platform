@@ -15,6 +15,7 @@
 - [x] **`/sitemap.xml`** (app/sitemap.ts) — ~5535 адреса: начало, /movies, /series, жанрове,
   всички филми и сериали + постери.
 - [x] **Метаданни** (lib/seo.ts) — БГ заглавия и описания, keywords (кирилица + латиница),
+  canonical, Open Graph `bg_BG`; филтрирани списъци → `noindex, follow`; not-found → `noindex`.
 - [x] **JSON-LD** — WebSite + Organization (layout), Movie / TVSeries на детайлните страници.
   `aggregateRating` нарочно липсва (нямаме собствени оценки).
 - [x] **H1** — начална страница (`components/home/seo-intro.tsx` + линкове към жанрове),
