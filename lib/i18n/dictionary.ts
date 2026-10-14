@@ -458,6 +458,8 @@ export const dictionary = {
   "actor.female": { en: "Female", bg: "Жена" },
   "actor.male": { en: "Male", bg: "Мъж" },
   "actor.popularity": { en: "Popularity:", bg: "Популярност:" },
+  "actor.ageShort": { en: "{age} y/o", bg: "{age} г." },
+  "actor.viewProfile": { en: "View profile", bg: "Виж профила" },
 
   "carousel.latestWorks": { en: "Latest Works", bg: "Последни изяви" },
   "carousel.lastViewed": { en: "Last Viewed", bg: "Последно гледани" },

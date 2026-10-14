@@ -43,7 +43,7 @@ export function ImageGallery({ images }: { images: MediaImage[] }) {
 
   return (
     <section ref={ref} className="mx-auto mt-16 mb-24 max-w-[110rem] px-4 sm:mt-20 sm:mb-32 sm:px-6">
-      <div className={`flex flex-wrap items-center justify-between gap-4 transition-opacity duration-500 ${inView ? "opacity-100" : "opacity-0"}`}>
+      <div className={`reveal flex flex-wrap items-center justify-between gap-4 ${inView ? "" : "reveal-hidden"}`}>
         <SectionHeading className="mb-0">{t("sections.images")}</SectionHeading>
 
         <div className="flex gap-1 rounded-full border border-foreground/10 bg-foreground/5 p-1">

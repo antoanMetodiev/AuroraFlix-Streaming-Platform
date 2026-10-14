@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
+import { SmoothScroll } from "@/components/layout/smooth-scroll";
 import { LocaleProvider, LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-context";
 import type { Locale } from "@/lib/i18n/dictionary";
 import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
@@ -107,8 +108,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <LocaleProvider initialLocale={initialLocale}>
           <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ScrollToTopOnNavigate />
+            <SmoothScroll />
             <SiteHeader />
-            {children}
+            {/* isolate: everything a page renders shares one stacking layer, so
+                no z-index inside a page (hover previews, carousel arrows, the
+                details banner) can ever paint over the fixed header. Overlays
+                that must cover the header portal to <body> instead. */}
+            <div className="relative isolate flex flex-1 flex-col">{children}</div>
           </ClerkLocalizedProvider>
         </LocaleProvider>
       </body>

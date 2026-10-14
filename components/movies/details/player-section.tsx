@@ -10,6 +10,7 @@ import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
+import { startSmoothScroll, stopSmoothScroll } from "@/lib/smooth-scroll";
 import type { WatchingTarget } from "@/lib/watching";
 
 type VidsrcRef =
@@ -865,6 +866,8 @@ export const PlayerSection = forwardRef<
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Lenis scrolls the window itself, past an overflow:hidden body.
+    stopSmoothScroll();
     // Hides the site header and the mobile tab bar (see globals.css). The
     // big view sits inside the details page's `isolate` wrapper, so no
     // z-index can lift it above those two — they're simply taken away.
@@ -873,6 +876,7 @@ export const PlayerSection = forwardRef<
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      startSmoothScroll();
       document.documentElement.removeAttribute("data-player-big-view");
       document.removeEventListener("keydown", handleKeyDown);
     };

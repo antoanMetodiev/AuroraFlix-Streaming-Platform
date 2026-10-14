@@ -76,9 +76,7 @@ export function EpisodesSection({
   return (
     <section
       ref={ref}
-      className={`mx-auto my-16 max-w-[90rem] px-4 transition-all duration-1000 sm:my-24 sm:px-6 ${
-        inView ? "translate-y-0 opacity-100" : "translate-y-14 opacity-0"
-      }`}
+      className={`reveal mx-auto my-16 max-w-[90rem] px-4 sm:my-24 sm:px-6 ${inView ? "" : "reveal-hidden"}`}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4 sm:mb-5">
         <SectionHeading className="mb-0">{t("sections.episodes")}</SectionHeading>

@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+// PAYMENTS DISABLED: Link + usePathname (the Pricing links and their
+// handlePricingClick) are back with them.
 import { useEffect, useState } from "react";
 // PAYMENTS DISABLED: Crown (the Pricing links' icon) is back with them.
-import { Bookmark, Clapperboard, /* Crown, */ Download, Home, ListVideo, Menu, PlusCircle, Tv, X } from "lucide-react";
+import { /* Crown, */ Download, Menu, X } from "lucide-react";
 // IOS DISABLED: FaApple (the iPhone icon) is back with it.
 import { FaAndroid, /* FaApple, */ FaLinkedin } from "react-icons/fa";
+import { NavLinks } from "@/components/layout/nav-links";
 import { NavSearch } from "@/components/layout/nav-search";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { AuthNav } from "@/components/layout/auth-nav";
@@ -15,25 +16,9 @@ import { NotificationsBell } from "@/components/friends/notifications-bell";
 // ASSISTANT DISABLED: import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
 import { AndroidInstallDialog } from "@/components/layout/android-install-dialog";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import type { TranslationKey } from "@/lib/i18n/dictionary";
-
-// Exported so MobileTabBar (the floating bottom bar on phones) renders the
-// exact same primary destinations instead of keeping a second list in sync.
-export const NAV_LINKS = [
-  { href: "/", labelKey: "nav.home", icon: Home },
-  { href: "/movies", labelKey: "nav.movies", icon: Clapperboard },
-  { href: "/series", labelKey: "nav.series", icon: Tv },
-  { href: "/watchlist", labelKey: "nav.watchlist", icon: Bookmark },
-  { href: "/playlists", labelKey: "nav.playlists", icon: ListVideo },
-  { href: "/order", labelKey: "nav.order", icon: PlusCircle },
-] as const satisfies { href: string; labelKey: TranslationKey; icon: unknown }[];
 
 // The Android app (sideloaded — not on Google Play); see mobile-front-end/.
 const ANDROID_APK_URL = "/downloads/auroraflix.apk";
-
-export function isLinkActive(pathname: string | null, href: string) {
-  return href === "/" ? pathname === "/" : (pathname?.startsWith(href) ?? false);
-}
 
 // PAYMENTS DISABLED — nobody is charged for now, so the Pricing links are
 // hidden. Uncomment this and the two links below to bring them back.
@@ -49,7 +34,7 @@ export function isLinkActive(pathname: string | null, href: string) {
 // }
 
 export function Navigation() {
-  const pathname = usePathname();
+  // PAYMENTS DISABLED: const pathname = usePathname();
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   // The APK download also opens install steps (Play Protect warning help).
@@ -122,44 +107,26 @@ export function Navigation() {
         */}
       </div>
 
-      <span className="hidden h-5 w-px bg-foreground/15 lg:block" />
+      <span className="hidden h-5 w-px bg-white/10 lg:block" />
 
-      {/* Desktop: plain row of links, left-aligned right after the logo */}
-      <div className="hidden items-center gap-1 md:flex">
-        {NAV_LINKS.map(({ href, labelKey, icon: Icon }) => {
-          const isActive = isLinkActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
-                isActive
-                  ? "bg-white text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.5)]"
-                  : "text-foreground/65 hover:bg-foreground/10 hover:text-foreground"
-              }`}
-            >
-              <Icon size={15} />
-              {t(labelKey)}
-            </Link>
-          );
-        })}
+      {/* Desktop: the link row with the sliding active pill, right after the logo */}
+      <NavLinks />
 
-        {/* PAYMENTS DISABLED
-        <Link
-          href="/#pricing"
-          onClick={(event) => handlePricingClick(pathname, event)}
-          className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-foreground/65 transition-all duration-300 hover:bg-foreground/10 hover:text-foreground"
-        >
-          <Crown size={15} />
-          {t("nav.pricing")}
-        </Link>
-        */}
-      </div>
+      {/* PAYMENTS DISABLED
+      <Link
+        href="/#pricing"
+        onClick={(event) => handlePricingClick(pathname, event)}
+        className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-foreground/65 transition-all duration-300 hover:bg-foreground/10 hover:text-foreground"
+      >
+        <Crown size={15} />
+        {t("nav.pricing")}
+      </Link>
+      */}
 
       {/* Pushes search/language/LinkedIn/hamburger to the far right, keeping links left-aligned */}
       <div className="flex-1" />
 
-      <span className="hidden h-5 w-px bg-foreground/15 md:block" />
+      <span className="hidden h-5 w-px bg-white/10 md:block" />
 
       <NavSearch />
 

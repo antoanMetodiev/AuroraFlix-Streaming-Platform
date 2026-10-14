@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeaderIsland } from "@/components/layout/header-island";
 import { Navigation } from "@/components/layout/navigation";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { FriendsSocketManager } from "@/components/friends/friends-socket-manager";
@@ -12,15 +13,20 @@ import { WatchingFriendsMobilePill } from "@/components/friends/watching-friends
 export function SiteHeader() {
   return (
     <>
-      <header data-site-chrome className="fixed inset-x-0 top-0 z-40 w-full border-b border-foreground/10 bg-background/40 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[120rem] items-center gap-6 px-4 sm:px-6 lg:pr-4 lg:pl-8">
-          <Link href="/" className="flex shrink-0 items-center" aria-label="AuroraFlix">
-            <Image src="/logo.webp" alt="AuroraFlix" width={40} height={40} priority className="h-10 w-10 object-contain" />
-          </Link>
+      <HeaderIsland>
+        <Link href="/" className="group/logo flex shrink-0 items-center" aria-label="AuroraFlix">
+          <Image
+            src="/logo.webp"
+            alt="AuroraFlix"
+            width={40}
+            height={40}
+            priority
+            className="h-9 w-9 object-contain transition-transform duration-500 ease-out group-hover/logo:scale-110 group-hover/logo:-rotate-6"
+          />
+        </Link>
 
-          <Navigation />
-        </div>
-      </header>
+        <Navigation />
+      </HeaderIsland>
 
       {/* Fixed to the viewport, so it lives outside <header> but is still
           driven from here to keep all nav wiring in one place.

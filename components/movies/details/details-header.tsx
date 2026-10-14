@@ -22,8 +22,9 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
 
   return (
     <div className="relative w-full">
-      {/* Cinematic banner */}
-      <div className="relative h-[46vh] min-h-[320px] w-full sm:h-[56vh] lg:h-[64vh]">
+      {/* Cinematic banner — pulled up 4rem (the body's header offset) so it
+          starts at the very top of the screen, under the floating header. */}
+      <div className="relative -mt-16 h-[calc(46vh+4rem)] min-h-[384px] w-full sm:h-[calc(56vh+4rem)] lg:h-[calc(64vh+4rem)]">
         {record.backgroundImg_URL && <ProgressiveBackdrop path={record.backgroundImg_URL} />}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/10" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-transparent" />
@@ -60,25 +61,29 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
         </div>
       </div>
 
-      {/* Poster + overview */}
-      <div className="mx-auto flex max-w-[100rem] flex-col gap-6 px-4 pt-8 pb-10 sm:flex-row sm:px-6 sm:pb-16 lg:px-8">
-        {poster && (
-          <div className="relative z-10 aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl shadow-[0_20px_45px_-10px_rgba(0,0,0,0.8)] ring-2 ring-black/40 sm:w-44 lg:w-52">
-            <FadeInImage src={poster} alt={record.title} sizes="208px" className="object-cover" priority />
-          </div>
-        )}
-
-        <div className="flex flex-1 flex-col items-start gap-3 sm:pt-2">
-          {record.description && (
-            <div>
-              <h2 className="text-xs font-bold tracking-widest text-foreground/45 uppercase">Overview</h2>
-              <p className="mt-2 max-w-3xl leading-7 text-foreground/80">{description}</p>
+      {/* Poster + overview. The span fades the banner's black bottom edge into
+          the page background (details-background.tsx) instead of a hard line. */}
+      <div className="relative">
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-[1] h-80 bg-gradient-to-b from-background via-background/70 to-transparent" />
+        <div className="mx-auto flex max-w-[100rem] flex-col gap-6 px-4 pt-8 pb-10 sm:flex-row sm:px-6 sm:pb-16 lg:px-8">
+          {poster && (
+            <div className="relative z-10 aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl shadow-[0_0_24px_-4px_rgba(255,255,255,0.3)] ring-2 ring-black/40 sm:w-44 lg:w-52">
+              <FadeInImage src={poster} alt={record.title} sizes="208px" className="object-cover" priority />
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <AddToWatchlistButton record={record} type={type} />
-            <LikeButton record={record} type={type} />
+          <div className="flex flex-1 flex-col items-start gap-3 sm:pt-2">
+            {record.description && (
+              <div>
+                <h2 className="text-xs font-bold tracking-widest text-foreground/45 uppercase">Overview</h2>
+                <p className="mt-2 max-w-3xl leading-7 text-foreground/80">{description}</p>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <AddToWatchlistButton record={record} type={type} />
+              <LikeButton record={record} type={type} />
+            </div>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
+import { useInViewOnce } from "@/lib/use-in-view-once";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
@@ -36,10 +37,15 @@ const SOCIAL_ICONS = [
 
 export function Footer() {
   const { t } = useTranslation();
+  // The content floats up as the footer scrolls in (same .reveal as sections).
+  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.15);
 
   return (
     <footer className="relative z-10 bg-background px-6 py-16 text-foreground/50 sm:px-10 lg:px-16">
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:justify-between">
+      <div
+        ref={ref}
+        className={`reveal mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:justify-between ${inView ? "" : "reveal-hidden"}`}
+      >
         <div className="flex max-w-sm flex-col gap-4">
           <h2 className="text-lg font-medium tracking-widest text-foreground/85 uppercase">
             AuroraFlix

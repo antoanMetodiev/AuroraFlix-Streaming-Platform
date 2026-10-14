@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Reveal } from "@/components/ui/reveal";
 import { SeoIntro } from "@/components/home/seo-intro";
 import { HeroSection } from "@/components/home/hero-section";
 import {
@@ -108,7 +109,9 @@ export default async function Home() {
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
 
-			<LazyLastViewedSection />
+			<Reveal>
+				<LazyLastViewedSection />
+			</Reveal>
 
 			{/* Streams in after the hero — see PopularSection's doc comment. */}
 			{/* Same trending data the hero already fetched — no extra requests. */}
@@ -120,7 +123,9 @@ export default async function Home() {
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
 
-			<SeoIntro />
+			<Reveal>
+				<SeoIntro />
+			</Reveal>
 
 			<Footer />
 		</main>

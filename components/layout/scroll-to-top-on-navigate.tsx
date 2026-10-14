@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { resetSmoothScroll } from "@/lib/smooth-scroll";
 
 // Next.js's own scroll restoration doesn't reliably land at the top for
 // every navigation (e.g. clicking a card far down a long list, or a link in
@@ -26,6 +27,9 @@ function ScrollToTopInner() {
   useEffect(() => {
     if (window.location.hash) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // Lenis keeps its own target position — reset it too, or a glide still in
+    // progress from the previous page would carry on down this one.
+    resetSmoothScroll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, query]);
 
