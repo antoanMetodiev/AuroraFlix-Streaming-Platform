@@ -24,8 +24,10 @@ export function HeaderIsland({ children }: { children: React.ReactNode }) {
       data-scrolled={scrolled}
       className="group/header pointer-events-none fixed inset-x-0 top-0 z-40 w-full px-2 pt-2 sm:px-4 lg:px-6"
     >
-      <div className="relative mx-auto max-w-[120rem]">
-        <div className="pointer-events-auto relative flex h-12 items-center gap-3 rounded-full border-[0.5px] border-white/30 bg-neutral-700/30 pr-2 pl-2.5 shadow-[0_0_20px_-2px_rgba(255,255,255,0.28)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,box-shadow] duration-300 ease-out group-data-[scrolled=true]/header:bg-neutral-700/45 group-data-[scrolled=true]/header:shadow-[0_0_24px_-2px_rgba(255,255,255,0.36)] sm:gap-5 sm:pl-3 lg:pl-4">
+      {/* The island hugs its content (w-fit) and sits centred, rather than
+          stretching edge to edge. */}
+      <div className="flex justify-center">
+        <div className="pointer-events-auto relative flex h-12 w-fit max-w-full items-center gap-3 rounded-full border-[0.5px] border-white/30 bg-neutral-700/30 pr-2 pl-2.5 shadow-[0_0_20px_-2px_rgba(255,255,255,0.28)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,box-shadow] duration-300 ease-out group-data-[scrolled=true]/header:bg-neutral-700/45 group-data-[scrolled=true]/header:shadow-[0_0_24px_-2px_rgba(255,255,255,0.36)] sm:gap-5 sm:pl-3 lg:pl-4">
           {children}
         </div>
       </div>

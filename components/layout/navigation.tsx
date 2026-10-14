@@ -59,10 +59,11 @@ export function Navigation() {
 
   return (
     // min-w-0 overrides flexbox's default min-width:auto — without it, this
-    // flex-1 item refuses to shrink below its own content's natural width on
-    // narrow screens, forcing the whole sticky header (and the page) wider
-    // than the viewport instead of letting its children wrap/truncate.
-    <nav className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+    // item refuses to shrink below its own content's natural width on narrow
+    // screens, forcing the whole header (and the page) wider than the
+    // viewport instead of letting its children wrap/truncate. No flex-1: the
+    // header island is only as wide as its content (see header-island.tsx).
+    <nav className="relative flex min-w-0 items-center gap-2 sm:gap-3">
       {/* The app download icons, right after the logo (hidden on tablet widths, where the links need the room). */}
       <div className="flex shrink-0 items-center gap-1.5 md:hidden lg:flex">
         <a
@@ -122,9 +123,6 @@ export function Navigation() {
         {t("nav.pricing")}
       </Link>
       */}
-
-      {/* Pushes search/language/LinkedIn/hamburger to the far right, keeping links left-aligned */}
-      <div className="flex-1" />
 
       <span className="hidden h-5 w-px bg-white/10 md:block" />
 
