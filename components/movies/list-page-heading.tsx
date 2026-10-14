@@ -2,6 +2,7 @@
 
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { GENRE_TRANSLATIONS } from "@/lib/i18n/dictionary";
+import { genreHeading } from "@/lib/seo";
 
 export function ListPageHeading({
   type,
@@ -15,11 +16,19 @@ export function ListPageHeading({
   const { t, locale } = useTranslation();
 
   const typeLabel = type === "movie" ? t("nav.movies") : t("nav.series");
+  // In Bulgarian, the same search phrases the page's <title> targets (see
+  // lib/seo.ts) — "Онлайн филми", "Екшън филми" — rather than a bare label.
   const heading = searchTitle
     ? `${t("common.results")} "${searchTitle}"`
-    : genre
-      ? `${GENRE_TRANSLATIONS[genre]?.[locale] ?? genre} ${typeLabel}`
-      : typeLabel;
+    : locale === "bg"
+      ? genre
+        ? genreHeading(genre, type)
+        : type === "movie"
+          ? "Онлайн филми"
+          : "Онлайн сериали"
+      : genre
+        ? `${GENRE_TRANSLATIONS[genre]?.[locale] ?? genre} ${typeLabel}`
+        : typeLabel;
 
   return (
     <div className="mx-auto flex max-w-[100rem] flex-wrap items-baseline justify-between gap-2 px-4 pt-8 pb-4 sm:px-6">

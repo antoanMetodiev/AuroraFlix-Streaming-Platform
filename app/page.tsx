@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SeoIntro } from "@/components/home/seo-intro";
 import { HeroSection } from "@/components/home/hero-section";
 import {
 	// PAYMENTS DISABLED: LazyPricingSection, LazyCheckoutResultOverlay
@@ -15,6 +17,11 @@ import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
+
+// Title/description come from the root layout's defaults (lib/seo.ts).
+export const metadata: Metadata = {
+	alternates: { canonical: "/" },
+};
 
 // How many of each kind the hero carousel shows. The trending endpoints
 // return up to 10 each; this is the slice actually put in front of the user.
@@ -112,6 +119,8 @@ export default async function Home() {
 			</Suspense>
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
+
+			<SeoIntro />
 
 			<Footer />
 		</main>

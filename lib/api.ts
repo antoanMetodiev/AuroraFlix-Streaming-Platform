@@ -90,6 +90,24 @@ export async function getSeriesDiscover(filters: DiscoverFilters, page: number):
   return unwrapList<Series>(data);
 }
 
+/**
+ * The whole catalog in one request each (slim rows: title/ids/date only) —
+ * for app/sitemap.ts. The discover endpoints take any page size; 10,000 is
+ * comfortably above the catalog (≈4,800 movies, ≈700 series as of
+ * 2026-10-14) while still well under the 50,000-URL limit of one sitemap.
+ */
+const SITEMAP_PAGE_SIZE = 10_000;
+
+export async function getAllMovies(): Promise<Movie[]> {
+  const data = await getJson<unknown>("/discover-movies", { page: 0, size: SITEMAP_PAGE_SIZE });
+  return unwrapList<Movie>(data);
+}
+
+export async function getAllSeries(): Promise<Series[]> {
+  const data = await getJson<unknown>("/discover-series", { page: 0, size: SITEMAP_PAGE_SIZE });
+  return unwrapList<Series>(data);
+}
+
 export async function getMoviesDiscoverCount(filters: DiscoverFilters): Promise<number> {
   return getCount("/discover-movies-count", { genre: filters.genre, year: filters.year, actorName: filters.actor });
 }

@@ -1,8 +1,13 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CinemaRecordDetailsPage } from "@/components/movies/cinema-record-details-page";
 import { getSeriesDetails } from "@/lib/api";
-import { tmdbImage } from "@/lib/tmdb";
+import { jsonLdHtml, recordJsonLd, recordMetadata } from "@/lib/seo";
+
+// cache(): generateMetadata and the page below both need the series — one
+// backend call per request instead of two.
+const loadSeries = cache((id: string) => getSeriesDetails(id));
 
 export async function generateMetadata({
   params,
@@ -10,20 +15,10 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const series = await getSeriesDetails(id);
-  if (!series) return { title: "Series not found" };
+  const series = await loadSeries(id);
+  if (!series) return { title: "Сериалът не е намерен", robots: { index: false } };
 
-  const backdrop = tmdbImage(series.backgroundImg_URL, "w1280");
-
-  return {
-    title: series.title,
-    description: series.description ?? `Watch ${series.title} on AuroraFlix.`,
-    openGraph: {
-      title: series.title,
-      description: series.description ?? undefined,
-      images: backdrop ? [{ url: backdrop }] : undefined,
-    },
-  };
+  return recordMetadata(series, "series", `/series/${series.tmdbId || id}`);
 }
 
 export default async function SeriesDetailsPage({
@@ -32,8 +27,16 @@ export default async function SeriesDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const series = await getSeriesDetails(id);
+  const series = await loadSeries(id);
   if (!series) notFound();
 
-  return <CinemaRecordDetailsPage record={series} type="series" />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdHtml(recordJsonLd(series, "series", `/series/${series.tmdbId || id}`))}
+      />
+      <CinemaRecordDetailsPage record={series} type="series" />
+    </>
+  );
 }

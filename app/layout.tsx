@@ -6,6 +6,7 @@ import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navi
 import { LocaleProvider, LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-context";
 import type { Locale } from "@/lib/i18n/dictionary";
 import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,44 +19,79 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AuroraFlix — Watch movies & series",
-    template: "%s | AuroraFlix",
+    default: HOME_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Stream trending movies and series in 4K on AuroraFlix — trailers, ratings, cast details and a personal watchlist, all in one place.",
+  description: HOME_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  category: "entertainment",
+  // Search Console ownership, if verified via the HTML-tag method (DNS
+  // verification in Cloudflare needs nothing here).
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   openGraph: {
     type: "website",
-    siteName: "AuroraFlix",
-    title: "AuroraFlix — Watch movies & series",
-    description:
-      "Stream trending movies and series in 4K on AuroraFlix — trailers, ratings, cast details and a personal watchlist, all in one place.",
+    siteName: SITE_NAME,
+    locale: "bg_BG",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "AuroraFlix — Watch movies & series",
-    description:
-      "Stream trending movies and series in 4K on AuroraFlix — trailers, ratings, cast details and a personal watchlist, all in one place.",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
 };
 
-// No saved preference yet — guess from the request's own Accept-Language
-// header so a Bulgarian visitor lands on a Bulgarian site by default, same
-// as the old client-side navigator.languages check used to, but resolved
-// server-side so it's baked into the very first render instead of flipped
-// in after the fact (see LocaleProvider's own comment for why that matters).
+/**
+ * Tells Google the site's name ("AuroraFlix" instead of the bare domain
+ * above results) and who runs it.
+ */
+const SITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      alternateName: ["Aurora Flix", "auroraflix.cloud"],
+      description: HOME_DESCRIPTION,
+      inLanguage: "bg-BG",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.png`,
+    },
+  ],
+};
+
+// No saved preference yet: Bulgarian, unless the browser asks for English
+// and not Bulgarian. Resolved server-side so it's baked into the very first
+// render instead of flipped in after the fact (see LocaleProvider's own
+// comment for why that matters).
+//
+// Bulgarian is the default (it used to be English) because crawlers send no
+// Accept-Language at all — Googlebot was getting, and indexing, the English
+// site, so the site never showed up for Bulgarian searches like "онлайн
+// филми".
 async function resolveInitialLocale(): Promise<Locale> {
   const cookieStore = await cookies();
   const saved = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
   if (saved === "en" || saved === "bg") return saved;
 
   const headerStore = await headers();
-  const acceptLanguage = headerStore.get("accept-language") ?? "";
-  return acceptLanguage.toLowerCase().includes("bg") ? "bg" : "en";
+  const acceptLanguage = (headerStore.get("accept-language") ?? "").toLowerCase();
+  return acceptLanguage.includes("en") && !acceptLanguage.includes("bg") ? "en" : "bg";
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -67,6 +103,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background pt-16 pb-24 text-foreground md:pb-0">
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(SITE_JSON_LD)} />
         <LocaleProvider initialLocale={initialLocale}>
           <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ScrollToTopOnNavigate />

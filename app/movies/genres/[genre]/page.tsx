@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { CinemaRecordListPage } from "@/components/movies/cinema-record-list-page";
 import type { SortOption } from "@/lib/api";
+import { listingMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ genre: string }>;
+  searchParams: Promise<{ year?: string; actor?: string; sort?: string; page?: string }>;
 }): Promise<Metadata> {
   const { genre } = await params;
-  const genreName = decodeURIComponent(genre);
-  return {
-    title: `${genreName} Movies`,
-    description: `Browse ${genreName} movies on AuroraFlix.`,
-  };
+  const { year, actor, sort, page } = await searchParams;
+  return listingMetadata({
+    type: "movie",
+    genre: decodeURIComponent(genre),
+    page,
+    filtered: Boolean(year || actor || sort),
+  });
 }
 
 export default async function MoviesByGenrePage({

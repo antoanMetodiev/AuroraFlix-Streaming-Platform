@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { CinemaRecordListPage } from "@/components/movies/cinema-record-list-page";
 import type { SortOption } from "@/lib/api";
+import { listingMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Movies",
-  description: "Browse the full AuroraFlix movie catalog — filter by genre, year, actor and search thousands of titles.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ genre?: string; year?: string; actor?: string; sort?: string; page?: string }>;
+}): Promise<Metadata> {
+  const { genre, year, actor, sort, page } = await searchParams;
+  return listingMetadata({ type: "movie", page, filtered: Boolean(genre || year || actor || sort) });
+}
 
 export default async function MoviesPage({
   searchParams,

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
@@ -10,6 +11,21 @@ const FOOTER_COLUMNS = [
   { titleKey: "footer.community", itemKeys: ["footer.blog", "footer.support", "footer.watchlist", "footer.orderTitle"] },
   { titleKey: "footer.legal", itemKeys: ["footer.privacy", "footer.terms", "footer.cookies", "footer.contact"] },
 ] as const satisfies { titleKey: TranslationKey; itemKeys: TranslationKey[] }[];
+
+/**
+ * The footer items that have a real page behind them — real <a> links, so
+ * search engines can follow them to the catalog. The rest are still
+ * placeholders.
+ */
+const FOOTER_LINKS: Partial<Record<TranslationKey, string>> = {
+  "footer.movies": "/movies",
+  "footer.series": "/series",
+  "footer.genres": "/movies/genres/Action",
+  "footer.newReleases": "/movies?sort=newest",
+  "footer.watchlist": "/watchlist",
+  "footer.orderTitle": "/order",
+  "footer.privacy": "/privacy",
+};
 
 const SOCIAL_ICONS = [
   { Icon: FaFacebook, label: "Facebook" },
@@ -64,11 +80,20 @@ export function Footer() {
               <li className="mb-1 text-sm font-semibold text-foreground/85">
                 {t(column.titleKey)}
               </li>
-              {column.itemKeys.map((itemKey) => (
-                <li key={itemKey} className="cursor-pointer text-sm transition-colors hover:text-foreground">
-                  {t(itemKey)}
-                </li>
-              ))}
+              {column.itemKeys.map((itemKey) => {
+                const href = FOOTER_LINKS[itemKey];
+                return (
+                  <li key={itemKey} className="cursor-pointer text-sm transition-colors hover:text-foreground">
+                    {href ? (
+                      <Link href={href} className="transition-colors hover:text-foreground">
+                        {t(itemKey)}
+                      </Link>
+                    ) : (
+                      t(itemKey)
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ))}
         </div>

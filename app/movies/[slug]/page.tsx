@@ -1,14 +1,18 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CinemaRecordDetailsPage } from "@/components/movies/cinema-record-details-page";
 import { getMovieDetails } from "@/lib/api";
+import { jsonLdHtml, recordJsonLd, recordMetadata } from "@/lib/seo";
 import {
+  getMovieSlug,
   parseMovieIdFromSlug,
-  tmdbImage,
 } from "@/lib/tmdb";
 
-async function loadMovie(slug: string) {
+// cache(): generateMetadata and the page below both need the movie — one
+// backend call per request instead of two.
+const loadMovie = cache(async (slug: string) => {
   const movieId =
     parseMovieIdFromSlug(slug);
 
@@ -17,7 +21,7 @@ async function loadMovie(slug: string) {
   }
 
   return getMovieDetails(movieId);
-}
+});
 
 export async function generateMetadata({
   params,
@@ -34,35 +38,16 @@ export async function generateMetadata({
 
   if (!movie) {
     return {
-      title: "Movie not found",
+      title: "Филмът не е намерен",
+      robots: { index: false },
     };
   }
 
-  const backdrop =
-    tmdbImage(
-      movie.backgroundImg_URL,
-      "w1280"
-    );
-
-  return {
-    title: movie.title,
-
-    description:
-      movie.description ??
-      `Watch ${movie.title} on AuroraFlix.`,
-
-    openGraph: {
-      title: movie.title,
-
-      description:
-        movie.description ??
-        undefined,
-
-      images: backdrop
-        ? [{ url: backdrop }]
-        : undefined,
-    },
-  };
+  return recordMetadata(
+    movie,
+    "movie",
+    `/movies/${getMovieSlug({ ...movie, movieId: parseMovieIdFromSlug(slug) })}`
+  );
 }
 
 export default async function MovieDetailsPage({
@@ -90,9 +75,21 @@ export default async function MovieDetailsPage({
   // checks for subtitles itself, client-side, in the background, after the
   // player has already rendered — see its own effect for the doc comment.
   return (
-    <CinemaRecordDetailsPage
-      record={movie}
-      type="movie"
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdHtml(
+          recordJsonLd(
+            movie,
+            "movie",
+            `/movies/${getMovieSlug({ ...movie, movieId: parseMovieIdFromSlug(slug) })}`
+          )
+        )}
+      />
+      <CinemaRecordDetailsPage
+        record={movie}
+        type="movie"
+      />
+    </>
   );
 }
