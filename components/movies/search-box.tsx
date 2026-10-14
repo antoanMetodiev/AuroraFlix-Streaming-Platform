@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { formatReleaseDate } from "@/lib/dates";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { searchMatchingMovies, searchMatchingSeries } from "@/lib/api-public";
@@ -15,7 +16,7 @@ type Suggestion = (Movie | Series) & { title: string; posterImgURL?: string | nu
 
 export function SearchBox({ type, onNavigate }: { type: "movie" | "series"; onNavigate?: () => void }) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [isNavigating, startNavigation] = useTransition();
   const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -117,7 +118,7 @@ export function SearchBox({ type, onNavigate }: { type: "movie" | "series"; onNa
               )}
               <span>
                 <span className="block text-sm text-foreground">{item.title}</span>
-                <span className="block text-xs text-foreground/65">{item.releaseDate}</span>
+                <span className="block text-xs text-foreground/65">{formatReleaseDate(item.releaseDate, locale)}</span>
               </span>
             </button>
           ))}

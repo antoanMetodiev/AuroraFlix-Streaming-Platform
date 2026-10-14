@@ -14,7 +14,7 @@ import { RatingRing } from "@/components/ui/rating-ring";
 import { consumePendingActor } from "@/lib/actor-session";
 import { getActorLatestWorksClient, requestMoreMoviesForActor } from "@/lib/api-public";
 import { tmdbImage } from "@/lib/tmdb";
-import { calculateAge } from "@/lib/dates";
+import { calculateAge, formatReleaseDate, releaseDateValue } from "@/lib/dates";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Actor } from "@/types/actor";
 
@@ -56,7 +56,11 @@ export function ActorDetailsView({ id }: { id: string }) {
     if (!actor?.imdbId) return;
     getActorLatestWorksClient(actor.imdbId).then((latestWorks) => {
       setWorks(
-        latestWorks.map((work) => ({
+        latestWorks
+          // Newest first; titles without a release date go last.
+          .slice()
+          .sort((a, b) => releaseDateValue(b.releaseDate) - releaseDateValue(a.releaseDate))
+          .map((work) => ({
           key: `${work.TYPE}:${work.tmdbId ?? work.posterURL}`,
           title: work.title ?? work.name_in_real_life,
           posterURL: work.posterURL,
@@ -64,6 +68,8 @@ export function ActorDetailsView({ id }: { id: string }) {
           type: work.TYPE,
           videoURL: work.videoURL,
           tmdbId: work.tmdbId,
+          originalTitle: work.originalTitle,
+          releaseDate: work.releaseDate,
         }))
       );
     });
@@ -234,6 +240,9 @@ export function ActorDetailsView({ id }: { id: string }) {
         actorImdbId={actor.imdbId}
       />
 
+      {/* Fades the page background out into the footer's solid black. */}
+      <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
+
       <Footer />
     </div>
   );
@@ -256,7 +265,7 @@ function Filmography({
   actorName: string;
   actorImdbId?: string | null;
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const tabs = [
     { value: "all" as const, label: t("actor.filterAll"), count: counts.all, Icon: Sparkles },
     { value: "movies" as const, label: t("nav.movies"), count: counts.movies, Icon: Clapperboard },
@@ -323,9 +332,10 @@ function Filmography({
                     {work.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}
                   </span>
                   {Number.isFinite(rating) && rating > 0 && <RatingRing value={rating} size="xs" className="absolute top-2 right-2" />}
-                  <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-sm leading-snug font-semibold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                    {work.title}
-                  </p>
+                  <div className="absolute inset-x-0 bottom-0 p-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                    <p className="line-clamp-2 text-sm leading-snug font-semibold text-white">{work.title}</p>
+                    {work.releaseDate && <p className="mt-0.5 text-xs font-medium text-white/60">{formatReleaseDate(work.releaseDate, locale)}</p>}
+                  </div>
                 </div>
               </Link>
             );

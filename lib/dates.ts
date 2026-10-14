@@ -24,3 +24,23 @@ export function calculateAge(dateString?: string | null): string {
 
   return age.toString();
 }
+
+/**
+ * A release / air date ("2026-10-09") in the visitor's language — "9 октомври
+ * 2026 г.", "9 October 2026", … A bare year or anything unparseable comes back
+ * as-is. Parsed as a calendar date (no time zone), so it never shifts a day.
+ */
+export function formatReleaseDate(value: string | null | undefined, locale: string): string {
+  if (!value) return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+  if (!match) return value;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
+/** A sortable timestamp for a release date — missing / unparseable dates sort last. */
+export function releaseDateValue(value: string | null | undefined): number {
+  const time = value ? Date.parse(value) : NaN;
+  return Number.isNaN(time) ? -8.64e15 : time;
+}

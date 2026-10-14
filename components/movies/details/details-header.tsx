@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
+import { formatReleaseDate } from "@/lib/dates";
 import { genreLabel } from "@/lib/i18n/translate";
 import { tmdbImage } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -66,10 +67,10 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
               ))}
               {record.releaseDate && (
                 <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-md sm:text-sm">
-                  {record.releaseDate}
+                  {formatReleaseDate(record.releaseDate, locale)}
                 </span>
               )}
-              {record.tmdbRating && <RatingRing value={record.tmdbRating} size="sm" className="border-2 border-white/25" />}
+              {record.tmdbRating && <RatingRing value={record.tmdbRating} size="sm" />}
             </div>
           </div>
         </div>

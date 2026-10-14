@@ -203,31 +203,6 @@ body {
   }
 }
 
-/* Circular TMDB-rating ring (hero, movie/series details, cast) */
-.rating-ring {
-  --size: 48px;
-  --thickness: 4px;
-  --pct: 0%;
-  --ring-color: #ffffff;
-  width: var(--size);
-  height: var(--size);
-}
-
-.rating-ring::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: conic-gradient(var(--ring-color) var(--pct), rgba(255, 255, 255, 0.12) 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
-  mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
-}
-
-.rating-ring > span {
-  width: calc(var(--size) - var(--thickness) * 2);
-  height: calc(var(--size) - var(--thickness) * 2);
-}
-
 /* Slow blurred zoom/rotate drift for the movies & series list backdrop */
 @keyframes zoom-rotate {
   from {

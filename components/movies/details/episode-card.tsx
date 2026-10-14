@@ -1,13 +1,14 @@
 "use client";
 
 import { Play } from "lucide-react";
+import { formatReleaseDate } from "@/lib/dates";
 import { tmdbImage } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Episode } from "@/types/episode";
 
 export function EpisodeCard({ episode, onSelect }: { episode: Episode; onSelect: () => void }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const description =
     episode.description && episode.description.length > 219 ? `${episode.description.slice(0, 219)}..` : episode.description;
   const poster = tmdbImage(episode.posterImgURL, "w1280");
@@ -46,7 +47,7 @@ export function EpisodeCard({ episode, onSelect }: { episode: Episode; onSelect:
           </h3>
         </div>
         <p className="text-xs text-foreground/45">
-          {episode.airDate}
+          {formatReleaseDate(episode.airDate, locale)}
           {episode.runtime && (
             <span>
               {" "}

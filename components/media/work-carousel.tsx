@@ -19,12 +19,14 @@ export type WorkCardItem = {
   type: "MOVIE" | "SERIES" | string;
   videoURL?: string | null;
   tmdbId?: string | null;
+  originalTitle?: string | null;
+  releaseDate?: string | null;
 };
 
 export function hrefFor(item: WorkCardItem) {
   return item.type === "SERIES"
     ? `/series/${item.tmdbId}`
-    : `/movies/${getMovieSlug({ title: item.title, tmdbId: item.tmdbId, videoURL: item.videoURL })}`;
+    : `/movies/${getMovieSlug({ title: item.title, originalTitle: item.originalTitle, tmdbId: item.tmdbId, videoURL: item.videoURL })}`;
 }
 
 const COOLDOWN_KEY_PREFIX = "add_movies_actor_cooldown_";

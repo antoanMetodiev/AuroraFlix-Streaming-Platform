@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { formatReleaseDate } from "@/lib/dates";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Volume1, Volume2, VolumeX } from "lucide-react";
@@ -429,7 +430,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
                 {genreLabel(genre, locale)}
               </Link>
             ))}
-            {record.releaseDate && <span className="rounded-md bg-black/65 px-2 py-1">{record.releaseDate}</span>}
+            {record.releaseDate && <span className="rounded-md bg-black/65 px-2 py-1">{formatReleaseDate(record.releaseDate, locale)}</span>}
             <span className="rounded-md bg-black/65 px-2 py-1">4K</span>
           </div>
 
@@ -452,7 +453,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
               <LikeButton record={record} type={type} />
             </div>
 
-            <RatingRing value={record.tmdbRating} className="border-2 border-white/55" />
+            <RatingRing value={record.tmdbRating} />
           </div>
         </div>
       </div>
