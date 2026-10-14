@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useLocale } from "@/lib/i18n/locale-context";
-import { GENRE_TRANSLATIONS } from "@/lib/i18n/dictionary";
+import type { Locale } from "@/lib/i18n/dictionary";
+import { genreLabel } from "@/lib/i18n/translate";
 import { ALL_GENRES } from "@/lib/genres";
 import { genreHeading } from "@/lib/seo";
 
@@ -12,7 +13,8 @@ import { genreHeading } from "@/lib/seo";
  * series online with Bulgarian subtitles (the hero and carousels above are
  * all images). Bulgarian is what gets indexed (see app/layout.tsx); the
  * English version is only for visitors who picked English. Also links every
- * genre page, so they get crawled and pass on relevance.
+ * genre page, so they get crawled and pass on relevance. Greek and Spanish
+ * visitors get their own copy (without the Bulgarian-subtitles pitch).
  */
 const COPY = {
   bg: {
@@ -35,15 +37,37 @@ const COPY = {
     moviesHeading: "Movies by genre",
     seriesHeading: "Series by genre",
   },
-} as const;
+  el: {
+    title: "Δες ταινίες και σειρές online",
+    paragraphs: [
+      "Το AuroraFlix είναι το μέρος για να βλέπεις ταινίες και σειρές online δωρεάν — σε HD και 4K, χωρίς εγγραφή. Κάθε μέρα προσθέτουμε νέες ταινίες και νέα επεισόδια.",
+      "Θα βρεις τις νέες κυκλοφορίες του 2026, χολιγουντιανές επιτυχίες, ταινίες δράσης, κωμωδίες, ταινίες τρόμου, θρίλερ, κινούμενα σχέδια για όλη την οικογένεια και δημοφιλείς σειρές με όλες τις σεζόν και τα επεισόδια.",
+      "Δεν βρίσκεις έναν τίτλο; Παράγγειλέ τον και θα τον προσθέσουμε στον κατάλογο.",
+    ],
+    moviesHeading: "Ταινίες ανά είδος",
+    seriesHeading: "Σειρές ανά είδος",
+  },
+  es: {
+    title: "Ver películas y series online",
+    paragraphs: [
+      "AuroraFlix es el lugar para ver películas y series online gratis — en HD y 4K, sin registrarte. Cada día añadimos películas nuevas y nuevos episodios.",
+      "Encontrarás los estrenos de 2026, éxitos de Hollywood, películas de acción, comedias, terror, suspense, animación para toda la familia y series de éxito con todas sus temporadas y episodios.",
+      "¿No encuentras un título? Pídelo y lo añadimos al catálogo.",
+    ],
+    moviesHeading: "Películas por género",
+    seriesHeading: "Series por género",
+  },
+} as const satisfies Record<Locale, { title: string; paragraphs: readonly string[]; moviesHeading: string; seriesHeading: string }>;
 
 export function SeoIntro() {
   const { locale } = useLocale();
   const copy = COPY[locale];
 
-  function genreLabel(genre: string, type: "movie" | "series") {
+  function genreLinkLabel(genre: string, type: "movie" | "series") {
     if (locale === "bg") return genreHeading(genre, type);
-    return `${GENRE_TRANSLATIONS[genre]?.en ?? genre} ${type === "movie" ? "movies" : "series"}`;
+    if (locale === "en") return `${genreLabel(genre, locale)} ${type === "movie" ? "movies" : "series"}`;
+    // Under a "Movies by genre" / "Series by genre" heading, the genre alone reads fine.
+    return genreLabel(genre, locale);
   }
 
   return (
@@ -69,7 +93,7 @@ export function SeoIntro() {
                       href={`/${type === "movie" ? "movies" : "series"}/genres/${encodeURIComponent(genre)}`}
                       className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:border-white/30 hover:text-foreground sm:text-sm"
                     >
-                      {genreLabel(genre, type)}
+                      {genreLinkLabel(genre, type)}
                     </Link>
                   </li>
                 ))}

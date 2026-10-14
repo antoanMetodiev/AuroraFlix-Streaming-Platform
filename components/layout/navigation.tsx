@@ -9,7 +9,7 @@ import { /* Crown, */ Download, Menu, X } from "lucide-react";
 import { FaAndroid, /* FaApple, */ FaLinkedin } from "react-icons/fa";
 import { NavLinks } from "@/components/layout/nav-links";
 import { NavSearch } from "@/components/layout/nav-search";
-import { LanguageToggle } from "@/components/layout/language-toggle";
+import { LanguageSelect } from "@/components/layout/language-select";
 import { AuthNav } from "@/components/layout/auth-nav";
 import { FriendsNavButton } from "@/components/friends/friends-nav-button";
 import { NotificationsBell } from "@/components/friends/notifications-bell";
@@ -136,7 +136,7 @@ export function Navigation() {
 
       {/* On phones the language toggle lives in the menu, next to the account. */}
       <div className="hidden md:block">
-        <LanguageToggle />
+        <LanguageSelect />
       </div>
 
       <AuthNav className="hidden md:block" />
@@ -199,7 +199,7 @@ export function Navigation() {
 
         <div className="flex items-center justify-between gap-2 px-2 py-1">
           <AuthNav />
-          <LanguageToggle />
+          <LanguageSelect />
         </div>
 
         <a

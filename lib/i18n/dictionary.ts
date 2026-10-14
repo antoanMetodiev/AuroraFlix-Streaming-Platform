@@ -1,6 +1,19 @@
-export type Locale = "en" | "bg";
+export type Locale = "en" | "bg" | "el" | "es";
 
-type Entry = Record<Locale, string>;
+/** Every UI language, in the order the language picker lists them. */
+export const LOCALES = ["bg", "en", "el", "es"] as const satisfies readonly Locale[];
+
+export function isLocale(value: unknown): value is Locale {
+  return typeof value === "string" && (LOCALES as readonly string[]).includes(value);
+}
+
+/**
+ * English and Bulgarian live side by side below (the mobile app's generator
+ * reads this file); Greek and Spanish are in dictionary.el.ts / dictionary.es.ts.
+ * Look strings up through translate() / genreLabel() in ./translate, never by
+ * indexing these objects with a locale.
+ */
+type Entry = Record<"en" | "bg", string>;
 
 /**
  * Only static UI copy lives here — never dynamic, per-record data (titles,

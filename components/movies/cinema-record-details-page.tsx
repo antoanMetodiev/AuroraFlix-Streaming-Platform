@@ -25,7 +25,10 @@ export function CinemaRecordDetailsPage({
   type: "movie" | "series";
 }) {
   return (
-    <div className="relative isolate min-h-screen w-full overflow-x-hidden">
+    // -mt-16 lifts the whole page (banner first) up under the floating header.
+    // It has to be here, not on the banner: overflow-x-hidden also clips
+    // vertically, so a banner pulled above this box would be cut off.
+    <div className="relative isolate -mt-16 min-h-screen w-full overflow-x-hidden">
       <DetailsBackground record={record} />
 
       <TrackLastViewed

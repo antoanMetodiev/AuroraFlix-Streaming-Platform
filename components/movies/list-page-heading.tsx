@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { GENRE_TRANSLATIONS } from "@/lib/i18n/dictionary";
+import { genreLabel } from "@/lib/i18n/translate";
 import { genreHeading } from "@/lib/seo";
 
 export function ListPageHeading({
@@ -27,7 +27,11 @@ export function ListPageHeading({
           ? "Онлайн филми"
           : "Онлайн сериали"
       : genre
-        ? `${GENRE_TRANSLATIONS[genre]?.[locale] ?? genre} ${typeLabel}`
+        ? locale === "en"
+          ? `${genreLabel(genre, locale)} ${typeLabel}`
+          : // Greek / Spanish genre names are adjectives or nouns that don't
+            // simply prefix the type ("Películas de acción") — keep it neutral.
+            `${typeLabel}: ${genreLabel(genre, locale)}`
         : typeLabel;
 
   return (

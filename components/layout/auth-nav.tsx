@@ -5,7 +5,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 // Client-side (useUser, not the server-only <Show>) so this can be reused freely
-// in both the desktop bar and the mobile dropdown, same as NavSearch/LanguageToggle.
+// in both the desktop bar and the mobile dropdown, same as NavSearch/LanguageSelect.
 export function AuthNav({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   const { isLoaded, isSignedIn } = useUser();

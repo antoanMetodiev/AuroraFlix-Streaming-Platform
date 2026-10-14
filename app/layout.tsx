@@ -3,8 +3,10 @@ import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
-import { LocaleProvider, LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-context";
+import { LocaleProvider } from "@/lib/i18n/locale-context";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
 import type { Locale } from "@/lib/i18n/dictionary";
+import { detectLocale } from "@/lib/i18n/detect-locale";
 import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
 import "./globals.css";
@@ -75,23 +77,19 @@ const SITE_JSON_LD = {
   ],
 };
 
-// No saved preference yet: Bulgarian, unless the browser asks for English
-// and not Bulgarian. Resolved server-side so it's baked into the very first
-// render instead of flipped in after the fact (see LocaleProvider's own
-// comment for why that matters).
-//
-// Bulgarian is the default (it used to be English) because crawlers send no
-// Accept-Language at all — Googlebot was getting, and indexing, the English
-// site, so the site never showed up for Bulgarian searches like "онлайн
-// филми".
+// Resolved server-side so it's baked into the very first render instead of
+// flipped in after the fact (see LocaleProvider's own comment for why that
+// matters): the saved choice, else by the visitor's country (Cloudflare's
+// CF-IPCountry header) — see detectLocale. Crawlers always get Bulgarian, the
+// language the site is indexed in.
 async function resolveInitialLocale(): Promise<Locale> {
-  const cookieStore = await cookies();
-  const saved = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
-  if (saved === "en" || saved === "bg") return saved;
-
-  const headerStore = await headers();
-  const acceptLanguage = (headerStore.get("accept-language") ?? "").toLowerCase();
-  return acceptLanguage.includes("en") && !acceptLanguage.includes("bg") ? "en" : "bg";
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  return detectLocale({
+    savedLocale: cookieStore.get(LOCALE_COOKIE_NAME)?.value,
+    userAgent: headerStore.get("user-agent"),
+    country: headerStore.get("cf-ipcountry"),
+    acceptLanguage: headerStore.get("accept-language"),
+  });
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

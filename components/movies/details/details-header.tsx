@@ -22,12 +22,14 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
 
   return (
     <div className="relative w-full">
-      {/* Cinematic banner — pulled up 4rem (the body's header offset) so it
-          starts at the very top of the screen, under the floating header. */}
-      <div className="relative -mt-16 h-[calc(46vh+4rem)] min-h-[384px] w-full sm:h-[calc(56vh+4rem)] lg:h-[calc(64vh+4rem)]">
+      {/* Cinematic banner — starts at the very top of the screen, under the
+          floating header (the page is lifted 4rem in cinema-record-details-page),
+          so it's 4rem taller to keep the same visible height. */}
+      <div className="relative h-[calc(46vh+4rem)] min-h-[384px] w-full sm:h-[calc(56vh+4rem)] lg:h-[calc(64vh+4rem)]">
         {record.backgroundImg_URL && <ProgressiveBackdrop path={record.backgroundImg_URL} />}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-transparent" />
+        {/* Only a light shade at the top, so the photo shows around the floating header. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent via-25% to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8">

@@ -13,7 +13,7 @@ import { tmdbImage } from "@/lib/tmdb";
 import { calculateAge } from "@/lib/dates";
 import { ALL_GENRES } from "@/lib/genres";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { GENRE_TRANSLATIONS } from "@/lib/i18n/dictionary";
+import { genreLabel } from "@/lib/i18n/translate";
 import type { SortOption } from "@/lib/api";
 import type { Actor } from "@/types/actor";
 
@@ -122,7 +122,7 @@ export function DiscoverFilters({
 
   const genreOptions = [
     { value: "", label: t("filters.allGenres") },
-    ...ALL_GENRES.map((g) => ({ value: g, label: GENRE_TRANSLATIONS[g]?.[locale] ?? g })),
+    ...ALL_GENRES.map((g) => ({ value: g, label: genreLabel(g, locale) })),
   ];
 
   const yearOptions = [{ value: "", label: t("filters.allYears") }, ...YEARS.map((y) => ({ value: y, label: y }))];
@@ -267,7 +267,7 @@ export function DiscoverFilters({
       {activeCount > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {genre && (
-            <FilterChip label={`${t("filters.genre")}: ${GENRE_TRANSLATIONS[genre]?.[locale] ?? genre}`} onRemove={() => navigate({ genre: undefined })} removeLabel={t("filters.removeFilter")} />
+            <FilterChip label={`${t("filters.genre")}: ${genreLabel(genre, locale)}`} onRemove={() => navigate({ genre: undefined })} removeLabel={t("filters.removeFilter")} />
           )}
           {year && <FilterChip label={`${t("filters.year")}: ${year}`} onRemove={() => navigate({ year: undefined })} removeLabel={t("filters.removeFilter")} />}
           {actor && (

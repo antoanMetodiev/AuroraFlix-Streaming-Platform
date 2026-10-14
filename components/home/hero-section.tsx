@@ -322,7 +322,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
 
   if (!current) {
     return (
-      <section className="relative flex h-[calc(70vh-4rem)] w-full items-center justify-center bg-background text-foreground sm:h-[calc(100dvh-4rem)]">
+      <section className="relative -mt-16 flex h-[70vh] w-full items-center justify-center bg-background text-foreground sm:h-[100dvh]">
         <h1 className="px-6 text-center text-2xl font-semibold text-foreground/80 sm:text-3xl">
           {t("hero.welcome")}
         </h1>
@@ -369,7 +369,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
         if (dx < 0) goToNext();
         else goToPrevious();
       }}
-      className="bg-grain relative isolate h-[calc(85vh-4rem)] min-h-[560px] w-full overflow-hidden bg-black sm:h-[calc(100dvh-4rem)]"
+      className="bg-grain relative isolate -mt-16 h-[85vh] min-h-[624px] w-full overflow-hidden bg-black sm:h-[100dvh]"
     >
       <HeroBackground
         key={record.id}

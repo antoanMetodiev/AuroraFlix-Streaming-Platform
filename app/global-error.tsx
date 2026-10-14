@@ -3,11 +3,12 @@
 
 import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
-import { dictionary, type Locale } from "@/lib/i18n/dictionary";
-import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-context";
+import type { Locale, TranslationKey } from "@/lib/i18n/dictionary";
+import { translate } from "@/lib/i18n/translate";
+import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
 import "./globals.css";
 
-const LOCALE_COOKIE_RE = new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=(en|bg)`);
+const LOCALE_COOKIE_RE = new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=(en|bg|el|es)`);
 
 function readLocaleCookie(): Locale {
   const match = document.cookie.match(LOCALE_COOKIE_RE);
@@ -35,7 +36,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
     console.error(error);
   }, [error]);
 
-  const t = (key: keyof typeof dictionary) => dictionary[key][locale];
+  const t = (key: TranslationKey) => translate(key, locale);
 
   return (
     <html lang={locale} className="h-full antialiased">

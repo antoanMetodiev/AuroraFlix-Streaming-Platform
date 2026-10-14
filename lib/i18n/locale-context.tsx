@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { dictionary, type Locale, type TranslationKey } from "./dictionary";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Locale, TranslationKey } from "./dictionary";
+import { translate } from "./translate";
+import { LOCALE_COOKIE_NAME } from "./locale-cookie";
 
-export const LOCALE_COOKIE_NAME = "auroraflix_locale";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 type LocaleContextValue = {
@@ -15,7 +16,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 /**
  * `initialLocale` is resolved server-side (see app/layout.tsx: the
- * `auroraflix_locale` cookie if set, else the request's Accept-Language header)
+ * `auroraflix_locale` cookie if set, else the visitor's country — detectLocale)
  * so the very first render — server AND client — always agrees on the same
  * value. That's the fix for a hydration mismatch this used to have: this
  * provider previously flipped from a server-only "en" default to the real
@@ -27,13 +28,25 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
  * Resolving the locale before the first render exists removes that race
  * outright instead of trying to win it.
  */
+function saveLocaleCookie(locale: Locale) {
+  document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
+}
+
 export function LocaleProvider({ children, initialLocale }: { children: ReactNode; initialLocale: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    document.cookie = `${LOCALE_COOKIE_NAME}=${next}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
+    saveLocaleCookie(next);
+    document.documentElement.lang = next;
   }, []);
+
+  // The first visit's language was picked from the visitor's country (see
+  // detectLocale) — remember it, so it stays the same on later visits even
+  // from abroad, until they pick another one.
+  useEffect(() => {
+    if (!document.cookie.includes(`${LOCALE_COOKIE_NAME}=`)) saveLocaleCookie(initialLocale);
+  }, [initialLocale]);
 
   return <LocaleContext.Provider value={{ locale, setLocale }}>{children}</LocaleContext.Provider>;
 }
@@ -49,7 +62,7 @@ export function useTranslation() {
 
   const t = useCallback(
     (key: TranslationKey, vars?: Record<string, string | number>) => {
-      let text: string = dictionary[key][locale];
+      let text = translate(key, locale);
       if (vars) {
         for (const [name, value] of Object.entries(vars)) {
           text = text.replace(`{${name}}`, String(value));
