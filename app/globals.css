@@ -21,12 +21,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Where Lenis drives the scroll (components/layout/smooth-scroll.tsx), it sets
-   the position every frame itself — a CSS smooth scroll on top would fight it. */
-html.lenis {
-  scroll-behavior: auto;
-}
-
 /* Belt-and-suspenders against horizontal scroll on narrow screens — any
    descendant that overflows its container (a flex/grid child refusing to
    shrink below its content's intrinsic width, a marquee row, etc.) gets
