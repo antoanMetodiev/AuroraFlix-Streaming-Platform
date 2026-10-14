@@ -26,16 +26,35 @@ function readLocalLastViewed(): LastViewed[] {
   }
 }
 
-// Newest-first, matching the server-backed list's ordering.
+/**
+ * One movie / series across languages: titles come back translated
+ * (Inception / Генезис), so they're matched by TMDB id (or series id) and
+ * only fall back to the title for entries saved without one.
+ */
+function recordKey(entry: LastViewed) {
+  if (entry.tmdbId) return `${entry.type}:tmdb:${entry.tmdbId}`;
+  if (entry.seriesId) return `${entry.type}:series:${entry.seriesId}`;
+  return `${entry.type}:title:${entry.title}`;
+}
+
+// Newest-first, matching the server-backed list's ordering — one entry per
+// record (older, per-language duplicates collapse to the newest).
 export function getLocalLastViewed(): LastViewed[] {
-  return [...readLocalLastViewed()].reverse();
+  const seen = new Set<string>();
+  return [...readLocalLastViewed()].reverse().filter((entry) => {
+    const key = recordKey(entry);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function addLocalLastViewed(entry: LastViewed) {
   if (typeof window === "undefined") return;
 
   // Re-viewing something already on the list bumps it to the top instead of duplicating it.
-  const withoutDuplicate = readLocalLastViewed().filter((item) => item.title !== entry.title);
+  const key = recordKey(entry);
+  const withoutDuplicate = readLocalLastViewed().filter((item) => recordKey(item) !== key && item.title !== entry.title);
   withoutDuplicate.push(entry);
 
   const trimmed = withoutDuplicate.slice(-MAX_ITEMS);
