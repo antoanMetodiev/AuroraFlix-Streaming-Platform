@@ -11,6 +11,7 @@ import { searchMatchingMovies, searchMatchingSeries } from "@/lib/api-public";
 import { addPlaylistItem, getPlaylistItems, removePlaylistItem, type Playlist, type PlaylistItem } from "@/lib/playlists";
 import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { useLocalizedItems } from "@/lib/use-localized-titles";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -19,10 +20,10 @@ import type { Series } from "@/types/series";
 // the signal for whether another page might exist (a short page means no more).
 const PAGE_SIZE = 10;
 
-function hrefFor(item: PlaylistItem) {
+function hrefFor(item: PlaylistItem & { originalTitle?: string | null }) {
   return item.type === "TV-SHOW"
     ? `/series/${item.tmdbId}`
-    : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
+    : `/movies/${getMovieSlug({ title: item.title ?? "", originalTitle: item.originalTitle, tmdbId: item.tmdbId, movieId: item.videoId })}`;
 }
 
 function toPlaylistItem(record: Movie | Series, type: "movie" | "series"): PlaylistItem {
@@ -70,7 +71,9 @@ export function PlaylistCard({
   // require a click first. The collapse control still works, it's just not
   // the default state anymore.
   const [isExpanded, setIsExpanded] = useState(true);
-  const [items, setItems] = useState<PlaylistItem[] | null>(null);
+  const [savedItems, setItems] = useState<PlaylistItem[] | null>(null);
+  // Titles / posters in the language the visitor uses now (see useLocalizedItems).
+  const items = useLocalizedItems(savedItems);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);

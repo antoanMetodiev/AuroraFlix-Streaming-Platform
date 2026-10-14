@@ -8,11 +8,14 @@ import { FadeInImage } from "@/components/ui/fade-in-image";
 import { tmdbImage, getMovieSlug } from "@/lib/tmdb";
 import { MAX_WATCHLIST_ITEMS, type WatchlistItem } from "@/lib/watchlist";
 import { useWatchlist } from "@/lib/use-watchlist";
+import { useLocalizedItems } from "@/lib/use-localized-titles";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 export function WatchlistView() {
   const { t } = useTranslation();
-  const { items, isLoading, remove } = useWatchlist();
+  const { items: savedItems, isLoading, remove } = useWatchlist();
+  // Titles / posters in the language the visitor uses now (see useLocalizedItems).
+  const items = useLocalizedItems(savedItems);
 
   const handleRemove = (item: WatchlistItem, event: React.MouseEvent) => {
     event.preventDefault();
@@ -55,7 +58,7 @@ export function WatchlistView() {
               const isSeries = item.type === "TV-SHOW";
               const href = isSeries
                 ? `/series/${item.tmdbId}`
-                : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
+                : `/movies/${getMovieSlug({ title: item.title ?? "", originalTitle: item.originalTitle, tmdbId: item.tmdbId, movieId: item.videoId })}`;
               const poster = tmdbImage(item.posterImgURL, "w500");
 
               return (

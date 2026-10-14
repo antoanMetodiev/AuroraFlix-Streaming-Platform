@@ -16,15 +16,16 @@ import { getLikesForUser, type LikedItem } from "@/lib/likes";
 import { getPlaylistsForUser, type Playlist } from "@/lib/playlists";
 import { useFriends } from "@/lib/use-friends";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { useLocalizedItems } from "@/lib/use-localized-titles";
 
 // Same pattern as actor-details-view.tsx — only ever needed once someone
 // clicks the avatar, so it has no business being in this modal's initial bundle.
 const BigImageLightbox = dynamic(() => import("@/components/ui/big-image-lightbox").then((mod) => mod.BigImageLightbox), { ssr: false });
 
-function hrefFor(item: LikedItem) {
+function hrefFor(item: LikedItem & { originalTitle?: string | null }) {
   return item.type === "TV-SHOW"
     ? `/series/${item.tmdbId}`
-    : `/movies/${getMovieSlug({ title: item.title ?? "", tmdbId: item.tmdbId, movieId: item.videoId })}`;
+    : `/movies/${getMovieSlug({ title: item.title ?? "", originalTitle: item.originalTitle, tmdbId: item.tmdbId, movieId: item.videoId })}`;
 }
 
 // Compact "user profile" — their liked movies/series and public playlists
@@ -58,7 +59,9 @@ export function UserProfileModal({
   const { t } = useTranslation();
   const { user } = useUser();
   const { friends, isLoading: isFriendsLoading } = useFriends();
-  const [items, setItems] = useState<LikedItem[] | null>(null);
+  const [savedItems, setItems] = useState<LikedItem[] | null>(null);
+  // Titles / posters in the language the visitor uses now (see useLocalizedItems).
+  const items = useLocalizedItems(savedItems);
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
   const [showLightbox, setShowLightbox] = useState(false);
   // Liked titles and playlists are both capped at 30 (see lumo-user-svc's
