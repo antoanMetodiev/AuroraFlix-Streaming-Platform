@@ -1,5 +1,5 @@
 import { Footer } from "@/components/layout/footer";
-import { DetailsBackground } from "@/components/movies/details/details-background";
+import { DetailsBackground, detailsBackgroundPath } from "@/components/movies/details/details-background";
 import { Suspense } from "react";
 import { DetailsHeader } from "@/components/movies/details/details-header";
 import { FactsSection } from "@/components/movies/details/facts-section";
@@ -62,7 +62,8 @@ export function CinemaRecordDetailsPage({
         <LazyCastSection
           cast={record.castList ?? []}
           backgroundImgUrl={
-            record.backgroundImg_URL
+            // The actor page reuses this page's background.
+            detailsBackgroundPath(record)
           }
         />
 

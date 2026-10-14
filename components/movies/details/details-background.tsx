@@ -23,8 +23,20 @@ import type { Series } from "@/types/series";
  *   huge optimized variant.
  */
 export function DetailsBackground({ record }: { record: Movie | Series }) {
+  return <BlurredPageBackdrop path={detailsBackgroundPath(record)} />;
+}
+
+/** The TMDB image path a record's details page uses as its background. */
+export function detailsBackgroundPath(record: Movie | Series): string | null {
   const stills = getImagesByType(record.imagesList, "BACKDROP", 2);
-  const path = stills[1]?.imageURL ?? stills[0]?.imageURL ?? record.backgroundImg_URL;
+  return stills[1]?.imageURL ?? stills[0]?.imageURL ?? record.backgroundImg_URL ?? null;
+}
+
+/**
+ * The fixed, blurred, shaded page background itself — also used by the actor
+ * page, which shows the background of the title it was opened from.
+ */
+export function BlurredPageBackdrop({ path }: { path?: string | null }) {
   const src = tmdbImage(path, "w1280");
   if (!src) return null;
 
