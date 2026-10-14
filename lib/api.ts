@@ -1,6 +1,7 @@
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 import type { ActorLatestWork } from "@/types/actor";
+import type { RecordFacts } from "@/types/facts";
 import { API_BASE_URL } from "@/lib/config";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
 
@@ -171,4 +172,10 @@ export async function getSeriesDetails(id: string): Promise<Series | null> {
 export async function getActorLatestWorks(imdbId: string): Promise<ActorLatestWork[]> {
   const data = await getJson<unknown>(`/actor/latest-works/${encodeURIComponent(imdbId)}`);
   return unwrapList<ActorLatestWork>(data);
+}
+
+/** A movie's / series' facts panel (original title and language, budget, crew, social pages). */
+export async function getRecordFacts(type: "movie" | "series", tmdbId: string | null | undefined): Promise<RecordFacts | null> {
+  if (!tmdbId) return null;
+  return getJson<RecordFacts>(type === "movie" ? "/get-movie-facts" : "/get-series-facts", { tmdbId }, { localized: false });
 }

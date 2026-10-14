@@ -607,6 +607,28 @@ export const dictionary = {
     bg: "Прекалено много заявки в момента — изчакай малко и опитай пак.",
   },
   "assistant.newChat": { en: "New chat", bg: "Нов разговор" },
+  // The details page's facts panel (components/movies/details/facts-section.tsx).
+  "facts.title": { en: "Information", bg: "Информация" },
+  "facts.crew": { en: "Crew", bg: "Екип" },
+  "facts.originalTitle": { en: "Original title", bg: "Оригинално заглавие" },
+  "facts.originalLanguage": { en: "Original language", bg: "Оригинален език" },
+  "facts.budget": { en: "Budget", bg: "Бюджет" },
+  "facts.revenue": { en: "Revenue", bg: "Приходи" },
+  "facts.networks": { en: "Network", bg: "Телевизия" },
+  "facts.links": { en: "Official pages", bg: "Официални страници" },
+  "facts.homepage": { en: "Official website", bg: "Официален сайт" },
+  "facts.job.Director": { en: "Director", bg: "Режисьор" },
+  "facts.job.Creator": { en: "Creator", bg: "Създател" },
+  "facts.job.Screenplay": { en: "Screenplay", bg: "Сценарий" },
+  "facts.job.Writer": { en: "Writer", bg: "Сценарист" },
+  "facts.job.Story": { en: "Story", bg: "История" },
+  "facts.job.Teleplay": { en: "Teleplay", bg: "Телевизионен сценарий" },
+  "facts.job.Novel": { en: "Novel", bg: "Роман" },
+  "facts.job.Book": { en: "Book", bg: "Книга" },
+  "facts.job.Author": { en: "Author", bg: "Автор" },
+  "facts.job.Characters": { en: "Characters", bg: "Персонажи" },
+  "facts.job.Original Story": { en: "Original Story", bg: "Оригинална история" },
+
   "assistant.viewTitle": { en: "View", bg: "Виж" },
 } as const satisfies Record<string, Entry>;
 

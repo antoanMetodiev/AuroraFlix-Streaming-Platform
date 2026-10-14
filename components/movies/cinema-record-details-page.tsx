@@ -1,6 +1,8 @@
 import { Footer } from "@/components/layout/footer";
 import { DetailsBackground } from "@/components/movies/details/details-background";
+import { Suspense } from "react";
 import { DetailsHeader } from "@/components/movies/details/details-header";
+import { FactsSection } from "@/components/movies/details/facts-section";
 import { TrailerSection } from "@/components/movies/details/trailer-section";
 import { PlayerSection } from "@/components/movies/details/player-section";
 import { SeriesWatchSection } from "@/components/movies/details/series-watch-section";
@@ -41,6 +43,11 @@ export function CinemaRecordDetailsPage({
           record={record}
           type={type}
         />
+
+        {/* Streams in on its own, so the rest of the page doesn't wait for it. */}
+        <Suspense fallback={null}>
+          <FactsSection type={type} tmdbId={record.tmdbId} />
+        </Suspense>
 
         {record.trailerURL && (
           <Reveal>

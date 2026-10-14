@@ -81,7 +81,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
         <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-[1] h-80 bg-gradient-to-b from-background via-background/70 to-transparent" />
         <div className="mx-auto flex max-w-[100rem] flex-col gap-6 px-4 pt-8 pb-10 sm:flex-row sm:px-6 sm:pb-16 lg:px-8">
           {poster && (
-            <div className="relative z-10 aspect-2/3 w-32 shrink-0 overflow-hidden rounded-xl shadow-[0_0_24px_-4px_rgba(255,255,255,0.3)] ring-2 ring-black/40 sm:w-44 lg:w-52">
+            <div className="relative z-10 aspect-2/3 w-32 shrink-0 self-start overflow-hidden rounded-xl shadow-[0_0_24px_-4px_rgba(255,255,255,0.3)] ring-2 ring-black/40 sm:w-44 lg:w-52">
               <FadeInImage src={poster} alt={record.title} sizes="208px" className="object-cover" priority />
             </div>
           )}
@@ -98,6 +98,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
               <AddToWatchlistButton record={record} type={type} />
               <LikeButton record={record} type={type} />
             </div>
+
           </div>
         </div>
       </div>
