@@ -661,13 +661,43 @@ export const PlayerSection = forwardRef<
   const [isFrameLoading, setIsFrameLoading] =
     useState(true);
 
+  const vidsrcRef = useMemo(
+    () =>
+      videoUrl
+        ? parseVidsrcUrl(videoUrl)
+        : null,
+    [videoUrl]
+  );
+
+  // Where our own Bulgarian subtitles for this movie / episode would be.
+  const subtitleCheckUrl = useMemo(
+    () =>
+      !vidsrcRef
+        ? null
+        : vidsrcRef.kind === "movie"
+          ? `/api/subtitles/${encodeURIComponent(vidsrcRef.tmdbId)}`
+          : `/api/subtitles/${encodeURIComponent(vidsrcRef.tmdbId)}/${vidsrcRef.season}/${vidsrcRef.episode}`,
+    [vidsrcRef]
+  );
+
   // Whether *we* have our own Bulgarian subtitles for this title — checked
   // client-side, in the background, by the effect below (see its doc
   // comment for why this can no longer be a prop resolved before this
   // component ever mounts). Starts as "no subtitles" and flips to the real
   // answer once/if the check resolves; never blocks anything above.
-  const [subtitleUrl, setSubtitleUrl] =
-    useState<string | undefined>(undefined);
+  // Remembered together with the URL it was found for, so picking another
+  // episode reads as "no subtitles" again straight away, until its own
+  // check resolves.
+  const [ownSubtitles, setOwnSubtitles] = useState<{
+    url: string;
+    vidsrc: boolean;
+    vidfast: boolean;
+  } | null>(null);
+  const currentOwnSubtitles =
+    ownSubtitles && ownSubtitles.url === subtitleCheckUrl
+      ? ownSubtitles
+      : null;
+  const subtitleUrl = currentOwnSubtitles?.url;
 
   /**
    * Only when we have our own Bulgarian subtitles: EmbedMaster is added
@@ -693,8 +723,8 @@ export const PlayerSection = forwardRef<
    * then — adding it would reload the iframe mid-playback. (EmbedMaster
    * needs no such flag: it's only ever listed once our subtitles exist.)
    */
-  const [vidsrcUsesOurSubs, setVidsrcUsesOurSubs] =
-    useState(false);
+  const vidsrcUsesOurSubs =
+    currentOwnSubtitles?.vidsrc ?? false;
 
   /**
    * Whether VidFast's URL was built without its own subtitle track, i.e.
@@ -703,8 +733,8 @@ export const PlayerSection = forwardRef<
    * watching VidFast by then, since switching its URL would reload the
    * iframe mid-playback.
    */
-  const [vidfastUsesOurSubs, setVidfastUsesOurSubs] =
-    useState(false);
+  const vidfastUsesOurSubs =
+    currentOwnSubtitles?.vidfast ?? false;
 
   const playerOrder = useMemo<
     readonly ProviderId[]
@@ -872,14 +902,6 @@ export const PlayerSection = forwardRef<
     requestFullscreen(container)?.catch(() => setIsBigView(true));
   }
 
-  const vidsrcRef = useMemo(
-    () =>
-      videoUrl
-        ? parseVidsrcUrl(videoUrl)
-        : null,
-    [videoUrl]
-  );
-
   /**
    * Checks, in the background, whether we have our own Bulgarian subtitles
    * for this movie. Deliberately NOT awaited by the server component that
@@ -899,23 +921,37 @@ export const PlayerSection = forwardRef<
    * If they're already watching, the player they're on is left alone
    * (changing its URL would reload it mid-playback) and only the others
    * get them; EmbedMaster still shows up in the list.
+   *
+   * Series check per episode (lumo-series-subtitles-taker-svc, via
+   * /api/subtitles/[tmdbId]/[season]/[episode]): picking another episode
+   * starts over with no subtitles, and if the viewer was on EmbedMaster or
+   * VidLink — which only exist with ours — and the new episode has none,
+   * they're put back on vidsrc2.ru.
    */
   useEffect(() => {
-    if (!vidsrcRef || vidsrcRef.kind !== "movie") return;
+    if (!subtitleCheckUrl) return;
 
     let cancelled = false;
-    const url = `/api/subtitles/${encodeURIComponent(vidsrcRef.tmdbId)}`;
+    const url = subtitleCheckUrl;
+
+    function dropSubtitleOnlyPlayer() {
+      if (activePlayerRef.current === 4 || activePlayerRef.current === 5) {
+        setActivePlayer(1);
+      }
+    }
 
     fetch(url, { cache: "force-cache" })
       .then((res) => {
-        if (cancelled || !res.ok) return;
-        setSubtitleUrl(url);
-        if (!hasStartedRef.current || activePlayerRef.current !== 1) {
-          setVidsrcUsesOurSubs(true);
+        if (cancelled) return;
+        if (!res.ok) {
+          dropSubtitleOnlyPlayer();
+          return;
         }
-        if (!hasStartedRef.current || activePlayerRef.current !== 2) {
-          setVidfastUsesOurSubs(true);
-        }
+        setOwnSubtitles({
+          url,
+          vidsrc: !hasStartedRef.current || activePlayerRef.current !== 1,
+          vidfast: !hasStartedRef.current || activePlayerRef.current !== 2,
+        });
         if (!hasStartedRef.current && !userChangedPlayerRef.current) {
           setActivePlayer(5);
         }
@@ -923,12 +959,13 @@ export const PlayerSection = forwardRef<
       .catch(() => {
         // Subtitles service unreachable/slow/down — no subtitle track for
         // this session. Never surfaced to the viewer.
+        if (!cancelled) dropSubtitleOnlyPlayer();
       });
 
     return () => {
       cancelled = true;
     };
-  }, [vidsrcRef]);
+  }, [subtitleCheckUrl]);
 
   /**
    * Build all the player URLs.
