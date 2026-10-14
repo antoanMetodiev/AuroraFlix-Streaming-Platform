@@ -2,9 +2,33 @@ import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 import type { ActorLatestWork } from "@/types/actor";
 import { API_BASE_URL } from "@/lib/config";
+import { getRequestLocale } from "@/lib/i18n/request-locale";
 
-async function getJson<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T | null> {
+/**
+ * Asks for the visitor's language (?lang=bg|el|es — see getRequestLocale):
+ * the movies / series services then answer with that language's titles,
+ * descriptions, posters and trailers where TMDB has them, and the English
+ * title in `originalTitle`. English needs no parameter. Off for the sitemap,
+ * which only needs ids and the (English, URL-building) titles.
+ */
+async function languageParam(localized: boolean): Promise<{ lang?: string }> {
+  if (!localized) return {};
   try {
+    const locale = await getRequestLocale();
+    return locale === "en" ? {} : { lang: locale };
+  } catch {
+    // Outside a request (nothing to read the language from).
+    return {};
+  }
+}
+
+async function getJson<T>(
+  path: string,
+  params?: Record<string, string | number | undefined>,
+  { localized = true }: { localized?: boolean } = {}
+): Promise<T | null> {
+  try {
+    params = { ...params, ...(await languageParam(localized)) };
     const query = params
       ? "?" +
         new URLSearchParams(
@@ -99,12 +123,12 @@ export async function getSeriesDiscover(filters: DiscoverFilters, page: number):
 const SITEMAP_PAGE_SIZE = 10_000;
 
 export async function getAllMovies(): Promise<Movie[]> {
-  const data = await getJson<unknown>("/discover-movies", { page: 0, size: SITEMAP_PAGE_SIZE });
+  const data = await getJson<unknown>("/discover-movies", { page: 0, size: SITEMAP_PAGE_SIZE }, { localized: false });
   return unwrapList<Movie>(data);
 }
 
 export async function getAllSeries(): Promise<Series[]> {
-  const data = await getJson<unknown>("/discover-series", { page: 0, size: SITEMAP_PAGE_SIZE });
+  const data = await getJson<unknown>("/discover-series", { page: 0, size: SITEMAP_PAGE_SIZE }, { localized: false });
   return unwrapList<Series>(data);
 }
 

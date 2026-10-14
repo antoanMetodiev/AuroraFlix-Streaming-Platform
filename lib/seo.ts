@@ -94,9 +94,17 @@ export function releaseYear(releaseDate?: string | null): string | undefined {
 }
 
 /** A movie's / series' <title>, without the " | AuroraFlix" template suffix. */
-export function recordTitle(title: string, releaseDate: string | null | undefined, type: "movie" | "series"): string {
+export function recordTitle(
+  title: string,
+  releaseDate: string | null | undefined,
+  type: "movie" | "series",
+  originalTitle?: string | null
+): string {
   const year = releaseYear(releaseDate);
-  const name = year ? `${title} (${year})` : title;
+  // A translated title also carries the original, so both searches match:
+  // "Генезис (Inception, 2010)".
+  const extras = [originalTitle && originalTitle !== title ? originalTitle : null, year].filter(Boolean).join(", ");
+  const name = extras ? `${title} (${extras})` : title;
   return type === "movie"
     ? `${name} — гледай онлайн с БГ субтитри`
     : `${name} — гледай сериала онлайн с БГ субтитри`;
@@ -185,6 +193,7 @@ export function listingMetadata({
 
 type SeoRecord = {
   title: string;
+  originalTitle?: string | null;
   description?: string | null;
   releaseDate?: string | null;
   genres?: string | null;
@@ -198,7 +207,7 @@ type SeoRecord = {
 
 /** generateMetadata for a movie / series details page; `path` is its URL path. */
 export function recordMetadata(record: SeoRecord, type: "movie" | "series", path: string): Metadata {
-  const title = recordTitle(record.title, record.releaseDate, type);
+  const title = recordTitle(record.title, record.releaseDate, type, record.originalTitle);
   const description = recordDescription(record.title, record.releaseDate, record.description, type);
   const backdrop = tmdbImage(record.backgroundImg_URL ?? record.posterImgURL, "w1280");
 
@@ -240,6 +249,7 @@ export function recordJsonLd(record: SeoRecord, type: "movie" | "series", path: 
     "@context": "https://schema.org",
     "@type": type === "movie" ? "Movie" : "TVSeries",
     name: record.title,
+    alternateName: record.originalTitle && record.originalTitle !== record.title ? record.originalTitle : undefined,
     url: `${SITE_URL}${path}`,
     description: record.description ?? undefined,
     image: tmdbImage(record.posterImgURL, "w500") ?? undefined,

@@ -24,8 +24,18 @@ export function getMovieId(movie: { movieId?: string | null; tmdbId?: string | n
   return movie.tmdbId ?? movie.movieId ?? extractIdFromVideoUrl(movie.videoURL) ?? "";
 }
 
-export function getMovieSlug(movie: { title: string; movieId?: string | null; tmdbId?: string | null; videoURL?: string | null }) {
-  return `${encodeURIComponent(movie.title)}-${getMovieId(movie)}`;
+/**
+ * Built from the English title (`originalTitle` when the record came back
+ * translated), so a movie's URL is the same in every language.
+ */
+export function getMovieSlug(movie: {
+  title: string;
+  originalTitle?: string | null;
+  movieId?: string | null;
+  tmdbId?: string | null;
+  videoURL?: string | null;
+}) {
+  return `${encodeURIComponent(movie.originalTitle ?? movie.title)}-${getMovieId(movie)}`;
 }
 
 export function parseMovieIdFromSlug(slug: string) {

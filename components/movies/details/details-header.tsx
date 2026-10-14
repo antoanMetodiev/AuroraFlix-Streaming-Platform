@@ -38,6 +38,13 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
               {record.title} {year && <span className="font-normal text-white/55">({year})</span>}
             </h1>
 
+            {/* The original (English) title under a translated one — people know films by both names. */}
+            {record.originalTitle && record.originalTitle !== record.title && (
+              <p className="mt-1 text-base font-medium text-white/60 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] sm:text-xl">
+                {record.originalTitle}
+              </p>
+            )}
+
             {record.specialText && (
               <p className="mt-2 max-w-2xl text-sm text-white/70 italic sm:text-base">{record.specialText}</p>
             )}

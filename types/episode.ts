@@ -3,6 +3,8 @@ export type Episode = {
   videoURL: string;
   posterImgURL?: string | null;
   episodeTitle?: string | null;
+  /** The English name, sent only when `episodeTitle` is a translation. */
+  originalEpisodeTitle?: string | null;
   airDate?: string | null;
   description?: string | null;
   runtime?: string | null;

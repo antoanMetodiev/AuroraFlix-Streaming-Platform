@@ -7,6 +7,8 @@ export type Series = {
   id: string;
   tmdbId: string;
   title: string;
+  /** The English title, sent only when `title` is a translation (?lang=bg|el|es). */
+  originalTitle?: string | null;
   description?: string | null;
   specialText?: string | null;
   genres?: string | null;

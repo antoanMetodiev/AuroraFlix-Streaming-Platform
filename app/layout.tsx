@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
-import { LOCALE_COOKIE_NAME } from "@/lib/i18n/locale-cookie";
-import type { Locale } from "@/lib/i18n/dictionary";
-import { detectLocale } from "@/lib/i18n/detect-locale";
+import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
 import "./globals.css";
@@ -77,23 +74,12 @@ const SITE_JSON_LD = {
   ],
 };
 
-// Resolved server-side so it's baked into the very first render instead of
-// flipped in after the fact (see LocaleProvider's own comment for why that
-// matters): the saved choice, else by the visitor's country (Cloudflare's
-// CF-IPCountry header) — see detectLocale. Crawlers always get Bulgarian, the
-// language the site is indexed in.
-async function resolveInitialLocale(): Promise<Locale> {
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
-  return detectLocale({
-    savedLocale: cookieStore.get(LOCALE_COOKIE_NAME)?.value,
-    userAgent: headerStore.get("user-agent"),
-    country: headerStore.get("cf-ipcountry"),
-    acceptLanguage: headerStore.get("accept-language"),
-  });
-}
-
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const initialLocale = await resolveInitialLocale();
+  // Resolved server-side so it's baked into the very first render instead of
+  // flipped in after the fact (see LocaleProvider's own comment): the saved
+  // choice, else by the visitor's country — see getRequestLocale. Crawlers
+  // always get Bulgarian, the language the site is indexed in.
+  const initialLocale = await getRequestLocale();
 
   return (
     <html
