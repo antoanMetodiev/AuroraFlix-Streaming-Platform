@@ -35,10 +35,15 @@ function saveLocaleCookie(locale: Locale) {
 export function LocaleProvider({ children, initialLocale }: { children: ReactNode; initialLocale: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
+  // Switching language reloads the page: the server renders it again in the
+  // new language, including the titles, descriptions and artwork it fetches
+  // from the backend (lib/api.ts) — swapping only the UI strings would leave
+  // those in the old one.
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
     saveLocaleCookie(next);
     document.documentElement.lang = next;
+    window.location.reload();
   }, []);
 
   // The first visit's language was picked from the visitor's country (see

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getRequestLocale } from "@/lib/i18n/request-locale";
+import { genreLabel } from "@/lib/i18n/translate";
 import { tmdbImage } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { RatingRing } from "@/components/ui/rating-ring";
@@ -8,7 +10,9 @@ import { ProgressiveBackdrop } from "@/components/movies/details/progressive-bac
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
-export function DetailsHeader({ record, type }: { record: Movie | Series; type: "movie" | "series" }) {
+export async function DetailsHeader({ record, type }: { record: Movie | Series; type: "movie" | "series" }) {
+  // Genres come from the backend in English; the chips show them translated.
+  const locale = await getRequestLocale();
   const description = record.description ?? "";
   const poster = tmdbImage(record.posterImgURL, "w780");
   const year = record.releaseDate?.split("-")[0];
@@ -16,7 +20,8 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
   const genreList = record.genres
     ? record.genres
         .split(",")
-        .map((genre) => genre.trim())
+        // Some series rows store genres as `"Drama".` — strip the quotes/dot.
+        .map((genre) => genre.trim().replace(/^["']+|["'.]+$/g, ""))
         .filter(Boolean)
     : [];
 
@@ -56,7 +61,7 @@ export function DetailsHeader({ record, type }: { record: Movie | Series; type: 
                   href={`/${listType}/genres/${encodeURIComponent(genre)}`}
                   className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-md transition-colors duration-300 hover:border-white/30 hover:bg-black/60 hover:text-white sm:text-sm"
                 >
-                  {genre}
+                  {genreLabel(genre, locale)}
                 </Link>
               ))}
               {record.releaseDate && (

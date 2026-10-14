@@ -632,4 +632,17 @@ export const GENRE_TRANSLATIONS: Record<string, Entry> = {
   Musical: { en: "Musical", bg: "Мюзикъл" },
   Sports: { en: "Sports", bg: "Спортен" },
   War: { en: "War", bg: "Военен" },
+  // Other TMDB genres a record can carry (not in the filters' list).
+  "Science Fiction": { en: "Science Fiction", bg: "Научна фантастика" },
+  Music: { en: "Music", bg: "Музикален" },
+  History: { en: "History", bg: "Исторически" },
+  "TV Movie": { en: "TV Movie", bg: "Телевизионен филм" },
+  "Action & Adventure": { en: "Action & Adventure", bg: "Екшън и приключения" },
+  "Sci-Fi & Fantasy": { en: "Sci-Fi & Fantasy", bg: "Фантастика и фентъзи" },
+  "War & Politics": { en: "War & Politics", bg: "Война и политика" },
+  Kids: { en: "Kids", bg: "Детски" },
+  Reality: { en: "Reality", bg: "Риалити" },
+  Soap: { en: "Soap", bg: "Сапунена опера" },
+  Talk: { en: "Talk", bg: "Ток шоу" },
+  News: { en: "News", bg: "Новини" },
 };

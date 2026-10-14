@@ -11,6 +11,7 @@ import { LikeButton } from "@/components/movies/details/like-button";
 import { RatingRing } from "@/components/ui/rating-ring";
 import { getMovieSlug, tmdbImage } from "@/lib/tmdb";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { genreLabel } from "@/lib/i18n/translate";
 import type { Series } from "@/types/series";
 import type { Movie } from "@/types/movie";
 
@@ -237,7 +238,7 @@ function TrailerRail({
 }
 
 export function HeroSection({ items }: { items: HeroItem[] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
@@ -425,7 +426,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
                 href={`${genreBase}/${encodeURIComponent(genre)}`}
                 className="rounded-md bg-black/65 px-2 py-1 hover:bg-black/85 hover:text-white"
               >
-                {genre}
+                {genreLabel(genre, locale)}
               </Link>
             ))}
             {record.releaseDate && <span className="rounded-md bg-black/65 px-2 py-1">{record.releaseDate}</span>}

@@ -10,6 +10,7 @@ import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
 import { LikeButton } from "@/components/movies/details/like-button";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { genreLabel } from "@/lib/i18n/translate";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -22,7 +23,7 @@ function useHoverCapable() {
 }
 
 export function CinemaRecordCard({ record, type }: { record: Movie | Series; type: "movie" | "series" }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const hoverCapable = useHoverCapable();
   const href = type === "series" ? `/series/${(record as Series).tmdbId}` : `/movies/${getMovieSlug(record as Movie)}`;
   const poster = tmdbImage(record.posterImgURL, "w780");
@@ -243,7 +244,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
               ) : (
                 genres.map((genre) => (
                   <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
-                    {genre}
+                    {genreLabel(genre, locale)}
                   </span>
                 ))
               )}
