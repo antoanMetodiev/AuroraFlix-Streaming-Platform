@@ -134,11 +134,6 @@ export function Navigation() {
       <AssistantLauncher className="hidden md:flex" />
       */}
 
-      {/* On phones the language toggle lives in the menu, next to the account. */}
-      <div className="hidden md:block">
-        <LanguageSelect />
-      </div>
-
       <AuthNav className="hidden md:block" />
 
       <a
@@ -150,6 +145,11 @@ export function Navigation() {
       >
         <FaLinkedin size={16} />
       </a>
+
+      {/* Rightmost on desktop; on phones the language toggle lives in the menu, next to the account. */}
+      <div className="hidden md:block">
+        <LanguageSelect />
+      </div>
 
       {/* Mobile: trigger + dropdown panel */}
       <button

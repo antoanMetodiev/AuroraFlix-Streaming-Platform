@@ -6,6 +6,7 @@ import { FactsSection } from "@/components/movies/details/facts-section";
 import { TrailerSection } from "@/components/movies/details/trailer-section";
 import { PlayerSection } from "@/components/movies/details/player-section";
 import { SeriesWatchSection } from "@/components/movies/details/series-watch-section";
+import { SimilarTitlesSection } from "@/components/movies/details/similar-titles-section";
 import { TrackLastViewed } from "@/components/movies/details/track-last-viewed";
 import {
   LazyCastSection,
@@ -110,6 +111,11 @@ export function CinemaRecordDetailsPage({
             type={type}
           />
         </Reveal>
+
+        {/* Streams in on its own, after the rest of the page. */}
+        <Suspense fallback={null}>
+          <SimilarTitlesSection record={record} type={type} />
+        </Suspense>
 
         {/* Fades the page background out into the footer's solid black. */}
         <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />

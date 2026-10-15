@@ -12,7 +12,16 @@ import type { Series } from "@/types/series";
 const MAX_STAGGERED = 24;
 const STAGGER_STEP_MS = 45;
 
-export function CinemaRecordGrid({ records, type }: { records: (Movie | Series)[]; type: "movie" | "series" }) {
+export function CinemaRecordGrid({
+  records,
+  type,
+  recordTypes,
+}: {
+  records: (Movie | Series)[];
+  type: "movie" | "series";
+  /** Per-record types for a mixed movies + series grid (same order as records); falls back to type. */
+  recordTypes?: ("movie" | "series")[];
+}) {
   const { t } = useTranslation();
   const { ref, inView } = useInViewOnce<HTMLElement>(0.05);
 
@@ -32,7 +41,7 @@ export function CinemaRecordGrid({ records, type }: { records: (Movie | Series)[
     >
       {records.map((record, index) => (
         <div
-          key={record.id}
+          key={`${recordTypes?.[index] ?? type}-${record.id}`}
           // relative + hover:z-40 (not just something inside this cell) is
           // required for the hover-preview panel to paint above cards in the
           // row below: animate-card-in animates opacity/transform, which per
@@ -43,7 +52,7 @@ export function CinemaRecordGrid({ records, type }: { records: (Movie | Series)[
           className={`relative ${inView ? "animate-card-in" : "opacity-0"} hover:z-40`}
           style={inView ? { animationDelay: `${Math.min(index, MAX_STAGGERED) * STAGGER_STEP_MS}ms` } : undefined}
         >
-          <CinemaRecordCard record={record} type={type} />
+          <CinemaRecordCard record={record} type={recordTypes?.[index] ?? type} />
         </div>
       ))}
     </section>

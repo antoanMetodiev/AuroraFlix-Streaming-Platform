@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { formatReleaseDate } from "@/lib/dates";
+import { parseGenres } from "@/lib/genres";
 import { genreLabel } from "@/lib/i18n/translate";
 import { tmdbImage } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -18,13 +19,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
   const poster = tmdbImage(record.posterImgURL, "w780");
   const year = record.releaseDate?.split("-")[0];
   const listType = type === "movie" ? "movies" : "series";
-  const genreList = record.genres
-    ? record.genres
-        .split(",")
-        // Some series rows store genres as `"Drama".` — strip the quotes/dot.
-        .map((genre) => genre.trim().replace(/^["']+|["'.]+$/g, ""))
-        .filter(Boolean)
-    : [];
+  const genreList = parseGenres(record.genres);
 
   return (
     <div className="relative w-full">

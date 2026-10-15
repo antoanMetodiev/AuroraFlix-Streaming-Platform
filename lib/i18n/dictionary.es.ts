@@ -146,6 +146,7 @@ export const esDictionary = {
   "sections.loadMore": "Cargar más",
   "sections.season": "Temporada",
   "comments.title": "Comentarios",
+  "details.similarTitle": "También te puede gustar",
   "comments.placeholder": "Comparte tu opinión...",
   "comments.submitAria": "Publicar comentario",
   "comments.postError": "No se pudo publicar tu comentario. Inténtalo de nuevo.",

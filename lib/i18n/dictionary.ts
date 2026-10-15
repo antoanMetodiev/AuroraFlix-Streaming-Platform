@@ -228,6 +228,7 @@ export const dictionary = {
   "sections.season": { en: "Season", bg: "Сезон" },
 
   "comments.title": { en: "Comments", bg: "Коментари" },
+  "details.similarTitle": { en: "You may also like", bg: "Може да харесате" },
   "comments.placeholder": { en: "Share your thoughts...", bg: "Сподели мнението си..." },
   "comments.submitAria": { en: "Post comment", bg: "Публикувай коментар" },
   "comments.postError": { en: "Couldn't post your comment. Please try again.", bg: "Неуспешно публикуване на коментара. Опитай пак." },

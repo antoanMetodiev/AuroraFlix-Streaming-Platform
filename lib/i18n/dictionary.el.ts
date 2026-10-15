@@ -146,6 +146,7 @@ export const elDictionary = {
   "sections.loadMore": "Περισσότερα",
   "sections.season": "Σεζόν",
   "comments.title": "Σχόλια",
+  "details.similarTitle": "Μπορεί επίσης να σας αρέσουν",
   "comments.placeholder": "Μοιράσου τη γνώμη σου...",
   "comments.submitAria": "Δημοσίευση σχολίου",
   "comments.postError": "Δεν ήταν δυνατή η δημοσίευση του σχολίου. Δοκίμασε ξανά.",
