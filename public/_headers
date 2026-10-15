@@ -1,0 +1,11 @@
+# Cloudflare Workers static-asset headers (files in public/ are served
+# straight from the assets binding, outside Next's headers() config).
+#
+# The mobile app (mobile-front-end) shows these list backgrounds too and
+# loads them from this site; its web build needs CORS to read them.
+
+/movie-background-image.webp
+  Access-Control-Allow-Origin: *
+
+/series-background-image.webp
+  Access-Control-Allow-Origin: *

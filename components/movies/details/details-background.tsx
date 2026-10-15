@@ -34,10 +34,11 @@ export function detailsBackgroundPath(record: Movie | Series): string | null {
 
 /**
  * The fixed, blurred, shaded page background itself — also used by the actor
- * page, which shows the background of the title it was opened from.
+ * page, which shows the background of the title it was opened from, and the
+ * movies / series lists (ListBackground), which pass their own image as src.
  */
-export function BlurredPageBackdrop({ path }: { path?: string | null }) {
-  const src = tmdbImage(path, "w1280");
+export function BlurredPageBackdrop({ path, src: imageSrc }: { path?: string | null; src?: string }) {
+  const src = imageSrc ?? tmdbImage(path, "w1280");
   if (!src) return null;
 
   return (

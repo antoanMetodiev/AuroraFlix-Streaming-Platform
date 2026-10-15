@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Footer } from "@/components/layout/footer";
 import { DiscoverFilters } from "@/components/movies/discover-filters";
+import { ListBackground } from "@/components/movies/list-background";
 import { CinemaRecordGrid } from "@/components/movies/cinema-record-grid";
 import { ListPageHeading } from "@/components/movies/list-page-heading";
 import { PaginationControls } from "@/components/movies/pagination-controls";
@@ -41,6 +42,8 @@ export function CinemaRecordListPage({
 
   return (
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden">
+      <ListBackground type={listType} />
+
       {/*
        * flex-col so a short result set (few/no matches) still pins the footer
        * to the viewport bottom instead of leaving min-h-screen's slack trail
