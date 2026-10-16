@@ -11,6 +11,7 @@ import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchli
 import { LikeButton } from "@/components/movies/details/like-button";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { genreLabel } from "@/lib/i18n/translate";
+import { formatReleaseDate } from "@/lib/dates";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -30,6 +31,14 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
   const year = record.releaseDate?.split("-")[0];
   const rating = record.tmdbRating ? Math.max(0, Math.min(10, Number(record.tmdbRating) || 0)) : null;
   const TypeIcon = type === "movie" ? Film : Tv;
+  const fullDate = formatReleaseDate(record.releaseDate, locale);
+  // Up to two on the tile, kept to one line — if both don't fit, the second
+  // is clipped rather than wrapping further up the poster.
+  const cardGenres = (record.genres ?? "")
+    .split(",")
+    .map((genre) => genre.trim())
+    .filter(Boolean)
+    .slice(0, 2);
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [preview, setPreview] = useState<Movie | Series | null>(null);
@@ -95,18 +104,19 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
     setActiveIndex(0);
   };
 
-  // Poster first, always — then whatever backdrops the fetch turned up,
-  // deduped against it and each other. Capped at 5 frames: plenty for a
-  // hover-length slideshow, keeps the DOM (one <Image> per frame) small.
+  // Backdrops only — the main one first, then whatever else the fetch turned
+  // up, deduped. No poster: the card itself already is one, and a portrait
+  // image in this 16:9 frame only shows a cropped close-up of its top.
+  // Capped at 5 frames: plenty for a hover-length slideshow, keeps the DOM
+  // (one <Image> per frame) small.
   const galleryImages = useMemo(() => {
-    const poster = tmdbImage(record.posterImgURL, "w780");
     const backdrops = (preview?.imagesList ?? [])
       .filter((img) => img.imageType === "BACKDROP")
       .map((img) => tmdbImage(img.imageURL, "w780"));
     const main = tmdbImage(preview?.backgroundImg_URL, "w780");
-    const ordered = [poster, main, ...backdrops].filter((src): src is string => Boolean(src));
+    const ordered = [main, ...backdrops].filter((src): src is string => Boolean(src));
     return Array.from(new Set(ordered)).slice(0, 5);
-  }, [record.posterImgURL, preview]);
+  }, [preview]);
 
   useEffect(() => {
     if (galleryIntervalRef.current) window.clearInterval(galleryIntervalRef.current);
@@ -129,6 +139,9 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
     .map((genre) => genre.trim())
     .filter(Boolean)
     .slice(0, 3);
+  const tagline = preview?.specialText ?? record.specialText;
+  // The full date ("9 октомври 2026 г."), not just the year the tile shows.
+  const releaseDate = formatReleaseDate(preview?.releaseDate ?? record.releaseDate, locale);
 
   return (
     <div ref={wrapperRef} className="group/tile relative hover:z-40" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
@@ -180,16 +193,33 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
             <h2 className="line-clamp-2 text-sm leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-base">
               {record.title}
             </h2>
-            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-white/60 sm:text-xs">
+            {record.specialText && (
+              <p className="mt-0.5 line-clamp-1 text-[10px] text-white/55 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
+                {record.specialText}
+              </p>
+            )}
+            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-white/60 sm:text-xs">
               <TypeIcon size={11} className="shrink-0 text-white/80" />
-              {type === "movie" ? t("watchlist.movie") : t("watchlist.series")}
-              {year && (
+              <span className="shrink-0">{type === "movie" ? t("watchlist.movie") : t("watchlist.series")}</span>
+              {(fullDate || year) && (
                 <>
                   <span className="text-white/30">•</span>
-                  {year}
+                  <span className="truncate">{fullDate || year}</span>
                 </>
               )}
             </p>
+            {cardGenres.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1 overflow-hidden [max-height:1.25rem] sm:[max-height:1.375rem]">
+                {cardGenres.map((genre) => (
+                  <span
+                    key={genre}
+                    className="rounded-full border border-white/15 bg-black/35 px-1.5 py-px text-[9px] font-medium whitespace-nowrap text-white/75 backdrop-blur-sm sm:px-2 sm:text-[10px]"
+                  >
+                    {genreLabel(genre, locale)}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Link>
@@ -208,7 +238,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
                 src={src}
                 alt=""
                 sizes="288px"
-                className={`object-cover object-top transition-opacity duration-700 ease-in-out ${index === (showGallery ? activeIndex : 0) ? "opacity-100" : "opacity-0"}`}
+                className={`object-cover transition-opacity duration-700 ease-in-out ${index === (showGallery ? activeIndex : 0) ? "opacity-100" : "opacity-0"}`}
               />
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
@@ -216,8 +246,9 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
           <div className="px-3.5 pt-1 pb-3.5">
             <h3 className="line-clamp-1 text-sm font-bold text-foreground">{record.title}</h3>
+            {tagline && <p className="mt-0.5 line-clamp-1 text-[11px] text-foreground/50 italic">{tagline}</p>}
 
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-foreground/55">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs font-medium text-foreground/55">
               {rating !== null && (
                 <span className="flex items-center gap-1">
                   <span aria-hidden style={{ color: getRatingColor(rating) }}>
@@ -226,8 +257,8 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
                   {rating.toFixed(1)}
                 </span>
               )}
-              {rating !== null && year && <span className="text-foreground/25">•</span>}
-              {year && <span>{year}</span>}
+              {rating !== null && releaseDate && <span className="text-foreground/25">•</span>}
+              {releaseDate && <span>{releaseDate}</span>}
               <span className="text-foreground/25">•</span>
               <span className="flex items-center gap-1">
                 <TypeIcon size={11} />

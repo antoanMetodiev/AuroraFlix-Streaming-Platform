@@ -18,6 +18,8 @@ function languageName(code: string, locale: Locale) {
   }
 }
 
+const MAX_CREW = 3;
+
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 function jobLabel(job: string, locale: Locale) {
@@ -75,7 +77,8 @@ export async function FactsSection({ type, tmdbId }: { type: "movie" | "series";
     facts.revenue ? { Icon: TrendingUp, label: t("facts.revenue"), value: usd.format(facts.revenue) } : null,
     facts.networks?.length ? { Icon: Tv, label: t("facts.networks"), value: facts.networks.join(", ") } : null,
   ].filter((tile): tile is { Icon: LucideIcon; label: string; value: string } => tile !== null);
-  const crew = facts.crew ?? [];
+  // At most three people — any more and the card gets crowded.
+  const crew = (facts.crew ?? []).slice(0, MAX_CREW);
   const pages = officialPages(facts, locale);
   if (tiles.length === 0 && crew.length === 0 && pages.length === 0) return null;
 
@@ -87,16 +90,16 @@ export async function FactsSection({ type, tmdbId }: { type: "movie" | "series";
         {crew.length > 0 && (
           <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5 sm:p-6 lg:col-span-2">
             <p className="text-[11px] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("facts.crew")}</p>
-            <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <ul className="mt-3 divide-y divide-white/[0.08]">
               {crew.map((member) => {
                 const photo = tmdbImage(member.profilePath, "w300");
                 return (
-                  <li key={member.id} className="flex items-center gap-4">
-                    <span className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-white/25 to-white/5 text-sm font-bold text-white ring-2 ring-white/15">
+                  <li key={member.id} className="flex items-center gap-3 py-3 last:pb-0 sm:gap-4 sm:py-4">
+                    <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-white/25 to-white/5 text-sm font-bold text-white ring-2 ring-white/15 sm:h-14 sm:w-14">
                       {photo ? <FadeInImage src={photo} alt={member.name} sizes="56px" className="object-cover" /> : initials(member.name)}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-base font-semibold text-foreground">{member.name}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-semibold text-foreground sm:text-base">{member.name}</span>
                       <span className="mt-1.5 flex flex-wrap gap-1.5">
                         {member.jobs.map((job) => (
                           <span key={job} className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-foreground/75">
