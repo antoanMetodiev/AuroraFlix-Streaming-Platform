@@ -43,7 +43,7 @@ export function StatusPage({ code, titleKey, descriptionKey, detail, detailLabel
           {code}
         </span>
 
-        <h1 className="-mt-6 text-3xl font-bold tracking-tight text-foreground sm:-mt-10 sm:text-4xl">{t(titleKey)}</h1>
+        <h1 className="-mt-6 font-display text-3xl font-semibold tracking-tight text-foreground sm:-mt-10 sm:text-4xl">{t(titleKey)}</h1>
         <p className="mt-3 max-w-md text-sm text-foreground/50 sm:text-base">{t(descriptionKey)}</p>
 
         {detail && (

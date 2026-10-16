@@ -35,13 +35,36 @@ body {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-noto-serif-display), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  /* With <html lang="bg"> Manrope switches to its Bulgarian localized
+     Cyrillic (cursive-looking д, т, и, л…). The standard Cyrillic shapes —
+     the ones picked in the typography comparison — read cleaner in UI. */
+  font-feature-settings: "locl" 0;
+}
+
+/* Site-wide typography. Headings break into even lines (no lone word on the
+   last one), paragraphs avoid a one-word last line, and the display serif
+   gets its optical-size / kerning features. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.font-display {
+  font-optical-sizing: auto;
+  font-kerning: normal;
 }
 
 /* Site-wide scrollbar */

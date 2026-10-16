@@ -35,7 +35,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8">
           <div className="mx-auto max-w-[100rem]">
-            <h1 className="max-w-3xl text-3xl leading-tight font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:text-5xl">
+            <h1 className="max-w-3xl font-display text-4xl leading-[1.05] font-semibold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:text-6xl">
               {record.title} {year && <span className="font-normal text-white/55">({year})</span>}
             </h1>
 
@@ -47,7 +47,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
             )}
 
             {record.specialText && (
-              <p className="mt-2 max-w-2xl text-sm text-white/70 italic sm:text-base">{record.specialText}</p>
+              <p className="mt-2 max-w-2xl font-display text-base text-white/75 italic sm:text-xl">{record.specialText}</p>
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">

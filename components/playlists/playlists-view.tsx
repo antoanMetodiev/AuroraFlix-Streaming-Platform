@@ -19,7 +19,7 @@ export function PlaylistsView() {
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4 sm:mb-10">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{t("playlists.title")}</h1>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("playlists.title")}</h1>
               {playlists.length > 0 && (
                 <span className="rounded-full border border-foreground/15 bg-foreground/10 px-3 py-1 text-xs font-semibold text-foreground/70 backdrop-blur-md">
                   {playlists.length}
@@ -61,7 +61,7 @@ export function PlaylistsView() {
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground/5 text-foreground/30">
               <ListVideo size={24} />
             </span>
-            <h2 className="text-xl font-semibold text-foreground">{t("playlists.emptyTitle")}</h2>
+            <h2 className="font-display text-2xl font-semibold text-foreground">{t("playlists.emptyTitle")}</h2>
             <p className="max-w-sm text-sm text-foreground/50">{t("playlists.emptyDesc")}</p>
             <button
               type="button"

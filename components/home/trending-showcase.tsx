@@ -208,7 +208,7 @@ function ShowcaseBlock({
             <Flame size={14} />
             {t("home.trendingEyebrow")}
           </span>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">{heading}</h2>
+          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">{heading}</h2>
           <p className="mt-3 max-w-md text-sm text-white/60 sm:text-base">{text}</p>
 
           <RankedList items={ranked} />

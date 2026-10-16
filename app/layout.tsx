@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Manrope, Noto_Serif_Display } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
@@ -8,9 +8,19 @@ import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-p
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Typography: Manrope for all running text and UI, Noto Serif Display for the
+// big "cinematic" type — page / section / movie titles, taglines and card
+// titles (the `font-display` utility, see globals.css). Both have Cyrillic
+// and Greek, so bg / el read in the real faces, not a system fallback.
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "cyrillic", "greek"],
+});
+
+const notoSerifDisplay = Noto_Serif_Display({
+  variable: "--font-noto-serif-display",
+  subsets: ["latin", "cyrillic", "greek"],
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -84,7 +94,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={initialLocale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${manrope.variable} ${notoSerifDisplay.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background pt-16 pb-24 text-foreground md:pb-0">
         <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(SITE_JSON_LD)} />

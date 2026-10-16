@@ -169,12 +169,14 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
             />
           )}
 
-          {/* Always-on vignette for text legibility, deepened a touch on hover. */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent transition-opacity duration-500 group-hover:from-black/98" />
+          {/* Always-on shade for the text along the bottom (tagline, title, date,
+              genres): solid black at the edge, still dark a third of the way up,
+              clear by two thirds — so the title reads on any poster. */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black from-0% via-black/75 via-35% to-transparent to-70% transition-opacity duration-500" />
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
 
           {rating !== null && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full border border-white/15 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
               <span aria-hidden style={{ color: getRatingColor(rating) }}>
                 ★
               </span>
@@ -191,14 +193,14 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
           <div className="absolute inset-x-0 bottom-0 translate-y-0 p-2.5 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 sm:p-3.5">
             {record.specialText && (
-              <p className="mb-0.5 line-clamp-1 text-[10px] text-white/55 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
+              <p className="mb-0.5 line-clamp-1 font-display text-[11px] text-white/60 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
                 {record.specialText}
               </p>
             )}
-            <h2 className="line-clamp-2 text-sm leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-base">
+            <h2 className="line-clamp-2 font-display text-[15px] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-[17px]">
               {record.title}
             </h2>
-            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-white/60 sm:text-xs">
+            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] tabular-nums font-medium text-white/60 sm:text-xs">
               <TypeIcon size={11} className="shrink-0 text-white/80" />
               <span className="shrink-0">{type === "movie" ? t("watchlist.movie") : t("watchlist.series")}</span>
               {(fullDate || year) && (
@@ -245,8 +247,8 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
           </div>
 
           <div className="px-3.5 pt-1 pb-3.5">
-            <h3 className="line-clamp-1 text-sm font-bold text-foreground">{record.title}</h3>
-            {tagline && <p className="mt-0.5 line-clamp-1 text-[11px] text-foreground/50 italic">{tagline}</p>}
+            <h3 className="line-clamp-1 font-display text-base font-semibold text-foreground">{record.title}</h3>
+            {tagline && <p className="mt-0.5 line-clamp-1 font-display text-xs text-foreground/55 italic">{tagline}</p>}
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs font-medium text-foreground/55">
               {rating !== null && (

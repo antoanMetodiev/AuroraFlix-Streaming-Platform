@@ -171,7 +171,7 @@ export function ActorDetailsView({ id }: { id: string }) {
             <Sparkles size={13} />
             {gender === 1 ? t("actor.roleFemale") : t("actor.roleMale")}
           </span>
-          <h1 className="mt-4 bg-gradient-to-b from-white to-white/65 bg-clip-text text-4xl leading-[0.95] font-black tracking-tight text-transparent drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] sm:text-6xl lg:text-7xl">
+          <h1 className="mt-4 bg-gradient-to-b from-white to-white/65 bg-clip-text font-display text-4xl leading-[0.95] font-semibold tracking-tight text-transparent drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] sm:text-6xl lg:text-7xl">
             {actor.nameInRealLife}
           </h1>
 
@@ -277,7 +277,7 @@ function Filmography({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 sm:mb-8">
         <div className="flex items-center gap-3">
           <span className="h-6 w-1 shrink-0 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{t("actor.filmography")}</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{t("actor.filmography")}</h2>
           {works && <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-foreground/70">{counts.all}</span>}
         </div>
         <RequestMoreButton actorName={actorName} actorImdbId={actorImdbId} />

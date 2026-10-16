@@ -401,7 +401,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
                 />
               </div>
             ) : (
-              <h1 className="mb-3 text-3xl leading-[1.05] font-extrabold tracking-tighter text-white text-balance sm:text-5xl lg:text-6xl">
+              <h1 className="mb-3 font-display text-4xl leading-[1.02] font-semibold tracking-tight text-white text-balance sm:text-6xl lg:text-7xl">
                 {record.title}
               </h1>
             )}

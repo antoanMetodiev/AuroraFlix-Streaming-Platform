@@ -12,7 +12,7 @@ export function FriendsView() {
   return (
     <div className="relative min-h-screen w-full">
       <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{t("friends.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t("friends.title")}</h1>
         <div className="mt-6">
           <FriendsPanel />
         </div>

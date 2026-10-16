@@ -28,7 +28,7 @@ export function CinemaRecordGrid({
   if (records.length === 0) {
     return (
       <div className="relative flex min-h-[24em] flex-col items-center justify-center gap-2 text-center">
-        <h3 className="text-2xl font-bold tracking-tight text-foreground">{t("common.noResults")}</h3>
+        <h3 className="font-display text-3xl font-semibold tracking-tight text-foreground">{t("common.noResults")}</h3>
         <p className="text-sm text-foreground/50">{t("common.noResultsDesc")}</p>
       </div>
     );

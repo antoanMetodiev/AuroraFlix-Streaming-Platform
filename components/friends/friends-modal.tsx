@@ -44,7 +44,7 @@ export function FriendsModal({ onClose }: { onClose: () => void }) {
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
               <Users size={20} />
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("friends.title")}</h2>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{t("friends.title")}</h2>
           </div>
           <button
             type="button"

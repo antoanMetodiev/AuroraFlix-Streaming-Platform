@@ -28,7 +28,7 @@ export function WatchlistView() {
       <div className="mx-auto max-w-[100rem] px-4 pt-8 pb-16 sm:px-6 sm:pt-14 lg:px-8">
         <div className="mb-10 flex flex-wrap items-center justify-between gap-4 sm:mb-14">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{t("watchlist.title")}</h1>
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("watchlist.title")}</h1>
             <p className="mt-2 max-w-md text-sm text-foreground/50">{t("watchlist.subtitle", { max: MAX_WATCHLIST_ITEMS })}</p>
           </div>
 
@@ -43,7 +43,7 @@ export function WatchlistView() {
           <Loader />
         ) : items.length === 0 ? (
           <div className="flex min-h-[30vh] flex-col items-center justify-center gap-3 text-center">
-            <h2 className="text-xl font-semibold text-foreground">{t("watchlist.emptyTitle")}</h2>
+            <h2 className="font-display text-2xl font-semibold text-foreground">{t("watchlist.emptyTitle")}</h2>
             <p className="text-sm text-foreground/50">{t("watchlist.emptyDesc")}</p>
             <Link
               href="/movies"
@@ -95,7 +95,7 @@ export function WatchlistView() {
                     </button>
 
                     <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3.5">
-                      <h2 className="line-clamp-2 text-sm leading-tight font-semibold text-white sm:text-base">{item.title}</h2>
+                      <h2 className="line-clamp-2 font-display text-[15px] leading-tight font-semibold text-white sm:text-[17px]">{item.title}</h2>
                       <p className="mt-1 text-[11px] font-medium text-white/55 sm:text-xs">{isSeries ? t("watchlist.series") : t("watchlist.movie")}</p>
                     </div>
                   </div>

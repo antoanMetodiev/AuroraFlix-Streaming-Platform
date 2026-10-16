@@ -36,7 +36,7 @@ export function ListPageHeading({
 
   return (
     <div className="mx-auto flex max-w-[100rem] flex-wrap items-baseline justify-between gap-2 px-4 pt-8 pb-4 sm:px-6">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{heading}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{heading}</h1>
     </div>
   );
 }

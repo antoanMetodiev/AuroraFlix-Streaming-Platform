@@ -154,7 +154,7 @@ export function PlaylistCard({
           </span>
 
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-base font-bold tracking-tight text-foreground sm:text-lg">{playlist.name}</h2>
+            <h2 className="truncate font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">{playlist.name}</h2>
             <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-foreground/45">
               {playlist.isPublic ? t("playlists.visibilityPublic") : t("playlists.visibilityPrivate")}
               <span aria-hidden>·</span>

@@ -137,7 +137,7 @@ export function UserProfileModal({
                   <Avatar src={profileImageURL} name={displayName} size={64} className="ring-2 ring-surface" />
                 </button>
                 <div className="min-w-0">
-                  <h2 className="truncate text-2xl font-bold tracking-tight text-foreground">{displayName || "?"}</h2>
+                  <h2 className="truncate font-display text-2xl font-semibold tracking-tight text-foreground">{displayName || "?"}</h2>
                   <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-foreground/50">
                     <span className="flex items-center gap-1.5">
                       <Heart size={13} className="fill-current text-white/70" />

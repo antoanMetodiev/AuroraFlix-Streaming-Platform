@@ -17,7 +17,7 @@ export function OrderSelectPage() {
   return (
     <div className="relative min-h-screen w-full">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{t("order.selectTitle")}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("order.selectTitle")}</h1>
         <p className="mt-4 max-w-md text-sm text-foreground/50 sm:text-base">{t("order.selectDesc")}</p>
 
         <div className="mt-10 flex w-full max-w-md flex-col gap-4 sm:flex-row">

@@ -155,7 +155,7 @@ function Coverflow({ heading, items }: { heading: string; items: PopularItem[] }
           #{active + 1} · {current.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}
           {current.releaseYear && ` · ${current.releaseYear}`}
         </p>
-        <h3 className="mt-2 line-clamp-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">{current.title}</h3>
+        <h3 className="mt-2 line-clamp-1 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">{current.title}</h3>
         <div className="mt-4 flex items-center gap-4">
           {Number.isFinite(currentRating) && <RatingRing value={currentRating} size="sm" />}
           <Link

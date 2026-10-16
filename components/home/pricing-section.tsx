@@ -121,7 +121,7 @@ export function PricingSection() {
                 </span>
               )}
 
-              <h3 className="text-lg font-bold text-foreground sm:text-xl">{t(plan.nameKey)}</h3>
+              <h3 className="font-display text-xl font-semibold text-foreground sm:text-2xl">{t(plan.nameKey)}</h3>
               <p className="mt-1 text-sm text-foreground/60">{t(plan.descKey)}</p>
 
               <div className="mt-5 flex items-baseline gap-1">

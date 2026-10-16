@@ -63,7 +63,7 @@ export function SubscriptionView() {
   return (
     <div className="relative min-h-screen w-full bg-background">
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-16 sm:px-6 sm:pt-14 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{t("subscription.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("subscription.title")}</h1>
         <p className="mt-2 text-sm text-foreground/50">{t("subscription.subtitle")}</p>
 
         <div className="mt-10 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 sm:p-8">
