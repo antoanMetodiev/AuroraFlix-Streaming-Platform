@@ -190,14 +190,14 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
           </div>
 
           <div className="absolute inset-x-0 bottom-0 translate-y-0 p-2.5 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 sm:p-3.5">
-            <h2 className="line-clamp-2 text-sm leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-base">
-              {record.title}
-            </h2>
             {record.specialText && (
-              <p className="mt-0.5 line-clamp-1 text-[10px] text-white/55 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
+              <p className="mb-0.5 line-clamp-1 text-[10px] text-white/55 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
                 {record.specialText}
               </p>
             )}
+            <h2 className="line-clamp-2 text-sm leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-base">
+              {record.title}
+            </h2>
             <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-white/60 sm:text-xs">
               <TypeIcon size={11} className="shrink-0 text-white/80" />
               <span className="shrink-0">{type === "movie" ? t("watchlist.movie") : t("watchlist.series")}</span>
