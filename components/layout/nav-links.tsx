@@ -122,12 +122,16 @@ export function NavLinks() {
             onFocus={() => showHoverPill(index)}
             onBlur={hideHoverPill}
             aria-current={isActive ? "page" : undefined}
+            aria-label={t(labelKey)}
+            title={t(labelKey)}
             className={`relative z-10 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors duration-300 lg:px-4 ${
               isActive ? "text-neutral-900" : "text-foreground/90 hover:text-white"
             }`}
           >
             <Icon size={15} className={`transition-transform duration-300 ${isActive ? "scale-110" : ""}`} />
-            {t(labelKey)}
+            {/* Icon-only on tablet widths — where TV browsers land too — so the
+                Android download icon fits in the header next to them. */}
+            <span className="md:max-lg:hidden">{t(labelKey)}</span>
           </Link>
         );
       })}

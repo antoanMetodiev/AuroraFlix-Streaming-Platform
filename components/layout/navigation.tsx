@@ -64,8 +64,10 @@ export function Navigation() {
     // viewport instead of letting its children wrap/truncate. No flex-1: the
     // header island is only as wide as its content (see header-island.tsx).
     <nav className="relative flex min-w-0 items-center gap-2 sm:gap-3">
-      {/* The app download icons, right after the logo (hidden on tablet widths, where the links need the room). */}
-      <div className="flex shrink-0 items-center gap-1.5 md:hidden lg:flex">
+      {/* The app download icons, right after the logo. Shown at every width —
+          TV browsers (a 4K Android TV reports ~960px) land in the tablet
+          range, so the link row goes icon-only there instead (see NavLinks). */}
+      <div className="flex shrink-0 items-center gap-1.5">
         <a
           href={ANDROID_APK_URL}
           download
@@ -108,7 +110,7 @@ export function Navigation() {
         */}
       </div>
 
-      <span className="hidden h-5 w-px bg-white/10 lg:block" />
+      <span className="hidden h-5 w-px bg-white/10 md:block" />
 
       {/* Desktop: the link row with the sliding active pill, right after the logo */}
       <NavLinks />
@@ -228,7 +230,7 @@ export function Navigation() {
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-semibold text-foreground">{t("nav.androidApp")}</span>
-            <span className="text-[11px] text-foreground/55">{t("nav.androidOnly")}</span>
+            <span className="text-[0.6875rem] text-foreground/55">{t("nav.androidOnly")}</span>
           </span>
           <Download size={16} className="shrink-0 text-[#3DDC84]" />
         </a>

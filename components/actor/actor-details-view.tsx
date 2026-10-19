@@ -186,7 +186,7 @@ export function ActorDetailsView({ id }: { id: string }) {
                   <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-neutral-900 shadow-[0_6px_20px_-6px_rgba(255,255,255,0.5)]">
                     <Icon size={16} />
                   </span>
-                  <p className="mt-3 text-[11px] font-bold tracking-[0.18em] text-foreground/45 uppercase">{label}</p>
+                  <p className="mt-3 text-[0.6875rem] font-bold tracking-[0.18em] text-foreground/45 uppercase">{label}</p>
                   <p className="mt-0.5 text-sm leading-snug font-bold break-words text-foreground sm:text-base">{value}</p>
                 </div>
               ))}
@@ -212,7 +212,7 @@ export function ActorDetailsView({ id }: { id: string }) {
 
           {biography && (
             <div className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5 text-left backdrop-blur-md sm:p-6">
-              <p className="text-[11px] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("actor.biography")}</p>
+              <p className="text-[0.6875rem] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("actor.biography")}</p>
               <p className="mt-3 leading-7 whitespace-pre-line text-foreground/80">
                 {bioIsLong && !bioExpanded ? `${biography.slice(0, BIO_PREVIEW_CHARS).trimEnd()}…` : biography}
               </p>
@@ -327,7 +327,7 @@ function Filmography({
                     <FadeInImage src={poster} alt={work.title} sizes="(min-width: 1280px) 16vw, (min-width: 768px) 25vw, 50vw" className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                   )}
                   <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                  <span className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white/90 uppercase backdrop-blur-md">
+                  <span className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide text-white/90 uppercase backdrop-blur-md">
                     {work.type === "SERIES" ? <Tv size={11} /> : <Clapperboard size={11} />}
                     {work.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}
                   </span>

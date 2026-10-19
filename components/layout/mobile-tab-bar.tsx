@@ -51,7 +51,7 @@ export function MobileTabBar() {
                 <Icon size={17} />
               </span>
               <span
-                className={`max-w-full truncate px-0.5 text-[10px] font-semibold transition-colors duration-300 ${
+                className={`max-w-full truncate px-0.5 text-[0.625rem] font-semibold transition-colors duration-300 ${
                   isActive ? "text-white" : "text-foreground/80"
                 }`}
               >

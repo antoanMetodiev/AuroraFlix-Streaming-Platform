@@ -130,7 +130,7 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
             <span className="hidden sm:inline">{label}</span>
             {badge > 0 && (
               <span
-                className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${
+                className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.625rem] font-bold ${
                   tab === key ? "bg-neutral-900 text-white" : "bg-white text-neutral-900"
                 }`}
               >
@@ -316,7 +316,7 @@ function FriendWatchingCard({ watching }: { watching: WatchingTarget }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-emerald-400 uppercase">
+        <p className="flex items-center gap-1 text-[0.625rem] font-semibold tracking-wide text-emerald-400 uppercase">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
           {t("friends.watching")}
         </p>
@@ -326,7 +326,7 @@ function FriendWatchingCard({ watching }: { watching: WatchingTarget }) {
             <span className="h-3.5 w-12 animate-pulse rounded-full bg-foreground/10" />
           ) : (
             genres.map((genre) => (
-              <span key={genre} className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-medium text-foreground/60">
+              <span key={genre} className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[0.5625rem] font-medium text-foreground/60">
                 {genre}
               </span>
             ))

@@ -217,10 +217,10 @@ function TrailerRail({
               )}
               <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               <span className="absolute inset-x-2 bottom-1.5 text-left">
-                <span className="block text-[9px] font-bold tracking-[0.15em] text-white/60 uppercase sm:text-[10px]">
+                <span className="block text-[0.5625rem] font-bold tracking-[0.15em] text-white/60 uppercase sm:text-[0.625rem]">
                   {item.type === "series" ? t("hero.badgeSeries") : t("hero.badgeMovie")}
                 </span>
-                <span className="line-clamp-1 text-[11px] font-semibold text-white sm:text-xs">{item.record.title}</span>
+                <span className="line-clamp-1 text-[0.6875rem] font-semibold text-white sm:text-xs">{item.record.title}</span>
               </span>
               {isActive && (
                 <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/20">

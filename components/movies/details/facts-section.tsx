@@ -89,7 +89,7 @@ export async function FactsSection({ type, tmdbId }: { type: "movie" | "series";
       <div className={`grid gap-4 ${crew.length > 0 && tiles.length > 0 ? "lg:grid-cols-5" : ""}`}>
         {crew.length > 0 && (
           <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5 sm:p-6 lg:col-span-2">
-            <p className="text-[11px] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("facts.crew")}</p>
+            <p className="text-[0.6875rem] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("facts.crew")}</p>
             <ul className="mt-3 divide-y divide-white/[0.08]">
               {crew.map((member) => {
                 const photo = tmdbImage(member.profilePath, "w300");
@@ -99,10 +99,10 @@ export async function FactsSection({ type, tmdbId }: { type: "movie" | "series";
                       {photo ? <FadeInImage src={photo} alt={member.name} sizes="56px" className="object-cover" /> : initials(member.name)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-semibold text-foreground sm:text-base">{member.name}</span>
+                      <span className="block truncate text-[0.9375rem] font-semibold text-foreground sm:text-base">{member.name}</span>
                       <span className="mt-1.5 flex flex-wrap gap-1.5">
                         {member.jobs.map((job) => (
-                          <span key={job} className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-foreground/75">
+                          <span key={job} className="rounded-full bg-white/10 px-2.5 py-0.5 text-[0.6875rem] font-medium text-foreground/75">
                             {jobLabel(job, locale)}
                           </span>
                         ))}
@@ -130,7 +130,7 @@ export async function FactsSection({ type, tmdbId }: { type: "movie" | "series";
                 <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-neutral-900 shadow-[0_6px_20px_-6px_rgba(255,255,255,0.5)]">
                   <Icon size={18} />
                 </span>
-                <p className="mt-4 text-[11px] font-bold tracking-[0.18em] text-foreground/45 uppercase">{label}</p>
+                <p className="mt-4 text-[0.6875rem] font-bold tracking-[0.18em] text-foreground/45 uppercase">{label}</p>
                 <p className="mt-1 text-lg leading-snug font-bold break-words text-foreground sm:text-xl">{value}</p>
               </div>
             ))}

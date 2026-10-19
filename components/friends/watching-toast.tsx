@@ -153,7 +153,7 @@ export function WatchingToastManager() {
                   </>
                 ) : (
                   genres.map((genre) => (
-                    <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
+                    <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[0.625rem] font-medium text-foreground/70">
                       {genre}
                     </span>
                   ))

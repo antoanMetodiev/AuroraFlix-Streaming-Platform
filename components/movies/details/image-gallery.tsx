@@ -70,7 +70,7 @@ export function ImageGallery({ images }: { images: MediaImage[] }) {
               }`}
             >
               {imageType === "BACKDROP" ? t("sections.backdrops") : t("sections.posters")}
-              <span className="text-[10px] font-bold tabular-nums opacity-50 sm:text-[11px]">
+              <span className="text-[0.625rem] font-bold tabular-nums opacity-50 sm:text-[0.6875rem]">
                 {getImagesByType(images, imageType).length}
               </span>
             </button>

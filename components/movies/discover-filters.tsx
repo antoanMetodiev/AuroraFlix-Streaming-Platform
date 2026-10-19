@@ -253,7 +253,7 @@ export function DiscoverFilters({
           <SlidersHorizontal size={15} />
           {t("filters.toggle")}
           {activeCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground/25 text-[11px] font-bold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground/25 text-[0.6875rem] font-bold">
               {activeCount}
             </span>
           )}

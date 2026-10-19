@@ -146,7 +146,7 @@ export function LanguageSelect({ className = "" }: { className?: string }) {
               <Flag locale={option} className="h-8 w-8 transition-transform duration-300 group-hover/item:scale-110" />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className={`text-sm font-semibold ${isActive ? "text-white" : "text-foreground/85"}`}>{NATIVE_NAMES[option]}</span>
-                <span className="text-[11px] font-medium tracking-wide text-foreground/40 uppercase">{option}</span>
+                <span className="text-[0.6875rem] font-medium tracking-wide text-foreground/40 uppercase">{option}</span>
               </span>
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 ${

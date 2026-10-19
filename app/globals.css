@@ -21,6 +21,44 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Big screens (1440p / 4K monitors and TVs, a PC hooked to a TV): the whole
+   layout is sized in rem, so growing the root font with the viewport scales
+   everything up proportionally — at 3840px the site looks exactly like it
+   does at 1920px, just twice as big, instead of a tiny strip in the middle.
+   Breakpoints are unaffected (media-query rem is the browser default, not
+   this). Icons sized in px (lucide `size` / width attr) get the same factor
+   through zoom, stepped to match; ones sized with rem classes (h-5, size-6)
+   already scale and are skipped. */
+@media (min-width: 1921px) {
+  html {
+    font-size: calc(100vw / 120);
+  }
+}
+
+@media (min-width: 2240px) {
+  svg:not([class^="h-"]):not([class*=" h-"]):not([class*="size-"]) {
+    zoom: 1.25;
+  }
+}
+
+@media (min-width: 2720px) {
+  svg:not([class^="h-"]):not([class*=" h-"]):not([class*="size-"]) {
+    zoom: 1.5;
+  }
+}
+
+@media (min-width: 3200px) {
+  svg:not([class^="h-"]):not([class*=" h-"]):not([class*="size-"]) {
+    zoom: 1.75;
+  }
+}
+
+@media (min-width: 3600px) {
+  svg:not([class^="h-"]):not([class*=" h-"]):not([class*="size-"]) {
+    zoom: 2;
+  }
+}
+
 /* Belt-and-suspenders against horizontal scroll on narrow screens — any
    descendant that overflows its container (a flex/grid child refusing to
    shrink below its content's intrinsic width, a marquee row, etc.) gets

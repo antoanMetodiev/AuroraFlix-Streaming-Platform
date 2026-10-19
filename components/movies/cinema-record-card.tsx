@@ -176,7 +176,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
 
           {rating !== null && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/60 px-1.5 py-0.5 text-[0.625rem] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
               <span aria-hidden style={{ color: getRatingColor(rating) }}>
                 ★
               </span>
@@ -193,14 +193,14 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
           <div className="absolute inset-x-0 bottom-0 translate-y-0 p-2.5 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 sm:p-3.5">
             {record.specialText && (
-              <p className="mb-0.5 line-clamp-1 font-display text-[11px] text-white/60 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[11px]">
+              <p className="mb-0.5 line-clamp-1 font-display text-[0.6875rem] text-white/60 italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] sm:text-[0.6875rem]">
                 {record.specialText}
               </p>
             )}
-            <h2 className="line-clamp-2 font-display text-[15px] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-[17px]">
+            <h2 className="line-clamp-2 font-display text-[0.9375rem] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-[1.0625rem]">
               {record.title}
             </h2>
-            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] tabular-nums font-medium text-white/60 sm:text-xs">
+            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[0.625rem] tabular-nums font-medium text-white/60 sm:text-xs">
               <TypeIcon size={11} className="shrink-0 text-white/80" />
               <span className="shrink-0">{type === "movie" ? t("watchlist.movie") : t("watchlist.series")}</span>
               {(fullDate || year) && (
@@ -215,7 +215,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
                 {cardGenres.map((genre) => (
                   <span
                     key={genre}
-                    className="rounded-full border border-white/15 bg-black/35 px-1.5 py-px text-[9px] font-medium whitespace-nowrap text-white/75 backdrop-blur-sm sm:px-2 sm:text-[10px]"
+                    className="rounded-full border border-white/15 bg-black/35 px-1.5 py-px text-[0.5625rem] font-medium whitespace-nowrap text-white/75 backdrop-blur-sm sm:px-2 sm:text-[0.625rem]"
                   >
                     {genreLabel(genre, locale)}
                   </span>
@@ -276,7 +276,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
                 </>
               ) : (
                 genres.map((genre) => (
-                  <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
+                  <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[0.625rem] font-medium text-foreground/70">
                     {genreLabel(genre, locale)}
                   </span>
                 ))

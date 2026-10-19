@@ -73,9 +73,9 @@ export function WatchingFriendCard({ friend, watching, onNavigate }: { friend: F
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <Avatar src={friend.profileImageURL} name={friend.displayName} size={16} />
-          <span className="truncate text-[11px] font-medium text-foreground/55">{friend.displayName || "?"}</span>
+          <span className="truncate text-[0.6875rem] font-medium text-foreground/55">{friend.displayName || "?"}</span>
         </div>
-        <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold tracking-wide text-emerald-400 uppercase">
+        <p className="mt-1 flex items-center gap-1 text-[0.625rem] font-semibold tracking-wide text-emerald-400 uppercase">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
           {t("friends.watching")}
         </p>
@@ -83,7 +83,7 @@ export function WatchingFriendCard({ friend, watching, onNavigate }: { friend: F
 
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {rating !== null && (
-            <span className="flex items-center gap-0.5 text-[10px] font-medium text-amber-400">
+            <span className="flex items-center gap-0.5 text-[0.625rem] font-medium text-amber-400">
               <Star size={9} className="fill-amber-400" />
               {rating.toFixed(1)}
             </span>
@@ -92,7 +92,7 @@ export function WatchingFriendCard({ friend, watching, onNavigate }: { friend: F
             <span className="h-3.5 w-12 animate-pulse rounded-full bg-foreground/10" />
           ) : (
             genres.map((genre) => (
-              <span key={genre} className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] font-medium text-foreground/60">
+              <span key={genre} className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[0.5625rem] font-medium text-foreground/60">
                 {genre}
               </span>
             ))

@@ -117,7 +117,7 @@ function PosterCard({ item, hidden }: { item: RankedItem; hidden: boolean }) {
           className="object-cover transition-transform duration-500 group-hover/card:scale-105"
         />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent px-3 pt-12 pb-3">
-          <p className="text-[10px] font-bold tracking-[0.18em] text-sky-400 uppercase">
+          <p className="text-[0.625rem] font-bold tracking-[0.18em] text-sky-400 uppercase">
             #{item.rank}
             {item.year && ` · ${item.year}`}
           </p>

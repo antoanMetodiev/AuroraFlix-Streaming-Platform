@@ -95,8 +95,8 @@ export function WatchlistView() {
                     </button>
 
                     <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3.5">
-                      <h2 className="line-clamp-2 font-display text-[15px] leading-tight font-semibold text-white sm:text-[17px]">{item.title}</h2>
-                      <p className="mt-1 text-[11px] font-medium text-white/55 sm:text-xs">{isSeries ? t("watchlist.series") : t("watchlist.movie")}</p>
+                      <h2 className="line-clamp-2 font-display text-[0.9375rem] leading-tight font-semibold text-white sm:text-[1.0625rem]">{item.title}</h2>
+                      <p className="mt-1 text-[0.6875rem] font-medium text-white/55 sm:text-xs">{isSeries ? t("watchlist.series") : t("watchlist.movie")}</p>
                     </div>
                   </div>
                 </Link>

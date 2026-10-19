@@ -30,7 +30,7 @@ function PlayProtectSketch() {
 
   return (
     <div className="mt-3 rounded-2xl border border-white/10 bg-black/40 p-3.5">
-      <div className="flex items-center gap-2 text-[13px] font-semibold text-foreground/90">
+      <div className="flex items-center gap-2 text-[0.8125rem] font-semibold text-foreground/90">
         <ShieldAlert size={15} className="text-amber-400" />
         {t("install.mockTitle")}
       </div>
@@ -41,19 +41,19 @@ function PlayProtectSketch() {
 
       <div className="mt-3.5 flex items-end justify-between gap-2">
         <div className="flex flex-col items-start gap-1">
-          <span className="text-[10px] font-bold tracking-wide text-[#3DDC84] uppercase">{t("install.mockTapThis")} ↓</span>
+          <span className="text-[0.625rem] font-bold tracking-wide text-[#3DDC84] uppercase">{t("install.mockTapThis")} ↓</span>
           <span className="rounded-lg border-2 border-[#3DDC84] px-2.5 py-1 text-xs font-bold text-[#3DDC84] shadow-[0_0_16px_-4px_rgba(61,220,132,0.8)]">
             {t("install.mockMore")}
           </span>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="text-[10px] font-bold tracking-wide text-red-400 uppercase">✕ {t("install.mockNotThis")}</span>
+          <span className="text-[0.625rem] font-bold tracking-wide text-red-400 uppercase">✕ {t("install.mockNotThis")}</span>
           <span className="rounded-lg px-2.5 py-1 text-xs font-semibold text-foreground/35 line-through">OK</span>
         </div>
       </div>
 
       <div className="mt-3 flex flex-col items-start gap-1 border-t border-white/10 pt-3">
-        <span className="text-[10px] font-bold tracking-wide text-[#3DDC84] uppercase">{t("install.mockThenThis")} ↓</span>
+        <span className="text-[0.625rem] font-bold tracking-wide text-[#3DDC84] uppercase">{t("install.mockThenThis")} ↓</span>
         <span className="rounded-lg border-2 border-[#3DDC84] px-2.5 py-1 text-xs font-bold text-[#3DDC84] shadow-[0_0_16px_-4px_rgba(61,220,132,0.8)]">
           {t("install.mockAnyway")}
         </span>

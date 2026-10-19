@@ -261,7 +261,7 @@ function LikedTile({ item, onNavigate }: { item: LikedItem; onNavigate: () => vo
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/5 to-transparent" />
 
         {rating !== null && rating > 0 && (
-          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/60 px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-md">
+          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/60 px-1.5 py-0.5 text-[0.5625rem] font-bold backdrop-blur-md">
             <span aria-hidden style={{ color: getRatingColor(rating) }}>
               ★
             </span>
@@ -270,7 +270,7 @@ function LikedTile({ item, onNavigate }: { item: LikedItem; onNavigate: () => vo
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-2">
-          <p className="line-clamp-2 text-[11px] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{item.title}</p>
+          <p className="line-clamp-2 text-[0.6875rem] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{item.title}</p>
           <TypeIcon size={10} className="mt-1 text-white/60" />
         </div>
       </div>

@@ -17,9 +17,9 @@ export function getRatingColor(value: number) {
 }
 
 const SIZES = {
-  xs: { box: 34, stroke: 3, whole: "text-[12px]", decimal: "text-[8px]" },
-  sm: { box: 44, stroke: 3.5, whole: "text-[15px]", decimal: "text-[10px]" },
-  md: { box: 58, stroke: 4, whole: "text-[20px]", decimal: "text-[12px]" },
+  xs: { box: 34, stroke: 3, whole: "text-[0.75rem]", decimal: "text-[0.5rem]" },
+  sm: { box: 44, stroke: 3.5, whole: "text-[0.9375rem]", decimal: "text-[0.625rem]" },
+  md: { box: 58, stroke: 4, whole: "text-[1.25rem]", decimal: "text-[0.75rem]" },
 } as const;
 
 /**

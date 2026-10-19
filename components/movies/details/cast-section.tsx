@@ -99,20 +99,20 @@ function ActorCard({ actor, onOpen }: { actor: Actor; onOpen: () => void }) {
           <h4 className="line-clamp-2 text-sm leading-snug font-semibold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-[0.95rem]">
             {actor.nameInRealLife}
           </h4>
-          {age && <p className="mt-0.5 text-[11px] font-medium text-white/65">{t("actor.ageShort", { age })}</p>}
+          {age && <p className="mt-0.5 text-[0.6875rem] font-medium text-white/65">{t("actor.ageShort", { age })}</p>}
 
           {/* Hover panel — grid-rows 0fr → 1fr animates to its natural height. */}
           <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-out group-hover/actor:grid-rows-[1fr] group-focus-visible/actor:grid-rows-[1fr]">
             <div className="overflow-hidden">
               <div className="mt-2 flex flex-col gap-2 rounded-xl border border-white/15 bg-white/10 p-2.5 opacity-0 backdrop-blur-md transition-opacity delay-100 duration-300 group-hover/actor:opacity-100 group-focus-visible/actor:opacity-100">
                 {place && (
-                  <p className="flex items-start gap-1 text-[11px] leading-tight text-white/80">
+                  <p className="flex items-start gap-1 text-[0.6875rem] leading-tight text-white/80">
                     <MapPin size={12} className="mt-px shrink-0" />
                     <span className="line-clamp-2">{place}</span>
                   </p>
                 )}
-                {actor.biography && <p className="line-clamp-3 text-[11px] leading-snug text-white/70">{actor.biography}</p>}
-                <span className="flex items-center justify-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-neutral-900">
+                {actor.biography && <p className="line-clamp-3 text-[0.6875rem] leading-snug text-white/70">{actor.biography}</p>}
+                <span className="flex items-center justify-center gap-1 rounded-full bg-white px-2.5 py-1 text-[0.6875rem] font-semibold text-neutral-900">
                   {t("actor.viewProfile")}
                   <ArrowRight size={12} className="transition-transform duration-300 group-hover/actor:translate-x-0.5" />
                 </span>

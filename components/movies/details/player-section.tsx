@@ -1276,13 +1276,13 @@ export const PlayerSection = forwardRef<
                       // so the subtitles one fits over its own button.
                       <span className="pointer-events-none absolute bottom-[calc(100%-0.5rem)] left-1/2 flex -translate-x-1/2 flex-col items-center gap-0.5">
                         {SANDBOXED_PLAYERS.has(provider) && (
-                          <span className="flex items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[9px] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
+                          <span className="flex items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[0.5625rem] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
                             <ShieldCheck size={10} />
                             {t("player.noAds")}
                           </span>
                         )}
                         {subtitlesMode && (
-                          <span className="rounded-full bg-[#ca8a04] px-2 py-px text-[10px] leading-tight font-bold whitespace-nowrap text-white shadow-[0_2px_8px_rgba(202,138,4,0.5)] [text-shadow:0_1px_1px_rgba(0,0,0,0.35)] sm:text-[11px]">
+                          <span className="rounded-full bg-[#ca8a04] px-2 py-px text-[0.625rem] leading-tight font-bold whitespace-nowrap text-white shadow-[0_2px_8px_rgba(202,138,4,0.5)] [text-shadow:0_1px_1px_rgba(0,0,0,0.35)] sm:text-[0.6875rem]">
                             {t(SUBTITLES_MODE_LABEL[subtitlesMode])}
                           </span>
                         )}

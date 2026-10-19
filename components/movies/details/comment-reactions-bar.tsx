@@ -38,7 +38,7 @@ function ReactorRow({ reactor, locale }: { reactor: ReactionUser; locale: string
       <ReactorAvatar reactor={reactor} size={28} />
       <div className="min-w-0">
         <p className="truncate text-sm text-foreground/85">{displayName}</p>
-        <p className="truncate text-[11px] text-foreground/40">{formatDateTime(reactor.createdAt, locale)}</p>
+        <p className="truncate text-[0.6875rem] text-foreground/40">{formatDateTime(reactor.createdAt, locale)}</p>
       </div>
     </li>
   );

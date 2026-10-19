@@ -149,7 +149,7 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
             w-52 above is what actually bounds it. */}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs font-semibold text-foreground/90">{friend.displayName || "?"}</span>
-          <span className="flex items-center gap-1 truncate text-[11px] text-foreground/50">
+          <span className="flex items-center gap-1 truncate text-[0.6875rem] text-foreground/50">
             <TypeIcon size={10} className="shrink-0" />
             {watching.title}
           </span>
@@ -219,7 +219,7 @@ function WatchingSidebarItem({ friend, watching }: { friend: Friend; watching: W
                   </>
                 ) : (
                   genres.map((genre) => (
-                    <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-foreground/70">
+                    <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[0.625rem] font-medium text-foreground/70">
                       {genre}
                     </span>
                   ))

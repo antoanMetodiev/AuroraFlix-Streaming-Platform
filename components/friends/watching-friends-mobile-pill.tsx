@@ -68,7 +68,7 @@ export function WatchingFriendsMobilePill() {
               </span>
             ))}
             {watchingFriends.length > MAX_AVATARS && (
-              <span className="relative flex h-[26px] w-[26px] items-center justify-center rounded-full bg-foreground/15 text-[10px] font-bold text-foreground/80 ring-2 ring-surface">
+              <span className="relative flex h-[26px] w-[26px] items-center justify-center rounded-full bg-foreground/15 text-[0.625rem] font-bold text-foreground/80 ring-2 ring-surface">
                 +{watchingFriends.length - MAX_AVATARS}
               </span>
             )}

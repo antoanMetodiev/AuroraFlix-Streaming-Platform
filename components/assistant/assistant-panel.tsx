@@ -51,7 +51,7 @@ function SpotlightCard({ card, onNavigate }: { card: ResolvedCard; onNavigate: (
 
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <h3 className="line-clamp-1 text-sm font-bold text-foreground">{card.title}</h3>
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-medium text-foreground/55">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.6875rem] font-medium text-foreground/55">
             {card.tmdbRating && (
               <span className="flex items-center gap-1 text-amber-400">
                 <Star size={11} className="fill-amber-400" />

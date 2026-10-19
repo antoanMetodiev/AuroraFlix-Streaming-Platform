@@ -73,7 +73,7 @@ export function FriendsNavButton({ className = "" }: { className?: string }) {
                 </span>
               ))}
               {watchingFriends.length > MAX_WATCHING_AVATARS && (
-                <span className="relative flex h-[26px] w-[26px] items-center justify-center rounded-full bg-foreground/15 text-[10px] font-bold text-foreground/80 ring-2 ring-background">
+                <span className="relative flex h-[26px] w-[26px] items-center justify-center rounded-full bg-foreground/15 text-[0.625rem] font-bold text-foreground/80 ring-2 ring-background">
                   +{watchingFriends.length - MAX_WATCHING_AVATARS}
                 </span>
               )}
@@ -99,7 +99,7 @@ export function FriendsNavButton({ className = "" }: { className?: string }) {
         >
           <Users size={18} />
           {incomingCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-neutral-900">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.625rem] font-bold text-neutral-900">
               {incomingCount}
             </span>
           )}
