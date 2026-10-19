@@ -57,6 +57,8 @@ export function DiscoverFilters({
   const [suggestions, setSuggestions] = useState<Actor[]>([]);
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  // The filtered-by actor, for their photo inside the field.
+  const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const actorFieldRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +66,36 @@ export function DiscoverFilters({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActorDraft(actor ?? "");
   }, [actor]);
+
+  // Picked from the suggestions we already have them; arriving with ?actor=
+  // in the URL (a shared link, a reload) we look the name up once.
+  useEffect(() => {
+    if (!actor) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedActor(null);
+      return;
+    }
+    if (selectedActor?.nameInRealLife === actor) return;
+
+    const controller = new AbortController();
+    suggestActors(type === "movies" ? "movie" : "series", actor, controller.signal)
+      .then((results) => {
+        const wanted = actor.toLocaleLowerCase();
+        setSelectedActor(results.find((result) => result.nameInRealLife.toLocaleLowerCase() === wanted) ?? null);
+      })
+      .catch(() => {
+        // aborted or network error — the field just keeps its plain icon
+      });
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actor, type]);
+
+  const fieldActor = selectedActor && selectedActor.nameInRealLife === actorDraft ? selectedActor : null;
+  const fieldActorImage = fieldActor
+    ? fieldActor.imageURL
+      ? tmdbImage(fieldActor.imageURL, "w342")
+      : FALLBACK_ACTOR_IMAGE
+    : null;
 
   useEffect(() => {
     if (!actorDraft.trim() || actorDraft === actor) {
@@ -150,7 +182,13 @@ export function DiscoverFilters({
 
       <div ref={actorFieldRef} className="relative w-full lg:w-56">
         <div className="relative flex items-center">
-          <User size={15} className="pointer-events-none absolute left-4 text-foreground/40" />
+          {fieldActor && fieldActorImage ? (
+            <span className="pointer-events-none absolute left-1.5 z-10 h-7 w-7 overflow-hidden rounded-full bg-foreground/10 ring-1 ring-foreground/15">
+              <FadeInImage src={fieldActorImage} alt={fieldActor.nameInRealLife} sizes="28px" className="object-cover" />
+            </span>
+          ) : (
+            <User size={15} className="pointer-events-none absolute left-4 z-10 text-foreground/40" />
+          )}
           <input
             value={actorDraft}
             onChange={(event) => {
@@ -198,6 +236,7 @@ export function DiscoverFilters({
                       type="button"
                       onClick={() => {
                         setActorDraft(suggestedActor.nameInRealLife);
+                        setSelectedActor(suggestedActor);
                         setIsSuggestOpen(false);
                         navigate({ actor: suggestedActor.nameInRealLife });
                       }}

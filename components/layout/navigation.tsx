@@ -199,9 +199,14 @@ export function Navigation() {
         <span className="my-1 h-px w-full bg-foreground/10" />
         */}
 
-        <div className="flex items-center justify-between gap-2 px-2 py-1">
+        {/* Wraps: signed out, the Sign in + Sign up pair alone fills the
+            sheet's width, so the language toggle drops to its own line
+            (right-aligned) instead of spilling out of the panel. */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-1">
           <AuthNav />
-          <LanguageSelect />
+          <div className="ml-auto">
+            <LanguageSelect />
+          </div>
         </div>
 
         <a
