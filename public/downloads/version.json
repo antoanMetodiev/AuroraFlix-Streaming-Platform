@@ -1,9 +1,9 @@
 {
-  "versionCode": 7,
-  "versionName": "0.3.1",
+  "versionCode": 8,
+  "versionName": "0.3.2",
   "url": "https://auroraflix.cloud/downloads/auroraflix.apk",
   "notes": {
-    "bg": "Поправки: известията (камбанката), превъртане на трейлърите и плейърите, по-чисти снимки. Плащанията и AI асистентът са изключени засега.",
-    "en": "Fixes: notifications (bell), seeking in trailers and players, cleaner image viewer. Payments and the AI assistant are off for now."
+    "bg": "Поправка: плейърът спира, когато отидеш на друга страница или таб, вместо да продължава да върви на заден план. Включва всички досегашни поправки и нов дизайн.",
+    "en": "Fix: the player stops when you go to another page or tab instead of playing on in the background. Includes all fixes so far and the new design."
   }
 }
