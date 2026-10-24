@@ -1,9 +1,9 @@
-// The browser's own `behavior: "smooth"` is fast and its speed can't be set,
+// The browser's own `behavior: "smooth"` can't be tuned at all,
 // so the details page's in-page jumps (watch button, section rail) glide with
-// this instead: a long ease-in-out whose duration grows with the distance.
+// this instead: a quick ease-in-out whose duration grows with the distance.
 
-const MIN_DURATION_MS = 2200;
-const MAX_DURATION_MS = 4500;
+const MIN_DURATION_MS = 700;
+const MAX_DURATION_MS = 1300;
 // Matches the targets' scroll-mt-24 (6rem), so the floating header never covers them.
 const TOP_OFFSET_PX = 96;
 
@@ -27,7 +27,7 @@ export function slowScrollTo(element: HTMLElement) {
     return;
   }
 
-  const duration = Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, Math.abs(distance) * 1.2));
+  const duration = Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, Math.abs(distance) * 0.4));
   const startedAt = performance.now();
   let frame = 0;
 
