@@ -8,6 +8,8 @@ import { PlayerSection } from "@/components/movies/details/player-section";
 import { SeriesWatchSection } from "@/components/movies/details/series-watch-section";
 import { SimilarTitlesSection } from "@/components/movies/details/similar-titles-section";
 import { TrackLastViewed } from "@/components/movies/details/track-last-viewed";
+import { NavSection } from "@/components/movies/details/nav-section";
+import { SectionNav } from "@/components/movies/details/section-nav";
 import {
   LazyCastSection,
   LazyImageGallery,
@@ -39,83 +41,103 @@ export function CinemaRecordDetailsPage({
         type={type}
       />
 
+      <SectionNav />
+
       <article className="relative">
-        <DetailsHeader
-          record={record}
-          type={type}
-        />
+        <NavSection id="overview" label="sections.overview">
+          <DetailsHeader
+            record={record}
+            type={type}
+          />
+        </NavSection>
 
         {/* Streams in on its own, so the rest of the page doesn't wait for it. */}
-        <Suspense fallback={null}>
-          <FactsSection type={type} tmdbId={record.tmdbId} />
-        </Suspense>
+        <NavSection id="info" label="facts.title">
+          <Suspense fallback={null}>
+            <FactsSection type={type} tmdbId={record.tmdbId} />
+          </Suspense>
+        </NavSection>
 
         {record.trailerURL && (
-          <Reveal>
-            <TrailerSection
-              trailerURL={
-                record.trailerURL
-              }
-            />
-          </Reveal>
+          <NavSection id="trailer" label="sections.trailer">
+            <Reveal>
+              <TrailerSection
+                trailerURL={
+                  record.trailerURL
+                }
+              />
+            </Reveal>
+          </NavSection>
         )}
 
-        <LazyCastSection
-          cast={record.castList ?? []}
-          backgroundImgUrl={
-            // The actor page reuses this page's background.
-            detailsBackgroundPath(record)
-          }
-        />
+        <NavSection id="cast" label="sections.cast">
+          <LazyCastSection
+            cast={record.castList ?? []}
+            backgroundImgUrl={
+              // The actor page reuses this page's background.
+              detailsBackgroundPath(record)
+            }
+          />
+        </NavSection>
 
         {record.imagesList &&
           record.imagesList.length >
             0 && (
-            <LazyImageGallery
-              images={
-                record.imagesList
-              }
-            />
+            <NavSection id="images" label="sections.images">
+              <LazyImageGallery
+                images={
+                  record.imagesList
+                }
+              />
+            </NavSection>
           )}
 
         {/* Series: the episodes section runs its own float-up entrance. */}
         {type === "series" ? (
-          <SeriesWatchSection
-            record={record as Series}
-          />
+          <NavSection id="watch" label="sections.episodes">
+            <SeriesWatchSection
+              record={record as Series}
+            />
+          </NavSection>
         ) : (
           record.videoURL && (
-            <Reveal>
-              <PlayerSection
-                videoUrl={
-                  record.videoURL
-                }
+            <NavSection id="watch" label="sections.watch">
+              <Reveal>
+                <PlayerSection
+                  videoUrl={
+                    record.videoURL
+                  }
 
-                title={
-                  record.title
-                }
+                  title={
+                    record.title
+                  }
 
-                poster={tmdbImage(
-                  record.backgroundImg_URL ??
-                    record.posterImgURL,
-                  "w1280"
-                )}
-              />
-            </Reveal>
+                  poster={tmdbImage(
+                    record.backgroundImg_URL ??
+                      record.posterImgURL,
+                    "w1280"
+                  )}
+                />
+              </Reveal>
+            </NavSection>
           )
         )}
 
         {/* Streams in on its own, after the rest of the page. */}
-        <Suspense fallback={null}>
-          <SimilarTitlesSection record={record} type={type} />
-        </Suspense>
+        <NavSection id="similar" label="sections.similar">
+          <Suspense fallback={null}>
+            <SimilarTitlesSection record={record} type={type} />
+          </Suspense>
+        </NavSection>
 
-        <Reveal>
-          <LazyCommentsSection
-            recordId={record.id}
-            type={type}
-          />
-        </Reveal>
+        <NavSection id="comments" label="comments.title">
+          <Reveal>
+            <LazyCommentsSection
+              recordId={record.id}
+              type={type}
+            />
+          </Reveal>
+        </NavSection>
 
         {/* Fades the page background out into the footer's solid black. */}
         <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />

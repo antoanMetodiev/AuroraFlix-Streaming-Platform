@@ -226,6 +226,11 @@ export const dictionary = {
   "sections.showLess": { en: "Show Less", bg: "Покажи по-малко" },
   "sections.loadMore": { en: "Load More", bg: "Зареди още" },
   "sections.season": { en: "Season", bg: "Сезон" },
+  "sections.overview": { en: "Overview", bg: "Начало" },
+  "sections.cast": { en: "Cast", bg: "Актьори" },
+  "sections.watch": { en: "Watch", bg: "Гледай" },
+  "sections.similar": { en: "Similar", bg: "Подобни" },
+  "sections.navLabel": { en: "Page sections", bg: "Секции на страницата" },
 
   "comments.title": { en: "Comments", bg: "Коментари" },
   "details.similarTitle": { en: "You may also like", bg: "Може да харесате" },
@@ -326,6 +331,8 @@ export const dictionary = {
     bg: "Как да добавя български субтитри?",
   },
   "player.play": { en: "Play", bg: "Пусни" },
+  "player.watchNow": { en: "Watch now", bg: "Гледай сега" },
+  "episodes.jump": { en: "Go to episodes", bg: "Към епизодите" },
 
   "subtitles.error": { en: "Couldn't load subtitles", bg: "Субтитрите не се заредиха" },
   "subtitles.retry": { en: "Retry", bg: "Опитай пак" },

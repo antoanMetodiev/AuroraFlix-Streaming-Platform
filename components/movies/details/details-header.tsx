@@ -8,6 +8,7 @@ import { FadeInImage } from "@/components/ui/fade-in-image";
 import { RatingRing } from "@/components/ui/rating-ring";
 import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
 import { LikeButton } from "@/components/movies/details/like-button";
+import { WatchNowButton } from "@/components/movies/details/watch-now-button";
 import { ProgressiveBackdrop } from "@/components/movies/details/progressive-backdrop";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -20,6 +21,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
   const year = record.releaseDate?.split("-")[0];
   const listType = type === "movie" ? "movies" : "series";
   const genreList = parseGenres(record.genres);
+  const canWatch = type === "series" ? ((record as Series).allEpisodes?.length ?? 0) > 0 : Boolean(record.videoURL);
 
   return (
     <div className="relative w-full">
@@ -90,7 +92,8 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {canWatch && <WatchNowButton type={type} />}
               <AddToWatchlistButton record={record} type={type} />
               <LikeButton record={record} type={type} />
             </div>
