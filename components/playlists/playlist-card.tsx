@@ -331,6 +331,8 @@ function ItemTile({ item, onRemove, onNavigate }: { item: PlaylistItem; onRemove
             <FadeInImage
               src={poster}
               alt={item.title ?? ""}
+              // Every playlist starts expanded, so most tiles sit below the fold.
+              loading="lazy"
               sizes="150px"
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
             />
@@ -339,7 +341,7 @@ function ItemTile({ item, onRemove, onNavigate }: { item: PlaylistItem; onRemove
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/5 to-transparent" />
 
           {rating !== null && rating > 0 && (
-            <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/60 px-1.5 py-0.5 text-[0.5625rem] font-bold backdrop-blur-md">
+            <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/75 px-1.5 py-0.5 text-[0.5625rem] font-bold">
               <span aria-hidden style={{ color: getRatingColor(rating) }}>
                 ★
               </span>
@@ -361,7 +363,7 @@ function ItemTile({ item, onRemove, onNavigate }: { item: PlaylistItem; onRemove
             event.preventDefault();
             onRemove();
           }}
-          className="absolute top-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur-md transition-all duration-200 hover:bg-red-500/90 group-hover:opacity-100"
+          className="absolute top-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-all duration-200 hover:bg-red-500/90 group-hover:opacity-100"
         >
           <X size={12} />
         </button>

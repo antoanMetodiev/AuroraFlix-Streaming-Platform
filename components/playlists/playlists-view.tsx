@@ -21,7 +21,7 @@ export function PlaylistsView() {
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("playlists.title")}</h1>
               {playlists.length > 0 && (
-                <span className="rounded-full border border-foreground/15 bg-foreground/10 px-3 py-1 text-xs font-semibold text-foreground/70 backdrop-blur-md">
+                <span className="rounded-full border border-foreground/15 bg-foreground/10 px-3 py-1 text-xs font-semibold text-foreground/70">
                   {playlists.length}
                 </span>
               )}

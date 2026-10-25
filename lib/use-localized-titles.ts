@@ -32,6 +32,35 @@ async function fetchTitles(kind: TitleKind, ids: string[]): Promise<TitleRow[]> 
 }
 
 /**
+ * How long ids are collected before one request goes out. Lists on a page
+ * get their items at slightly different moments (each playlist loads its
+ * own), so a short window — not just the same tick — is what lets them
+ * share a call. The saved copies show meanwhile, so it costs nothing visible.
+ */
+const BATCH_WINDOW_MS = 50;
+
+const batches: Record<TitleKind, { ids: Set<string>; rows: Promise<TitleRow[]> } | null> = { movie: null, series: null };
+
+/**
+ * fetchTitles, but merged: every list asking within BATCH_WINDOW_MS of the
+ * first shares one request per kind, instead of each list sending its own.
+ * Resolves with all of that request's rows (other lists' ones included).
+ */
+function requestTitles(kind: TitleKind, ids: string[]): Promise<TitleRow[]> {
+  let batch = batches[kind];
+  if (!batch) {
+    const collected = new Set<string>();
+    const rows = new Promise((resolve) => window.setTimeout(resolve, BATCH_WINDOW_MS)).then(() => {
+      batches[kind] = null;
+      return fetchTitles(kind, [...collected]);
+    });
+    batch = batches[kind] = { ids: collected, rows };
+  }
+  for (const id of ids) batch.ids.add(id);
+  return batch.rows;
+}
+
+/**
  * The watchlist, playlists, likes and last-viewed store a copy of each
  * title and poster from when it was saved — in whatever language the site
  * was in then. This looks up the catalog's current ones, in the language the
@@ -61,7 +90,7 @@ export function useLocalizedTitles(items: { kind: TitleKind; tmdbId?: string | n
       if (missing.length === 0) continue;
       // Mark as in flight so other lists on the page don't ask again.
       for (const id of missing) cache.set(cacheKey(locale, kind, id), null);
-      fetchTitles(kind, missing)
+      requestTitles(kind, missing)
         .then((rows) => {
           for (const row of rows) cache.set(cacheKey(locale, kind, row.tmdbId), row);
           if (!cancelled) setVersion((version) => version + 1);

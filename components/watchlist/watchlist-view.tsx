@@ -11,6 +11,9 @@ import { useWatchlist } from "@/lib/use-watchlist";
 import { useLocalizedItems } from "@/lib/use-localized-titles";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
+/** One full row at the widest breakpoint (6 columns). */
+const EAGER_POSTERS = 6;
+
 export function WatchlistView() {
   const { t } = useTranslation();
   const { items: savedItems, isLoading, remove } = useWatchlist();
@@ -33,7 +36,7 @@ export function WatchlistView() {
           </div>
 
           {items && items.length > 0 && (
-            <span className="rounded-full border border-foreground/15 bg-foreground/10 px-4 py-2 text-sm font-medium text-foreground/80 backdrop-blur-md">
+            <span className="rounded-full border border-foreground/15 bg-foreground/10 px-4 py-2 text-sm font-medium text-foreground/80">
               {items.length} {t("watchlist.saved")}
             </span>
           )}
@@ -54,7 +57,7 @@ export function WatchlistView() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {items.map((item) => {
+            {items.map((item, index) => {
               const isSeries = item.type === "TV-SHOW";
               const href = isSeries
                 ? `/series/${item.tmdbId}`
@@ -72,6 +75,8 @@ export function WatchlistView() {
                       <FadeInImage
                         src={poster}
                         alt={item.title ?? ""}
+                        // The first row right away, the rest as they near the screen.
+                        loading={index < EAGER_POSTERS ? "eager" : "lazy"}
                         sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 19vw, (min-width: 640px) 30vw, 46vw"
                         className="object-cover group-hover:scale-108"
                       />
@@ -80,7 +85,7 @@ export function WatchlistView() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
 
                     {item.tmdbRating && (
-                      <span className="absolute top-2 left-2 rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-md sm:top-2.5 sm:left-2.5">
+                      <span className="absolute top-2 left-2 rounded-md bg-black/75 px-1.5 py-0.5 text-xs font-semibold text-white sm:top-2.5 sm:left-2.5">
                         ★ {Number(item.tmdbRating).toFixed(1)}
                       </span>
                     )}
@@ -89,7 +94,7 @@ export function WatchlistView() {
                       type="button"
                       onClick={(event) => handleRemove(item, event)}
                       aria-label={t("watchlist.removeAria")}
-                      className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-100 backdrop-blur-md transition-all duration-200 hover:bg-red-500/90 sm:top-2.5 sm:right-2.5 sm:opacity-0 sm:group-hover:opacity-100"
+                      className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-100 transition-all duration-200 hover:bg-red-500/90 sm:top-2.5 sm:right-2.5 sm:opacity-0 sm:group-hover:opacity-100"
                     >
                       <X size={14} />
                     </button>
