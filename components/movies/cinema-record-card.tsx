@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Film, Play, Tv } from "lucide-react";
 import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
-import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
-import { LikeButton } from "@/components/movies/details/like-button";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { genreLabel } from "@/lib/i18n/translate";
 import { formatReleaseDate } from "@/lib/dates";
@@ -23,11 +22,22 @@ function useHoverCapable() {
   return capable;
 }
 
-export function CinemaRecordCard({ record, type }: { record: Movie | Series; type: "movie" | "series" }) {
+export function CinemaRecordCard({
+  record,
+  type,
+  eager = false,
+}: {
+  record: Movie | Series;
+  type: "movie" | "series";
+  /** Load the poster right away — for the first row; the rest load as they near the screen. */
+  eager?: boolean;
+}) {
   const { t, locale } = useTranslation();
   const hoverCapable = useHoverCapable();
   const href = type === "series" ? `/series/${(record as Series).tmdbId}` : `/movies/${getMovieSlug(record as Movie)}`;
-  const poster = tmdbImage(record.posterImgURL, "w780");
+  // w500: the tile is ~150–250 CSS px wide, so this stays sharp even at a
+  // phone's 3x density, at about half the bytes of w780.
+  const poster = tmdbImage(record.posterImgURL, "w500");
   const year = record.releaseDate?.split("-")[0];
   const rating = record.tmdbRating ? Math.max(0, Math.min(10, Number(record.tmdbRating) || 0)) : null;
   const TypeIcon = type === "movie" ? Film : Tv;
@@ -145,25 +155,17 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
 
   return (
     <div ref={wrapperRef} className="group/tile relative hover:z-40" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      {/* Deliberately a sibling of the <Link>, not a child: a <button> inside
-          an <a> is invalid HTML, and a click would navigate as well as
-          toggle. Sits above the card (z-10) in the corner opposite the
-          rating badge. Hidden until hover on pointer devices; always visible
-          on touch, where there is no hover to reveal it with. */}
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 opacity-100 transition-opacity duration-300 sm:top-2.5 sm:left-2.5 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/tile:opacity-100">
-        <AddToWatchlistButton record={record} type={type} variant="overlay" />
-        <LikeButton record={record} type={type} variant="overlay" />
-      </div>
-
       <Link
         href={href}
         className="group relative block w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-transform duration-500 ease-out hover:-translate-y-2"
       >
         <div className="relative aspect-2/3 w-full overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:ring-white/25 group-hover:shadow-[0_30px_60px_-18px_rgba(0,0,0,0.75)]">
           {poster && (
-            <FadeInImage
+            <Image
               src={poster}
               alt={record.title}
+              fill
+              loading={eager ? "eager" : "lazy"}
               sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 19vw, (min-width: 640px) 30vw, 46vw"
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
             />
@@ -176,7 +178,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
 
           {rating !== null && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/60 px-1.5 py-0.5 text-[0.625rem] font-bold backdrop-blur-md sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
               <span aria-hidden style={{ color: getRatingColor(rating) }}>
                 ★
               </span>
@@ -184,9 +186,11 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
             </div>
           )}
 
-          {/* Play affordance — glassmorphic ring that scales in on hover. */}
+          {/* Play affordance — a translucent ring that scales in on hover.
+              No backdrop-blur on this or the badges: with ~30 cards a page,
+              each blur is a layer re-rendered on every scroll frame. */}
           <div className="absolute inset-0 flex scale-90 items-center justify-center opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/10 text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] backdrop-blur-md sm:h-14 sm:w-14">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-black/45 text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] sm:h-14 sm:w-14">
               <Play size={20} className="ml-0.5 fill-current sm:size-6" />
             </span>
           </div>
@@ -215,7 +219,7 @@ export function CinemaRecordCard({ record, type }: { record: Movie | Series; typ
                 {cardGenres.map((genre) => (
                   <span
                     key={genre}
-                    className="rounded-full border border-white/15 bg-black/35 px-1.5 py-px text-[0.5625rem] font-medium whitespace-nowrap text-white/75 backdrop-blur-sm sm:px-2 sm:text-[0.625rem]"
+                    className="rounded-full border border-white/15 bg-black/55 px-1.5 py-px text-[0.5625rem] font-medium whitespace-nowrap text-white/75 sm:px-2 sm:text-[0.625rem]"
                   >
                     {genreLabel(genre, locale)}
                   </span>

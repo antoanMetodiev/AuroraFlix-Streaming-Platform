@@ -11,6 +11,9 @@ import type { Series } from "@/types/series";
 // growing forever the further down the grid you go.
 const MAX_STAGGERED = 24;
 const STAGGER_STEP_MS = 45;
+// One full row at the widest breakpoint (6 columns) loads right away; the
+// rest load lazily as they near the screen.
+const EAGER_POSTERS = 6;
 
 export function CinemaRecordGrid({
   records,
@@ -52,7 +55,7 @@ export function CinemaRecordGrid({
           className={`relative ${inView ? "animate-card-in" : "opacity-0"} hover:z-40`}
           style={inView ? { animationDelay: `${Math.min(index, MAX_STAGGERED) * STAGGER_STEP_MS}ms` } : undefined}
         >
-          <CinemaRecordCard record={record} type={recordTypes?.[index] ?? type} />
+          <CinemaRecordCard record={record} type={recordTypes?.[index] ?? type} eager={index < EAGER_POSTERS} />
         </div>
       ))}
     </section>

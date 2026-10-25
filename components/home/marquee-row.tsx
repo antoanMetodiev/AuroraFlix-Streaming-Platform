@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { MarqueeItem } from "@/lib/data/home-marquee";
+import { useInView } from "@/lib/use-in-view";
 
 export function MarqueeRow({
   items,
@@ -14,13 +17,15 @@ export function MarqueeRow({
   ariaLabel: string;
 }) {
   const doubledItems = [...items, ...items];
+  // Paused while scrolled off screen, not just while hovered.
+  const { ref, inView } = useInView<HTMLDivElement>();
 
   return (
-    <div className="edge-fade-x group relative overflow-hidden py-2" role="group" aria-label={ariaLabel}>
+    <div ref={ref} className="edge-fade-x group relative overflow-hidden py-2" role="group" aria-label={ariaLabel}>
       <ul
         className={`flex w-max gap-4 pr-4 ${
           direction === "left" ? "animate-marquee" : "animate-marquee-reverse"
-        } group-hover:[animation-play-state:paused]`}
+        } group-hover:[animation-play-state:paused] ${inView ? "" : "[animation-play-state:paused]"}`}
       >
         {doubledItems.map((item, index) => (
           <li key={`${item.slug}-${index}`} aria-hidden={index >= items.length}>

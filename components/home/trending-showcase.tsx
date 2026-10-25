@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Flame, Star } from "lucide-react";
 import { tmdbImage } from "@/lib/tmdb";
+import { useInView } from "@/lib/use-in-view";
 import { useInViewOnce } from "@/lib/use-in-view-once";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 export type TrendingShowcaseItem = {
@@ -138,17 +140,20 @@ function PosterCard({ item, hidden }: { item: RankedItem; hidden: boolean }) {
  * Endless vertical poster columns, alternating direction — up, down, up.
  * Each column's list is rendered twice back to back and slid by exactly
  * half its height (see .animate-marquee-up/-down in globals.css), so the
- * loop has no seam. Hovering anywhere over the columns pauses all of them.
+ * loop has no seam. Hovering anywhere over the columns pauses all of them,
+ * and so does scrolling them off screen.
  */
 function PosterColumns({ columns }: { columns: RankedItem[][] }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+
   return (
-    <div className="edge-fade-y group flex h-full gap-3 sm:gap-4">
+    <div ref={ref} className="edge-fade-y group flex h-full gap-3 sm:gap-4">
       {columns.map((column, columnIndex) => (
         <div key={columnIndex} className="min-w-0 flex-1 overflow-hidden">
           <ul
             className={`flex flex-col gap-3 pb-3 group-hover:[animation-play-state:paused] sm:gap-4 sm:pb-4 ${
               columnIndex % 2 === 0 ? "animate-marquee-up" : "animate-marquee-down"
-            }`}
+            } ${inView ? "" : "[animation-play-state:paused]"}`}
             style={{ "--marquee-duration": `${COLUMN_DURATIONS_S[columnIndex % COLUMN_DURATIONS_S.length]}s` } as CSSProperties}
           >
             {[...column, ...column].map((item, index) => (
@@ -177,6 +182,9 @@ function ShowcaseBlock({
 }) {
   const { t } = useTranslation();
   const { ref, inView } = useInViewOnce<HTMLElement>(0.15);
+  // Desktop (3 columns) is what the server renders; phones switch to 2 right
+  // after hydration — the section sits well below the fold, so it's unseen.
+  const isPhone = useMediaQuery("(max-width: 639px)");
 
   if (items.length === 0) return null;
 
@@ -216,13 +224,9 @@ function ShowcaseBlock({
 
         <div className={`h-[460px] sm:h-[560px] lg:h-[640px] ${flipped ? "lg:order-1" : ""}`}>
           {/* Two columns on phones, three from sm up — each split separately,
-              so a phone still gets every title rather than losing a column. */}
-          <div className="h-full sm:hidden">
-            <PosterColumns columns={toColumns(ranked, 2, 4)} />
-          </div>
-          <div className="hidden h-full sm:block">
-            <PosterColumns columns={toColumns(ranked, 3, 4)} />
-          </div>
+              so a phone still gets every title rather than losing a column.
+              Only the one that fits is rendered, not both with one hidden. */}
+          <PosterColumns key={isPhone ? "phone" : "wide"} columns={toColumns(ranked, isPhone ? 2 : 3, 4)} />
         </div>
       </div>
     </section>
