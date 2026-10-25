@@ -18,9 +18,8 @@ import type { Series } from "@/types/series";
  *   whole full-screen image every frame, which big screens choke on.
  * - Its own GPU layer (translateZ + will-change), so scrolling only moves the
  *   content above it and never repaints the blur.
- * - A mid-size (w1280) source: only lightly blurred, so it needs some detail,
- *   but loading it straight (unoptimized) keeps a 4K TV from requesting a
- *   huge optimized variant.
+ * - A mid-size (w780) source: blurred and shaded, so more pixels than that
+ *   are never seen — w1280 here was just a second big download per page.
  */
 export function DetailsBackground({ record }: { record: Movie | Series }) {
   return <BlurredPageBackdrop path={detailsBackgroundPath(record)} />;
@@ -37,7 +36,7 @@ export function detailsBackgroundPath(record: Movie | Series): string | null {
  * page, which shows the background of the title it was opened from.
  */
 export function BlurredPageBackdrop({ path, src: imageSrc }: { path?: string | null; src?: string }) {
-  const src = imageSrc ?? tmdbImage(path, "w1280");
+  const src = imageSrc ?? tmdbImage(path, "w780");
   if (!src) return null;
 
   return (

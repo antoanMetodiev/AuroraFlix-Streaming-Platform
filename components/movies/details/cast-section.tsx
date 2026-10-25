@@ -83,6 +83,7 @@ function ActorCard({ actor, onOpen }: { actor: Actor; onOpen: () => void }) {
           <FadeInImage
             src={image}
             alt={actor.nameInRealLife}
+            loading="lazy"
             sizes="176px"
             className="object-cover transition-transform duration-700 ease-out group-hover/actor:scale-110"
           />

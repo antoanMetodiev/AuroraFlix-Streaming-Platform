@@ -32,6 +32,8 @@ const COOLDOWN_KEY_PREFIX = "add_movies_actor_cooldown_";
 const COOLDOWN_MS = 3 * 60 * 1000;
 /** Longer biographies start collapsed behind "Show more". */
 const BIO_PREVIEW_CHARS = 520;
+/** One full filmography row at the widest breakpoint loads at once; the rest as they near the screen. */
+const EAGER_POSTERS = 6;
 
 type Filter = "all" | "movies" | "series";
 
@@ -100,7 +102,7 @@ export function ActorDetailsView({ id }: { id: string }) {
     );
   }
 
-  const image = actor.imageURL ? tmdbImage(actor.imageURL, "w780") : FALLBACK_ACTOR_IMAGE;
+  const image = actor.imageURL ? tmdbImage(actor.imageURL, "w500") : FALLBACK_ACTOR_IMAGE;
   const gender = Number(actor.gender);
   const age = calculateAge(actor.birthday);
   const birthday = (() => {
@@ -157,7 +159,7 @@ export function ActorDetailsView({ id }: { id: string }) {
               />
               <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               {actor.imageURL && (
-                <span className="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
+                <span className="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   <Maximize2 size={16} />
                 </span>
               )}
@@ -167,7 +169,7 @@ export function ActorDetailsView({ id }: { id: string }) {
 
         {/* Name, stats, links, biography */}
         <div className="min-w-0 text-center lg:pt-4 lg:text-left">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-white/85 backdrop-blur-md">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-white/85">
             <Sparkles size={13} />
             {gender === 1 ? t("actor.roleFemale") : t("actor.roleMale")}
           </span>
@@ -180,7 +182,7 @@ export function ActorDetailsView({ id }: { id: string }) {
               {stats.map(({ Icon, label, value }) => (
                 <div
                   key={label}
-                  className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] p-4 backdrop-blur-md transition-colors duration-300 hover:border-white/20 hover:bg-white/[0.08]"
+                  className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] p-4 transition-colors duration-300 hover:border-white/20 hover:bg-white/[0.08]"
                 >
                   <Icon aria-hidden className="pointer-events-none absolute -right-3 -bottom-3 h-20 w-20 text-white/[0.05] transition-transform duration-500 group-hover:scale-110" />
                   <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-neutral-900 shadow-[0_6px_20px_-6px_rgba(255,255,255,0.5)]">
@@ -201,7 +203,7 @@ export function ActorDetailsView({ id }: { id: string }) {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-foreground/80 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-neutral-900"
+                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-foreground/80 transition-all duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-neutral-900"
                 >
                   <Icon size={15} />
                   {label}
@@ -211,7 +213,7 @@ export function ActorDetailsView({ id }: { id: string }) {
           )}
 
           {biography && (
-            <div className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5 text-left backdrop-blur-md sm:p-6">
+            <div className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5 text-left sm:p-6">
               <p className="text-[0.6875rem] font-bold tracking-[0.2em] text-foreground/45 uppercase">{t("actor.biography")}</p>
               <p className="mt-3 leading-7 whitespace-pre-line text-foreground/80">
                 {bioIsLong && !bioExpanded ? `${biography.slice(0, BIO_PREVIEW_CHARS).trimEnd()}…` : biography}
@@ -284,7 +286,7 @@ function Filmography({
       </div>
 
       {works && counts.movies > 0 && counts.series > 0 && (
-        <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-md">
+        <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
           {tabs.map(({ value, label, count, Icon }) => (
             <button
               key={value}
@@ -324,10 +326,10 @@ function Filmography({
               >
                 <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:shadow-[0_18px_40px_-12px_rgba(255,255,255,0.35)] group-hover:ring-white/35">
                   {poster && (
-                    <FadeInImage src={poster} alt={work.title} sizes="(min-width: 1280px) 16vw, (min-width: 768px) 25vw, 50vw" className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                    <FadeInImage src={poster} alt={work.title} loading={index < EAGER_POSTERS ? "eager" : "lazy"} sizes="(min-width: 1280px) 16vw, (min-width: 768px) 25vw, 50vw" className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                   )}
                   <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                  <span className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide text-white/90 uppercase backdrop-blur-md">
+                  <span className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide text-white/90 uppercase">
                     {work.type === "SERIES" ? <Tv size={11} /> : <Clapperboard size={11} />}
                     {work.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}
                   </span>
@@ -381,7 +383,7 @@ function RequestMoreButton({ actorName, actorImdbId }: { actorName: string; acto
     const minutes = Math.floor(remainingMs / 60000);
     const seconds = Math.floor((remainingMs % 60000) / 1000);
     return (
-      <p className="rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-sm text-foreground/70 backdrop-blur-md">
+      <p className="rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-sm text-foreground/70">
         {t("carousel.checkingStarted")} {minutes}:{seconds.toString().padStart(2, "0")}
       </p>
     );

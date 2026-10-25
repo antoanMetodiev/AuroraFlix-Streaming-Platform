@@ -99,7 +99,8 @@ export function ImageGallery({ images }: { images: MediaImage[] }) {
             } ${hasSwitched ? "animate-card-in" : inView ? "opacity-100" : "opacity-0"}`}
           >
             <FadeInImage
-              src={tmdbImage(image.imageURL, "w1280") ?? ""}
+              // Tiles are at most ~27vw wide; the lightbox loads the big version.
+              src={tmdbImage(image.imageURL, "w780") ?? ""}
               alt=""
               loading="lazy"
               sizes="(min-width: 1024px) 27vw, (min-width: 640px) 33vw, 50vw"
