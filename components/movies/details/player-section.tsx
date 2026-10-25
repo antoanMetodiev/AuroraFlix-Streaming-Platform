@@ -1449,6 +1449,9 @@ export const PlayerSection = forwardRef<
                   <FadeInImage
                     src={poster}
                     alt=""
+                    // Far below the fold — loads as the viewer scrolls near it.
+                    loading="lazy"
+                    sizes="(min-width: 1280px) 80rem, 100vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
                 )}
