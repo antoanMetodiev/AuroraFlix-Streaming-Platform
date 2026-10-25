@@ -1,4 +1,4 @@
-import { getMoviesDiscover, getSeriesDiscover } from "@/lib/api";
+import { CURATED_CACHE_TTL_S, getMoviesDiscover, getSeriesDiscover } from "@/lib/api";
 import { PopularCarousels, type PopularItem } from "@/components/home/popular-carousels";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -76,10 +76,10 @@ export async function PopularSection() {
 	const topRated = { sort: "top_rated" as const };
 
 	const [moviesThisYear, moviesLastYear, seriesThisYear, seriesLastYear] = await Promise.all([
-		getMoviesDiscover({ ...topRated, year: String(year) }, 1),
-		getMoviesDiscover({ ...topRated, year: String(year - 1) }, 1),
-		getSeriesDiscover({ ...topRated, year: String(year) }, 1),
-		getSeriesDiscover({ ...topRated, year: String(year - 1) }, 1),
+		getMoviesDiscover({ ...topRated, year: String(year) }, 1, CURATED_CACHE_TTL_S),
+		getMoviesDiscover({ ...topRated, year: String(year - 1) }, 1, CURATED_CACHE_TTL_S),
+		getSeriesDiscover({ ...topRated, year: String(year) }, 1, CURATED_CACHE_TTL_S),
+		getSeriesDiscover({ ...topRated, year: String(year - 1) }, 1, CURATED_CACHE_TTL_S),
 	]);
 
 	return (

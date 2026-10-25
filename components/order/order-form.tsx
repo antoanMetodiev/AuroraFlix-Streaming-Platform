@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Send } from "lucide-react";
 import { orderMovie, orderSeries } from "@/lib/api-public";
+import { markCatalogFresh } from "@/lib/fresh-catalog";
 import { getOrderCooldownRemaining, startOrderCooldown } from "@/lib/order";
 import { Spinner } from "@/components/ui/loader";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -39,6 +40,7 @@ export function OrderForm({ type }: { type: "movie" | "series" }) {
     setStatus("sending");
 
     const ok = type === "movie" ? await orderMovie(title) : await orderSeries(title);
+    if (ok) markCatalogFresh();
 
     setIsSubmitting(false);
     setRemaining(startOrderCooldown());

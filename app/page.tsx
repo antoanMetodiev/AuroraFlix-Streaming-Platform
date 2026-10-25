@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import { Reveal } from "@/components/ui/reveal";
 import { SeoIntro } from "@/components/home/seo-intro";
 import { HeroSection } from "@/components/home/hero-section";
@@ -75,13 +75,25 @@ function shuffle<T>(items: T[]): T[] {
 	return shuffled;
 }
 
-export default async function Home() {
-	// Fetched in parallel — they hit two different downstream services, so
-	// awaiting them in sequence would stack two cold-start delays on Render's
-	// free tier. Promise.all is safe here because lib/api.ts's getJson never
-	// rejects (it returns null / an empty list on failure), so one service
-	// being down can't take the whole homepage with it.
-	const [movies, series] = await Promise.all([getTrendingMovies(), getTrendingSeries()]);
+// Fetched in parallel — they hit two different downstream services, so
+// awaiting them in sequence would stack two cold-start delays on Render's
+// free tier. Promise.all is safe here because lib/api.ts's getJson never
+// rejects (it returns null / an empty list on failure), so one service
+// being down can't take the whole homepage with it. cache(): the hero and
+// the showcase both read it, one fetch per request.
+const loadTrending = cache(() => Promise.all([getTrendingMovies(), getTrendingSeries()]));
+
+/** Holds the hero's place (same size, same black) while trending streams in. */
+function HeroSkeleton() {
+	return (
+		<section aria-hidden className="relative -mt-16 h-[85vh] min-h-[624px] w-full overflow-hidden bg-black sm:h-[100dvh]">
+			<div className="absolute inset-0 animate-pulse bg-gradient-to-t from-black via-white/[0.02] to-white/[0.05]" />
+		</section>
+	);
+}
+
+async function TrendingHero() {
+	const [movies, series] = await loadTrending();
 
 	const heroItems = interleave(
 		shuffle<Movie>(movies)
@@ -92,6 +104,18 @@ export default async function Home() {
 			.map((record): HeroItem => ({ record, type: "series" }))
 	);
 
+	return <HeroSection items={heroItems} />;
+}
+
+async function TrendingShowcaseSection() {
+	// Same trending data the hero already fetched — no extra requests.
+	const [movies, series] = await loadTrending();
+	return <LazyTrendingShowcase movies={toShowcaseItems(movies, "movie")} series={toShowcaseItems(series, "series")} />;
+}
+
+export default function Home() {
+	// Nothing awaited here: the header and page frame go out at once, and the
+	// trending-backed sections stream in behind their own Suspense boundaries.
 	return (
 		<main className="bg-black">
 			{/* PAYMENTS DISABLED — nobody is charged for now; uncomment the
@@ -105,7 +129,9 @@ export default async function Home() {
 			</Suspense>
 			*/}
 
-			<HeroSection items={heroItems} />
+			<Suspense fallback={<HeroSkeleton />}>
+				<TrendingHero />
+			</Suspense>
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
 
@@ -114,8 +140,9 @@ export default async function Home() {
 			</Reveal>
 
 			{/* Streams in after the hero — see PopularSection's doc comment. */}
-			{/* Same trending data the hero already fetched — no extra requests. */}
-			<LazyTrendingShowcase movies={toShowcaseItems(movies, "movie")} series={toShowcaseItems(series, "series")} />
+			<Suspense fallback={null}>
+				<TrendingShowcaseSection />
+			</Suspense>
 
 			<Suspense fallback={null}>
 				<PopularSection />

@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { CinemaRecordGrid } from "@/components/movies/cinema-record-grid";
 import { SectionHeading } from "@/components/movies/details/section-heading";
-import { getMoviesDiscover, getSeriesDiscover } from "@/lib/api";
+import { CURATED_CACHE_TTL_S, getMoviesDiscover, getSeriesDiscover } from "@/lib/api";
 import { parseGenres } from "@/lib/genres";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { translate } from "@/lib/i18n/translate";
@@ -74,7 +74,7 @@ export async function SimilarTitlesSection({ record, type }: { record: Movie | S
 async function candidates(candidateType: RecordType, genres: string[]): Promise<(Movie | Series)[]> {
   const fetchPage = candidateType === "movie" ? getMoviesDiscover : getSeriesDiscover;
   const pages = await Promise.all(
-    genres.map((genre) => fetchPage({ genre, sort: "top_rated" }, 1).catch(() => [] as (Movie | Series)[]))
+    genres.map((genre) => fetchPage({ genre, sort: "top_rated" }, 1, CURATED_CACHE_TTL_S).catch(() => [] as (Movie | Series)[]))
   );
 
   const seen = new Set<string>();
