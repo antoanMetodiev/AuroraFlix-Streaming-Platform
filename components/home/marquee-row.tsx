@@ -34,7 +34,6 @@ export function MarqueeRow({
                   src={item.imageSrc}
                   alt={item.title}
                   fill
-                  loading="eager"
                   sizes="(min-width: 1024px) 215px, (min-width: 640px) 180px, 150px"
                   className="object-cover"
                 />

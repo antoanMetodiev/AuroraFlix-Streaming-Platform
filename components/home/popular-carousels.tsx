@@ -32,12 +32,23 @@ function Coverflow({ heading, items }: { heading: string; items: PopularItem[] }
   const { t } = useTranslation();
   const router = useRouter();
   const { ref, inView } = useInViewOnce<HTMLElement>(0.25);
-  const [active, setActive] = useState(0);
+  // `previous` is the title just switched away from — its glow is still
+  // fading out, so it stays mounted alongside the active one.
+  const [{ active, previous }, setSelection] = useState({ active: 0, previous: 0 });
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const count = items.length;
-  const go = useCallback((delta: number) => setActive((current) => (current + delta + count) % count), [count]);
+  const select = useCallback(
+    (resolve: (current: number) => number) =>
+      setSelection((selection) => {
+        const next = resolve(selection.active);
+        return next === selection.active ? selection : { active: next, previous: selection.active };
+      }),
+    []
+  );
+  const go = useCallback((delta: number) => select((current) => (current + delta + count) % count), [count, select]);
+  const setActive = useCallback((index: number) => select(() => index), [select]);
 
   useEffect(() => {
     if (!inView || paused || count < 2) return;
@@ -59,14 +70,19 @@ function Coverflow({ heading, items }: { heading: string; items: PopularItem[] }
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {/* Ambient glow — the active poster, blurred, cross-fading as it changes. */}
+      {/* Ambient glow — the active poster, blurred, cross-fading as it changes.
+          Only the active and the previous (still fading out) layers hold an
+          image: a full-width blur-3xl per title was a dozen of the page's most
+          expensive layers sitting there invisible. */}
       {items.map((item, index) => (
         <div
           key={item.key}
           aria-hidden
           className={`pointer-events-none absolute inset-x-0 top-24 bottom-0 transition-opacity duration-1000 ${index === active ? "opacity-100" : "opacity-0"}`}
         >
-          <FadeInImage src={tmdbImage(item.posterURL, "w342") ?? ""} alt="" sizes="230px" className="scale-110 object-cover opacity-60 blur-3xl" />
+          {(index === active || index === previous) && (
+            <FadeInImage src={tmdbImage(item.posterURL, "w342") ?? ""} alt="" sizes="230px" className="scale-110 object-cover opacity-60 blur-3xl" />
+          )}
         </div>
       ))}
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,var(--background)_75%)]" />

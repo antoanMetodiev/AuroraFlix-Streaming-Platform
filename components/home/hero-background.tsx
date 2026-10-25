@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
+import type { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import { tmdbImage } from "@/lib/tmdb";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/shimmer";
-import { useProgressiveImage } from "@/lib/use-progressive-image";
 import type { HeroItem } from "@/components/home/hero-item";
+
+// Client-only and in its own chunk — it's never needed for the first paint
+// (see usePlayerUnlocked), so it stays out of the homepage's initial JS.
+const YouTube = dynamic(() => import("react-youtube"), { ssr: false });
 
 function extractYouTubeId(url?: string | null) {
     if (!url) return "";
@@ -16,6 +20,42 @@ function extractYouTubeId(url?: string | null) {
 
 /** How often the trailer's playback position is reported to the parent. */
 const PROGRESS_POLL_MS = 250;
+
+/** How long after the page has fully loaded the first trailer may start. */
+const PLAYER_DELAY_MS = 2500;
+
+// Once unlocked it stays unlocked for the rest of the visit, so switching
+// trailers (each one remounts HeroBackground) starts the next player at once.
+let playerUnlocked = false;
+
+/**
+ * Holds the YouTube player back on the first visit until PLAYER_DELAY_MS
+ * after the window's load event — the iframe and its ~1 MB of player JS
+ * otherwise compete with the page itself for the network and main thread,
+ * which phones feel the most. The backdrop still shows straight away.
+ */
+function usePlayerUnlocked() {
+    const [unlocked, setUnlocked] = useState(playerUnlocked);
+
+    useEffect(() => {
+        if (unlocked) return;
+        let timer: number | undefined;
+        const start = () => {
+            timer = window.setTimeout(() => {
+                playerUnlocked = true;
+                setUnlocked(true);
+            }, PLAYER_DELAY_MS);
+        };
+        if (document.readyState === "complete") start();
+        else window.addEventListener("load", start, { once: true });
+        return () => {
+            window.removeEventListener("load", start);
+            window.clearTimeout(timer);
+        };
+    }, [unlocked]);
+
+    return unlocked;
+}
 
 /**
  * Runs one call against the YouTube player, swallowing what it throws.
@@ -55,6 +95,7 @@ export function HeroBackground({
     onProgress?: (fraction: number) => void;
 }) {
     const videoId = extractYouTubeId(record.trailerVideoURL);
+    const playerReady = usePlayerUnlocked();
     const playerRef = useRef<YouTubePlayer | null>(null);
     const [videoReady, setVideoReady] = useState(false);
 
@@ -115,27 +156,21 @@ export function HeroBackground({
         return () => window.clearInterval(timer);
     }, [videoReady]);
 
-    // Same background-preload-then-swap strategy as the movie/series details
-    // header and the image lightbox: paint the fast w1280 render immediately,
-    // then quietly upgrade to the full-res backdrop once it's done loading —
-    // all while this same image is fading out into the trailer once it's ready.
-    const { src: backgroundSrc, isHighRes } = useProgressiveImage(
-        tmdbImage(record.backgroundImg_URL, "w1280"),
-        tmdbImage(record.backgroundImg_URL, "original")
-    );
+    // w1280 only — no upgrade to the original: it sits under a 50% shade and
+    // fades out into the trailer anyway, so the multi-MB original was never
+    // really seen, just downloaded on every slide. 1280px still covers a
+    // phone's ~1170 physical pixels across.
+    const backgroundSrc = tmdbImage(record.backgroundImg_URL, "w1280");
 
     return (
         // Remounted per title (keyed by the parent), so this fade plays on every switch.
         <div className="animate-hero-bg-in absolute inset-0 -z-10 overflow-hidden bg-black">
             {backgroundSrc && (
                 <Image
-                    key={backgroundSrc}
                     src={backgroundSrc}
                     alt=""
                     fill
-                    unoptimized={isHighRes}
-                    priority={!isHighRes}
-                    loading="eager"
+                    priority
                     placeholder="blur"
                     blurDataURL={SHIMMER_BLUR_DATA_URL}
                     sizes="100vw"
@@ -145,7 +180,7 @@ export function HeroBackground({
 
             <div className="absolute inset-0 z-10 bg-black/50" />
 
-            {videoId && (
+            {videoId && playerReady && (
                 <div
                     className={`pointer-events-none absolute inset-0 overflow-hidden ${videoReady ? "opacity-100" : "opacity-0"
                         } [&_iframe]:absolute [&_iframe]:top-1/2 [&_iframe]:left-1/2 [&_iframe]:w-screen [&_iframe]:h-[56.25vw] [&_iframe]:min-h-full [&_iframe]:min-w-[177.78vh] [&_iframe]:-translate-x-1/2 [&_iframe]:-translate-y-1/2`}

@@ -42,7 +42,7 @@ export function CinemaRecordListPage({
 
   return (
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden">
-      <ListBackground type={listType} />
+      <ListBackground />
 
       {/*
        * flex-col so a short result set (few/no matches) still pins the footer

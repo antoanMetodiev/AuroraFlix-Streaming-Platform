@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { formatReleaseDate } from "@/lib/dates";
 import Image from "next/image";
 import Link from "next/link";
@@ -98,6 +98,45 @@ function VolumeControl({
   );
 }
 
+type ProgressStore = ReturnType<typeof createProgressStore>;
+
+/**
+ * The playing trailer's progress (0–1), kept outside React state: it ticks
+ * every 250ms, and as HeroSection state each tick re-rendered the whole hero
+ * and all of its rail cards. Only RailProgress subscribes to it.
+ */
+function createProgressStore() {
+  let value = 0;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => value,
+    set: (next: number) => {
+      if (next === value) return;
+      value = next;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
+/** The bar filling along the bottom of the playing rail card. */
+function RailProgress({ store }: { store: ProgressStore }) {
+  const progress = useSyncExternalStore(store.subscribe, store.get, () => 0);
+  return (
+    <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/20">
+      <span
+        className="block h-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] transition-[width] duration-300 ease-linear"
+        style={{ width: `${progress * 100}%` }}
+      />
+    </span>
+  );
+}
+
 /** How far the mouse has to move before a press on the rail counts as a drag. */
 const DRAG_THRESHOLD_PX = 6;
 
@@ -116,7 +155,7 @@ function TrailerRail({
 }: {
   items: HeroItem[];
   currentIndex: number;
-  progress: number;
+  progress: ProgressStore;
   onSelect: (index: number) => void;
 }) {
   const { t } = useTranslation();
@@ -222,14 +261,7 @@ function TrailerRail({
                 </span>
                 <span className="line-clamp-1 text-[0.6875rem] font-semibold text-white sm:text-xs">{item.record.title}</span>
               </span>
-              {isActive && (
-                <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/20">
-                  <span
-                    className="block h-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] transition-[width] duration-300 ease-linear"
-                    style={{ width: `${progress * 100}%` }}
-                  />
-                </span>
-              )}
+              {isActive && <RailProgress store={progress} />}
             </button>
           </li>
         );
@@ -248,7 +280,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
   // render).
   const volumeLoadedRef = useRef(false);
   // 0–1, how far the current trailer has played — fills its rail card.
-  const [progress, setProgress] = useState(0);
+  const [progress] = useState(createProgressStore);
   const sectionRef = useRef<HTMLElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   // Fires once on first paint only — HeroSection never remounts on
@@ -273,13 +305,13 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
   const goTo = useCallback(
     (resolveIndex: (prev: number) => number) => {
       setIsVideoReady(false);
-      setProgress(0);
+      progress.set(0);
       setCurrentIndex((prev) => {
         const next = resolveIndex(prev);
         return ((next % items.length) + items.length) % items.length;
       });
     },
-    [items.length]
+    [items.length, progress]
   );
 
   const goToPrevious = useCallback(() => goTo((prev) => prev - 1), [goTo]);
@@ -380,7 +412,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
         volume={volume}
         onEnded={goToNext}
         onReady={() => setIsVideoReady(true)}
-        onProgress={setProgress}
+        onProgress={progress.set}
       />
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/85 sm:via-black/10 sm:to-transparent" />
