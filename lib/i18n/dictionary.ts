@@ -559,6 +559,18 @@ export const dictionary = {
 
   "common.noResults": { en: "No results found", bg: "Няма намерени резултати" },
   "common.noResultsDesc": { en: "Try a different search or pick another genre.", bg: "Пробвай друго търсене или избери друг жанр." },
+  "search.autoOrderTitle": { en: "Nothing found for “{query}”", bg: "Няма резултати за „{query}“" },
+  "search.autoOrderSending": { en: "Requesting it for the catalog…", bg: "Изпращаме заявка да бъде добавено…" },
+  "search.autoOrderSent": {
+    en: "We've asked for it to be added — it usually takes a few seconds. We'll check again for you.",
+    bg: "Пуснахме заявка да бъде добавено — обикновено отнема няколко секунди. Ще проверим отново вместо теб.",
+  },
+  "search.autoOrderFailed": {
+    en: "We couldn't request it automatically. You can order it yourself.",
+    bg: "Не успяхме да го заявим автоматично. Можеш да го поръчаш ръчно.",
+  },
+  "search.checkAgain": { en: "Check again", bg: "Провери отново" },
+  "search.orderManually": { en: "Order it", bg: "Поръчай ръчно" },
   "common.pagination": { en: "Pagination", bg: "Странициране" },
   "common.genres": { en: "Genres", bg: "Жанрове" },
   "common.results": { en: "Results for", bg: "Резултати за" },

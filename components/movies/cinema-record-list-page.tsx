@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Footer } from "@/components/layout/footer";
+import { AutoOrderNotice } from "@/components/movies/auto-order-notice";
 import { DiscoverFilters } from "@/components/movies/discover-filters";
 import { ListBackground } from "@/components/movies/list-background";
 import { CinemaRecordGrid } from "@/components/movies/cinema-record-grid";
@@ -131,7 +132,12 @@ async function CinemaRecordResults({
     <>
       <ListPageHeading type={type} genre={genre} searchTitle={searchTitle} />
 
-      <CinemaRecordGrid records={records} type={type} />
+      {/* A title search with no match orders it right away instead of a dead end. */}
+      {searchTitle && records.length === 0 && page === 1 ? (
+        <AutoOrderNotice type={type} query={searchTitle} />
+      ) : (
+        <CinemaRecordGrid records={records} type={type} />
+      )}
       <PaginationControls currentPage={page} totalPages={totalPages} basePath={basePath} extraQuery={filterQuery.toString()} />
     </>
   );
