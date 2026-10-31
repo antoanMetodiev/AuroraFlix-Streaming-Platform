@@ -29,24 +29,31 @@ export function CastSection({ cast, backgroundImgUrl }: { cast: Actor[]; backgro
       ref={ref}
       className={`reveal mx-auto max-w-[100rem] px-4 pt-4 pb-16 sm:px-6 sm:pb-24 ${inView ? "" : "reveal-hidden"}`}
     >
-      <SectionHeading>{t("sections.topCast")}</SectionHeading>
+      {/* The arrows sit in the heading row — over the track they covered the cards. */}
+      <SectionHeading
+        aside={
+          (canScrollLeft || canScrollRight) && (
+            <>
+              <CarouselArrowButton inline direction="left" disabled={!canScrollLeft} onClick={() => scrollBy(-400)} />
+              <CarouselArrowButton inline direction="right" disabled={!canScrollRight} onClick={() => scrollBy(400)} />
+            </>
+          )
+        }
+      >
+        {t("sections.topCast")}
+      </SectionHeading>
 
-      <div className="relative">
-        {canScrollLeft && <CarouselArrowButton direction="left" onClick={() => scrollBy(-400)} />}
-        {canScrollRight && <CarouselArrowButton direction="right" onClick={() => scrollBy(400)} />}
-
-        <div ref={containerRef} className="scrollbar-none -mt-3 flex snap-x gap-4 overflow-x-auto pt-3 pb-6" {...dragHandlers}>
-          {cast.map((actor) => (
-            <ActorCard
-              key={actor.id}
-              actor={actor}
-              onOpen={() => {
-                setPendingActor(actor, backgroundImgUrl);
-                router.push(`/actors/${actor.id}`);
-              }}
-            />
-          ))}
-        </div>
+      <div ref={containerRef} className="scrollbar-none -mt-3 flex snap-x gap-4 overflow-x-auto pt-3 pb-6" {...dragHandlers}>
+        {cast.map((actor) => (
+          <ActorCard
+            key={actor.id}
+            actor={actor}
+            onOpen={() => {
+              setPendingActor(actor, backgroundImgUrl);
+              router.push(`/actors/${actor.id}`);
+            }}
+          />
+        ))}
       </div>
     </section>
   );
