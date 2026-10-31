@@ -70,6 +70,11 @@ export const dictionary = {
   "install.mockNotThis": { en: "not this", bg: "не това" },
   "install.downloadAgain": { en: "Download again", bg: "Изтегли отново" },
   "install.close": { en: "Got it", bg: "Разбрах" },
+  "install.tvTitle": { en: "On an Android TV?", bg: "На Android TV?" },
+  "install.tvText": {
+    en: "Install **Downloader** from Google Play on the TV, open it and enter **auroraflix.cloud/tv**. If it asks, allow Downloader to install apps.",
+    bg: "Инсталирай **Downloader** от Google Play на телевизора, отвори го и въведи **auroraflix.cloud/tv**. Ако попита, разреши на Downloader да инсталира приложения.",
+  },
   "nav.iosApp":{ en: "iPhone app", bg: "iPhone приложение" },
   "nav.iosSoon": { en: "iPhone app — coming soon", bg: "iPhone приложение — скоро" },
   "nav.openMenu": { en: "Open menu", bg: "Отвори менюто" },

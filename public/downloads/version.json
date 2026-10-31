@@ -5,5 +5,14 @@
   "notes": {
     "bg": "Поправка: плейърът спира, когато отидеш на друга страница или таб, вместо да продължава да върви на заден план. Включва всички досегашни поправки и нов дизайн.",
     "en": "Fix: the player stops when you go to another page or tab instead of playing on in the background. Includes all fixes so far and the new design."
+  },
+  "tv": {
+    "versionCode": 8,
+    "versionName": "0.3.2",
+    "url": "https://auroraflix.cloud/downloads/auroraflix-tv.apk",
+    "notes": {
+      "bg": "Първа версия за Android TV.",
+      "en": "First Android TV build."
+    }
   }
 }

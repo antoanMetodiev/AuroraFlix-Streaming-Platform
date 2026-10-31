@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // A short address to type with a TV remote (into the Downloader app) for
+  // the 32-bit APK Android TVs need.
+  async redirects() {
+    return [{ source: "/tv", destination: "/downloads/auroraflix-tv.apk", permanent: false }];
+  },
 };
 
 export default nextConfig;

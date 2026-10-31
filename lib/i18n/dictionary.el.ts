@@ -34,6 +34,8 @@ export const elDictionary = {
   "install.mockNotThis": "όχι αυτό",
   "install.downloadAgain": "Λήψη ξανά",
   "install.close": "Εντάξει",
+  "install.tvTitle": "Σε Android TV;",
+  "install.tvText": "Εγκατάστησε το **Downloader** από το Google Play στην τηλεόραση, άνοιξέ το και γράψε **auroraflix.cloud/tv**. Αν ρωτήσει, επίτρεψε στο Downloader να εγκαθιστά εφαρμογές.",
   "nav.iosApp": "Εφαρμογή iPhone",
   "nav.iosSoon": "Εφαρμογή iPhone — έρχεται σύντομα",
   "nav.openMenu": "Άνοιγμα μενού",

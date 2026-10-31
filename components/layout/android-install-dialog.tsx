@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Download, ShieldAlert, X } from "lucide-react";
+import { Download, ShieldAlert, Tv, X } from "lucide-react";
 import { FaAndroid } from "react-icons/fa";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
@@ -140,6 +140,16 @@ export function AndroidInstallDialog({ apkUrl, onClose }: { apkUrl: string; onCl
               </li>
             );
           })}
+          {/* A TV has no file manager to open the download with, and needs the 32-bit build. */}
+          <li className="flex gap-3 rounded-2xl border border-white/[0.06] bg-foreground/[0.03] p-3.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground">
+              <Tv size={15} />
+            </span>
+            <div className="min-w-0 flex-1 pt-0.5 text-sm leading-relaxed text-foreground/80">
+              <p className="font-semibold text-foreground">{t("install.tvTitle")}</p>
+              <p className="mt-0.5">{withBold(t("install.tvText"))}</p>
+            </div>
+          </li>
         </ol>
 
         <div className="relative flex shrink-0 items-center gap-2 px-6 pt-3 pb-6">

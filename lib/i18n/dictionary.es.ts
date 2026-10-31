@@ -34,6 +34,8 @@ export const esDictionary = {
   "install.mockNotThis": "esto no",
   "install.downloadAgain": "Descargar de nuevo",
   "install.close": "Entendido",
+  "install.tvTitle": "¿En un Android TV?",
+  "install.tvText": "Instala **Downloader** desde Google Play en el televisor, ábrelo e introduce **auroraflix.cloud/tv**. Si lo pide, permite que Downloader instale aplicaciones.",
   "nav.iosApp": "App para iPhone",
   "nav.iosSoon": "App para iPhone — próximamente",
   "nav.openMenu": "Abrir menú",
