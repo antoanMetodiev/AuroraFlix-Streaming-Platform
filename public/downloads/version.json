@@ -7,12 +7,12 @@
     "en": "Fix: the player stops when you go to another page or tab instead of playing on in the background. Includes all fixes so far and the new design."
   },
   "tv": {
-    "versionCode": 8,
-    "versionName": "0.3.2",
+    "versionCode": 9,
+    "versionName": "0.3.3",
     "url": "https://auroraflix.cloud/downloads/auroraflix-tv.apk",
     "notes": {
-      "bg": "Първа версия за Android TV.",
-      "en": "First Android TV build."
+      "bg": "Управление с дистанционното: стрелките местят избора из цялото приложение, OK отваря.",
+      "en": "Remote control: the arrows move the focus around the whole app, OK opens."
     }
   }
 }
