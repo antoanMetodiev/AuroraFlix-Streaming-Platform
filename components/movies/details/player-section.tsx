@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Captions, Download, MonitorPlay, Play, ShieldCheck, X } from "lucide-react";
+import { AudioLines, Captions, Download, MonitorPlay, Play, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -9,6 +9,7 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
+import { BgAudioPlayer } from "@/components/movies/details/bg-audio-player";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
 import type { WatchingTarget } from "@/lib/watching";
 
@@ -471,7 +472,14 @@ function UploadSubtitlesGuide({
   );
 }
 
-type ProviderId = 1 | 2 | 3 | 4 | 5 | 6;
+/**
+ * 7 is our own player for a Bulgarian-dubbed stream (<BgAudioPlayer>), not
+ * an embed: listed first and selected when the movie has one.
+ */
+type ProviderId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+/** Our own player — no ads by construction (see <BgAudioPlayer>). */
+const BG_AUDIO_PLAYER: ProviderId = 7;
 
 /**
  * VidSpark — plays inside our sandbox (no sandbox checks anywhere in its
@@ -736,16 +744,36 @@ export const PlayerSection = forwardRef<
   const vidfastUsesOurSubs =
     currentOwnSubtitles?.vidfast ?? false;
 
+  /**
+   * The movie's Bulgarian-dubbed stream, when ZenoPlay has one — checked in
+   * the background like our subtitles (see the effect further down). With
+   * it, our own player (BG_AUDIO_PLAYER) leads the list and is selected
+   * unless the viewer already started or picked another one. Dropped for
+   * this page if the stream fails to play.
+   */
+  const bgAudioCheckUrl =
+    vidsrcRef?.kind === "movie"
+      ? `/api/bg-audio/${encodeURIComponent(vidsrcRef.tmdbId)}`
+      : null;
+  const [bgAudio, setBgAudio] = useState<{
+    url: string;
+    masterUrl: string;
+  } | null>(null);
+  const currentBgAudio =
+    bgAudio && bgAudio.url === bgAudioCheckUrl ? bgAudio : null;
+
   const playerOrder = useMemo<
     readonly ProviderId[]
   >(
-    () =>
-      hasOwnSubtitles
+    () => {
+      const embeds: ProviderId[] = hasOwnSubtitles
         ? VIDLINK_ENABLED
           ? [5, 1, 4, 2, 3, 6]
           : [5, 1, 2, 3, 6]
-        : [1, 2, 3, 6],
-    [hasOwnSubtitles]
+        : [1, 2, 3, 6];
+      return currentBgAudio ? [BG_AUDIO_PLAYER, ...embeds] : embeds;
+    },
+    [hasOwnSubtitles, currentBgAudio]
   );
 
   const [activePlayer, setActivePlayer] =
@@ -952,7 +980,11 @@ export const PlayerSection = forwardRef<
           vidsrc: !hasStartedRef.current || activePlayerRef.current !== 1,
           vidfast: !hasStartedRef.current || activePlayerRef.current !== 2,
         });
-        if (!hasStartedRef.current && !userChangedPlayerRef.current) {
+        if (
+          !hasStartedRef.current &&
+          !userChangedPlayerRef.current &&
+          activePlayerRef.current !== BG_AUDIO_PLAYER
+        ) {
           setActivePlayer(5);
         }
       })
@@ -966,6 +998,45 @@ export const PlayerSection = forwardRef<
       cancelled = true;
     };
   }, [subtitleCheckUrl]);
+
+  /**
+   * Whether ZenoPlay has a Bulgarian-dubbed stream of this movie (via
+   * /api/bg-audio). Same rules as the subtitle check above: in the
+   * background, never blocking the player; if it answers before playback
+   * starts and the viewer hasn't picked a player, ours becomes the selected
+   * one (it wins over EmbedMaster — a dub over subtitles).
+   */
+  useEffect(() => {
+    if (!bgAudioCheckUrl) return;
+
+    let cancelled = false;
+    const url = bgAudioCheckUrl;
+
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { masterUrl?: string } | null) => {
+        if (cancelled || !data?.masterUrl) return;
+        setBgAudio({ url, masterUrl: data.masterUrl });
+        if (!hasStartedRef.current && !userChangedPlayerRef.current) {
+          setActivePlayer(BG_AUDIO_PLAYER);
+        }
+      })
+      .catch(() => {
+        // Service slow/down — just no БГ аудио player this time.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bgAudioCheckUrl]);
+
+  /** The stream wouldn't play: drop our player, fall back to the next one. */
+  function handleBgAudioFailed() {
+    setBgAudio(null);
+    setActivePlayer((current) =>
+      current === BG_AUDIO_PLAYER ? (hasOwnSubtitles ? 5 : 1) : current
+    );
+  }
 
   /**
    * Build all the player URLs.
@@ -1034,7 +1105,10 @@ export const PlayerSection = forwardRef<
     4: player4Url,
     5: player5Url,
     6: player6Url,
+    7: null,
   };
+  const isBgAudioPlayer =
+    activePlayer === BG_AUDIO_PLAYER && Boolean(currentBgAudio);
   const activeSrc = playerUrls[activePlayer] || player1Url;
 
   // Only when activeSrc really is that provider's URL, not the player 1
@@ -1046,7 +1120,10 @@ export const PlayerSection = forwardRef<
   // See SUBTITLES_MODE_LABEL — by provider, not by its number in the
   // picker, and only for a player that really carries ours right now.
   function subtitlesModeFor(provider: ProviderId): SubtitlesMode | null {
-    if (!hasOwnSubtitles || !playerUrls[provider]) return null;
+    if (!hasOwnSubtitles) return null;
+    // Ours is a captions track in its <video>, off by default (it's a dub).
+    if (provider === BG_AUDIO_PLAYER) return currentBgAudio ? "select" : null;
+    if (!playerUrls[provider]) return null;
     if (provider === 5 || (provider === 1 && vidsrcUsesOurSubs)) return "select";
     if (provider === 4) return "builtin";
     if (provider === 3 || provider === 6) return "download";
@@ -1064,7 +1141,7 @@ export const PlayerSection = forwardRef<
    * that's what <AdblockPrompt> is for.
    */
   useEffect(() => {
-    if (!hasStarted || isSandboxed) return;
+    if (!hasStarted || isSandboxed || isBgAudioPlayer) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -1075,7 +1152,7 @@ export const PlayerSection = forwardRef<
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () =>
       window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasStarted, isSandboxed]);
+  }, [hasStarted, isSandboxed, isBgAudioPlayer]);
 
   /**
    * Show loader whenever iframe source changes.
@@ -1236,7 +1313,8 @@ export const PlayerSection = forwardRef<
                 const subtitlesMode = subtitlesModeFor(provider);
                 const hasBgSubtitles =
                   hasOwnSubtitles &&
-                  (provider === 3 ||
+                  ((provider === BG_AUDIO_PLAYER && Boolean(currentBgAudio)) ||
+                    provider === 3 ||
                     provider === 4 ||
                     provider === 5 ||
                     provider === 6 ||
@@ -1268,14 +1346,27 @@ export const PlayerSection = forwardRef<
                         className={isActive ? "text-emerald-600" : "text-emerald-400"}
                       />
                     )}
-                    {(subtitlesMode || SANDBOXED_PLAYERS.has(provider)) && (
+                    {provider === BG_AUDIO_PLAYER && (
+                      <AudioLines
+                        size={16}
+                        aria-label={t("player.bgAudio")}
+                        className={isActive ? "text-sky-600" : "text-sky-300"}
+                      />
+                    )}
+                    {(subtitlesMode || SANDBOXED_PLAYERS.has(provider) || provider === BG_AUDIO_PLAYER) && (
                       // Small tags stacked on the button's top edge — "no
                       // ads" first, how the subtitles work under it — so the
                       // button itself stays the same size as the others.
                       // One line each; the buttons are a bit wider (sm up)
                       // so the subtitles one fits over its own button.
                       <span className="pointer-events-none absolute bottom-[calc(100%-0.5rem)] left-1/2 flex -translate-x-1/2 flex-col items-center gap-0.5">
-                        {SANDBOXED_PLAYERS.has(provider) && (
+                        {provider === BG_AUDIO_PLAYER && (
+                          <span className="flex items-center gap-0.5 rounded-full bg-sky-400 px-1.5 py-px text-[0.5625rem] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(56,189,248,0.45)]">
+                            <AudioLines size={10} />
+                            {t("player.bgAudio")}
+                          </span>
+                        )}
+                        {(SANDBOXED_PLAYERS.has(provider) || provider === BG_AUDIO_PLAYER) && (
                           <span className="flex items-center gap-0.5 rounded-full bg-emerald-400 px-1.5 py-px text-[0.5625rem] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(16,185,129,0.45)]">
                             <ShieldCheck size={10} />
                             {t("player.noAds")}
@@ -1295,7 +1386,7 @@ export const PlayerSection = forwardRef<
           </div>
         )}
 
-        {videoUrl && isSandboxed && (
+        {videoUrl && (isSandboxed || isBgAudioPlayer) && (
           <NoAdsBanner key={activeSrc} />
         )}
 
@@ -1319,7 +1410,15 @@ export const PlayerSection = forwardRef<
         )}
 
         {(() => {
-          const playerBody = (
+          const playerBody = isBgAudioPlayer && currentBgAudio ? (
+            <BgAudioPlayer
+              key={currentBgAudio.masterUrl}
+              masterUrl={currentBgAudio.masterUrl}
+              subtitleUrl={subtitleUrl}
+              title={title}
+              onFailed={handleBgAudioFailed}
+            />
+          ) : (
             <>
               {isFrameLoading && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">

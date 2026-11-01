@@ -183,6 +183,8 @@ export const elDictionary = {
   "player.hint": "Δεν φορτώνει, είναι αργό, θέλεις καλύτερη ποιότητα ή δεν έχει υπότιτλους; Δοκίμασε άλλον player.",
   "player.bgSubtitles": "Βουλγαρικοί υπότιτλοι",
   "player.noAds": "Χωρίς διαφημίσεις",
+  "player.bgAudio": "Βουλγαρικός ήχος",
+  "player.audioTrack": "Ήχος",
   "player.noAdsDetail": "Χωρίς pop-ups και ανακατευθύνσεις σε άλλα sites — μόνο η ταινία.",
   "player.manualSubsTitle": "Ενεργοποίησε τους βουλγαρικούς υπότιτλους",
   "player.autoSwitched": "Ο Player {from} δεν φόρτωσε αυτόν τον τίτλο — έγινε αλλαγή στον Player {to}.",

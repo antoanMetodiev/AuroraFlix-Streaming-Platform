@@ -183,6 +183,8 @@ export const esDictionary = {
   "player.hint": "¿No carga, va lento, quieres mejor calidad o no tiene subtítulos? Prueba otro reproductor.",
   "player.bgSubtitles": "Subtítulos en búlgaro",
   "player.noAds": "Sin anuncios",
+  "player.bgAudio": "Audio búlgaro",
+  "player.audioTrack": "Audio",
   "player.noAdsDetail": "Sin pop-ups ni redirecciones a otras webs — solo la película.",
   "player.manualSubsTitle": "Activa los subtítulos en búlgaro",
   "player.autoSwitched": "El reproductor {from} no cargó este título — se cambió al reproductor {to}.",
