@@ -7,12 +7,12 @@
     "en": "Fix: the player stops when you go to another page or tab instead of playing on in the background. Includes all fixes so far and the new design."
   },
   "tv": {
-    "versionCode": 10,
-    "versionName": "0.3.4",
+    "versionCode": 11,
+    "versionName": "0.3.5",
     "url": "https://auroraflix.cloud/downloads/auroraflix-tv.apk",
     "notes": {
-      "bg": "Курсор като мишка: стрелките движат стрелката по екрана, OK натиска, а в края на екрана страницата се превърта.",
-      "en": "Mouse-style pointer: the arrows move a pointer around the screen, OK clicks, and pushing it to the screen's edge scrolls."
+      "bg": "БГ аудио плейър: при филми с български дублаж Плейър 1 пуска дублажа без реклами, с бутони БГ/EN.",
+      "en": "BG audio player: for movies with a Bulgarian dub, player 1 plays the dub without ads, with BG/EN buttons."
     }
   }
 }
