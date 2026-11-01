@@ -7,12 +7,12 @@
     "en": "A Bulgarian-dub player without ads, a BG audio filter for movies and a lighter home screen with stills instead of trailers."
   },
   "tv": {
-    "versionCode": 12,
-    "versionName": "0.3.6",
+    "versionCode": 14,
+    "versionName": "0.3.8",
     "url": "https://auroraflix.cloud/downloads/auroraflix-tv.apk",
     "notes": {
-      "bg": "Нов начален екран с кадри вместо трейлъри, филтър „БГ аудио“ при филмите и плейър с БГ дублаж.",
-      "en": "New home screen with stills instead of trailers, a BG audio filter for movies and a player for Bulgarian dubs."
+      "bg": "Изглед за телевизор: повече карти на ред, секциите „В тренда“ като на сайта, плейърът и трейлърът се събират на екрана.",
+      "en": "TV layout: more cards per row, the trending sections like on the website, the player and trailer fit the screen."
     }
   }
 }
