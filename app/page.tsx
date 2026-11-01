@@ -12,7 +12,6 @@ import {
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
 import { Footer } from "@/components/layout/footer";
-import { PopularSection } from "@/components/home/popular-section";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -64,7 +63,7 @@ function interleave(movies: HeroItem[], series: HeroItem[]): HeroItem[] {
 	return mixed;
 }
 
-// Randomizes which trailer opens the hero carousel so the same title isn't
+// Randomizes which title opens the hero carousel so the same one isn't
 // always shown first on every visit.
 function shuffle<T>(items: T[]): T[] {
 	const shuffled = [...items];
@@ -139,13 +138,9 @@ export default function Home() {
 				<LazyLastViewedSection />
 			</Reveal>
 
-			{/* Streams in after the hero — see PopularSection's doc comment. */}
+			{/* Streams in after the hero, behind its own boundary — never holds up the page. */}
 			<Suspense fallback={null}>
 				<TrendingShowcaseSection />
-			</Suspense>
-
-			<Suspense fallback={null}>
-				<PopularSection />
 			</Suspense>
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />

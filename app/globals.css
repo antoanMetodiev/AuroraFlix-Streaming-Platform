@@ -213,36 +213,6 @@ p {
   }
 }
 
-/* Hero volume slider — a native range input, restyled. The filled part of
-   the track comes from the inline background gradient (--fill). */
-.hero-volume {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  border-radius: 9999px;
-  background: linear-gradient(to right, #fff var(--fill, 0%), rgba(255, 255, 255, 0.25) var(--fill, 0%));
-  cursor: pointer;
-}
-
-.hero-volume::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
-  background: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-}
-
-.hero-volume::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 0;
-  border-radius: 9999px;
-  background: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-}
-
 /* Fades the bottom of a scroll box — the "there's more below" hint. */
 .edge-fade-bottom {
   mask-image: linear-gradient(to bottom, black 78%, transparent);

@@ -1,225 +1,147 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
-import type { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { tmdbImage } from "@/lib/tmdb";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/shimmer";
 import type { HeroItem } from "@/components/home/hero-item";
 
-// Client-only and in its own chunk — it's never needed for the first paint
-// (see usePlayerUnlocked), so it stays out of the homepage's initial JS.
-const YouTube = dynamic(() => import("react-youtube"), { ssr: false });
+/** How long each still stays up before the next fades in. */
+const SLIDE_MS = 6000;
 
-function extractYouTubeId(url?: string | null) {
-    if (!url) return "";
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([\w-]+)/);
-    return match ? match[1] : "";
-}
+/** The cross-fade between two stills. */
+const FADE_MS = 1500;
 
-/** How often the trailer's playback position is reported to the parent. */
-const PROGRESS_POLL_MS = 250;
+/** Stills per title: its own backdrop plus up to four more from the catalog. */
+const MAX_SLIDES = 5;
 
-/** How long after the page has fully loaded the first trailer may start. */
-const PLAYER_DELAY_MS = 2500;
+/** How long a title stays in the hero before moving on to the next one. */
+const TITLE_MS = SLIDE_MS * MAX_SLIDES;
 
-// Once unlocked it stays unlocked for the rest of the visit, so switching
-// trailers (each one remounts HeroBackground) starts the next player at once.
-let playerUnlocked = false;
+/** How often the time spent on this title is reported to the parent. */
+const TICK_MS = 250;
 
 /**
- * Holds the YouTube player back on the first visit until PLAYER_DELAY_MS
- * after the window's load event — the iframe and its ~1 MB of player JS
- * otherwise compete with the page itself for the network and main thread,
- * which phones feel the most. The backdrop still shows straight away.
+ * The hero's backdrop: a slideshow of the title's own stills, cross-fading
+ * every SLIDE_MS with a slow zoom — in place of the YouTube trailers it used
+ * to play, which cost an iframe and ~1 MB of player JS on every visit.
+ *
+ * It opens on the trending row's backdrop straight away; the rest come from
+ * the catalog record (get-movie-details / get-series-details by TMDB id, the
+ * same cached lookup the friends panel uses), each one only shown once it
+ * has loaded. After TITLE_MS the parent moves on to the next title.
  */
-function usePlayerUnlocked() {
-    const [unlocked, setUnlocked] = useState(playerUnlocked);
-
-    useEffect(() => {
-        if (unlocked) return;
-        let timer: number | undefined;
-        const start = () => {
-            timer = window.setTimeout(() => {
-                playerUnlocked = true;
-                setUnlocked(true);
-            }, PLAYER_DELAY_MS);
-        };
-        if (document.readyState === "complete") start();
-        else window.addEventListener("load", start, { once: true });
-        return () => {
-            window.removeEventListener("load", start);
-            window.clearTimeout(timer);
-        };
-    }, [unlocked]);
-
-    return unlocked;
-}
-
-/**
- * Runs one call against the YouTube player, swallowing what it throws.
- * The player's methods throw outright once its iframe is gone (e.g. a call
- * landing just as this trailer is swapped for the next one — seen as
- * "Cannot read properties of null (reading 'src')" from mute()), and from
- * inside an effect that would take the whole homepage down with it.
- */
-function withPlayer<T>(player: YouTubePlayer | null, call: (player: YouTubePlayer) => T): T | undefined {
-    if (!player) return undefined;
-    try {
-        return call(player);
-    } catch {
-        return undefined;
-    }
-}
-
 export function HeroBackground({
-    record,
-    muted,
-    volume,
-    onEnded,
-    onReady,
-    onProgress,
+  record,
+  type,
+  onEnded,
+  onProgress,
 }: {
-    record: HeroItem["record"];
-    muted: boolean;
-    /** 0–100, applied while unmuted (YouTube's own scale). */
-    volume: number;
-    onEnded: () => void;
-    // Fires once the player has actually started (after the same delay
-    // videoReady itself uses) — lets the parent's mute/unmute button stay
-    // disabled until there's a real player to mute/unmute, instead of
-    // queuing a toggle against a not-yet-ready (or still-buffering) iframe.
-    onReady?: () => void;
-    /** 0–1 share of the trailer played so far, every PROGRESS_POLL_MS. */
-    onProgress?: (fraction: number) => void;
+  record: HeroItem["record"];
+  type: HeroItem["type"];
+  onEnded: () => void;
+  /** 0–1 share of this title's time in the hero, every TICK_MS. */
+  onProgress?: (fraction: number) => void;
 }) {
-    const videoId = extractYouTubeId(record.trailerVideoURL);
-    const playerReady = usePlayerUnlocked();
-    const playerRef = useRef<YouTubePlayer | null>(null);
-    const [videoReady, setVideoReady] = useState(false);
+  const first = tmdbImage(record.backgroundImg_URL, "w1280");
+  const [slides, setSlides] = useState<string[]>(first ? [first] : []);
+  const [elapsed, setElapsed] = useState(0);
 
-    // Latest callbacks, read from the timers below without restarting them
-    // every time the parent re-renders with new function identities.
-    const onReadyRef = useRef(onReady);
-    const onProgressRef = useRef(onProgress);
-    useEffect(() => {
-        onReadyRef.current = onReady;
-        onProgressRef.current = onProgress;
-    }, [onReady, onProgress]);
+  const onEndedRef = useRef(onEnded);
+  const onProgressRef = useRef(onProgress);
+  useEffect(() => {
+    onEndedRef.current = onEnded;
+    onProgressRef.current = onProgress;
+  }, [onEnded, onProgress]);
 
-    // The reveal timer from onReady below — cleared on unmount so it can't
-    // fire into a trailer that's already been swapped out.
-    const revealTimerRef = useRef<number | undefined>(undefined);
-    useEffect(() => {
-        return () => {
-            window.clearTimeout(revealTimerRef.current);
-            playerRef.current = null;
+  // Trending movie rows carry the TMDB id as movieId; series as tmdbId.
+  const tmdbId = record.tmdbId ?? (record as { movieId?: string | null }).movieId ?? null;
+
+  // The catalog's other backdrops, appended one by one as each finishes
+  // loading, so a slide never fades in half-drawn.
+  useEffect(() => {
+    if (!tmdbId) return;
+    let cancelled = false;
+    const loaders: HTMLImageElement[] = [];
+
+    const lookup = type === "series" ? getSeriesPreview(tmdbId) : getMoviePreview(tmdbId);
+    void lookup.then((details) => {
+      if (cancelled || !details?.imagesList) return;
+      const seen = new Set([record.backgroundImg_URL]);
+      const extra = details.imagesList
+        .filter((image) => image.imageType === "BACKDROP" && image.imageURL && !seen.has(image.imageURL) && seen.add(image.imageURL))
+        .slice(0, MAX_SLIDES - 1)
+        .map((image) => tmdbImage(image.imageURL, "w1280"))
+        .filter((src): src is string => Boolean(src));
+
+      for (const src of extra) {
+        const loader = new window.Image();
+        loader.onload = () => {
+          if (!cancelled) setSlides((current) => (current.includes(src) ? current : [...current, src]));
         };
-    }, []);
+        loader.src = src;
+        loaders.push(loader);
+      }
+    });
 
-    useEffect(() => {
-        if (!videoReady) return;
-        withPlayer(playerRef.current, (player) => {
-            if (muted) {
-                player.mute();
-            } else {
-                player.unMute();
-                // Several mobile browsers (iOS Safari in particular) pause
-                // playback as a side effect of unMute() on an iframe that
-                // autoplayed muted, instead of just unmuting it — nudge it back
-                // into play to counteract that instead of leaving it paused.
-                player.playVideo();
-            }
-        });
-    }, [muted, videoReady]);
+    return () => {
+      cancelled = true;
+      loaders.forEach((loader) => (loader.onload = null));
+    };
+  }, [tmdbId, record.backgroundImg_URL, type]);
 
-    // Kept apart from the mute effect above so dragging the volume doesn't
-    // re-run its playVideo() nudge on every step. (iOS ignores setVolume —
-    // volume there is the hardware buttons' — so the parent only offers the
-    // slider on mouse/trackpad devices.)
-    useEffect(() => {
-        if (!videoReady) return;
-        withPlayer(playerRef.current, (player) => player.setVolume(volume));
-    }, [volume, videoReady]);
+  // The clock for this title — it only runs while the tab is visible, so a
+  // background tab doesn't race through the whole carousel.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      setElapsed((current) => current + TICK_MS);
+    }, TICK_MS);
+    return () => window.clearInterval(timer);
+  }, []);
 
-    useEffect(() => {
-        if (!videoReady) return;
-        const timer = window.setInterval(() => {
-            const fraction = withPlayer(playerRef.current, (player) => {
-                const duration = Number(player.getDuration());
-                const current = Number(player.getCurrentTime());
-                return duration > 0 && Number.isFinite(current) ? Math.min(current / duration, 1) : undefined;
-            });
-            if (fraction !== undefined) onProgressRef.current?.(fraction);
-        }, PROGRESS_POLL_MS);
-        return () => window.clearInterval(timer);
-    }, [videoReady]);
+  useEffect(() => {
+    onProgressRef.current?.(Math.min(elapsed / TITLE_MS, 1));
+    if (elapsed >= TITLE_MS) onEndedRef.current();
+  }, [elapsed]);
 
-    // w1280 only — no upgrade to the original: it sits under a 50% shade and
-    // fades out into the trailer anyway, so the multi-MB original was never
-    // really seen, just downloaded on every slide. 1280px still covers a
-    // phone's ~1170 physical pixels across.
-    const backgroundSrc = tmdbImage(record.backgroundImg_URL, "w1280");
+  const active = slides.length > 0 ? Math.floor(elapsed / SLIDE_MS) % slides.length : 0;
 
-    return (
-        // Remounted per title (keyed by the parent), so this fade plays on every switch.
-        <div className="animate-hero-bg-in absolute inset-0 -z-10 overflow-hidden bg-black">
-            {backgroundSrc && (
-                <Image
-                    src={backgroundSrc}
-                    alt=""
-                    fill
-                    priority
-                    placeholder="blur"
-                    blurDataURL={SHIMMER_BLUR_DATA_URL}
-                    sizes="100vw"
-                    className={videoReady ? "object-cover opacity-0" : "object-cover opacity-100"}
-                />
-            )}
+  return (
+    // Remounted per title (keyed by the parent), so this fade plays on every switch.
+    <div className="animate-hero-bg-in absolute inset-0 -z-10 overflow-hidden bg-black">
+      {slides.map((src, index) => {
+        const isActive = index === active;
+        return (
+          <div
+            key={src}
+            aria-hidden
+            className="absolute inset-0 ease-out"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? "scale(1.08)" : "scale(1)",
+              transitionProperty: "opacity, transform",
+              transitionDuration: isActive ? `${FADE_MS}ms, ${SLIDE_MS + FADE_MS}ms` : `${FADE_MS}ms, 0ms`,
+              transitionDelay: isActive ? "0ms" : `0ms, ${FADE_MS}ms`,
+              transitionTimingFunction: "ease-in-out, linear",
+            }}
+          >
+            <Image
+              src={src}
+              alt=""
+              fill
+              priority={index === 0}
+              placeholder={index === 0 ? "blur" : "empty"}
+              blurDataURL={index === 0 ? SHIMMER_BLUR_DATA_URL : undefined}
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        );
+      })}
 
-            <div className="absolute inset-0 z-10 bg-black/50" />
-
-            {videoId && playerReady && (
-                <div
-                    className={`pointer-events-none absolute inset-0 overflow-hidden ${videoReady ? "opacity-100" : "opacity-0"
-                        } [&_iframe]:absolute [&_iframe]:top-1/2 [&_iframe]:left-1/2 [&_iframe]:w-screen [&_iframe]:h-[56.25vw] [&_iframe]:min-h-full [&_iframe]:min-w-[177.78vh] [&_iframe]:-translate-x-1/2 [&_iframe]:-translate-y-1/2`}
-                >
-                    <YouTube
-                        videoId={videoId}
-                        className="h-full w-full"
-                        opts={{
-                            width: "100%",
-                            height: "100%",
-                            playerVars: {
-                                autoplay: 1,
-                                controls: 0,
-                                mute: 1,
-                                loop: 0,
-                                playlist: videoId,
-                                modestbranding: 1,
-                                playsinline: 1,
-                            },
-                        }}
-                        onReady={(event: YouTubeEvent) => {
-                            playerRef.current = event.target;
-
-                            // The `mute=1` playerVar is undocumented and not reliably honored,
-                            // so mute explicitly as soon as the player exists.
-                            if (muted) withPlayer(event.target, (player) => player.mute());
-
-                            // Reveal the video first — nothing below this line may throw and
-                            // block the fade-in (quality-level APIs are effectively deprecated
-                            // by YouTube and can hang or reject).
-                            revealTimerRef.current = window.setTimeout(() => {
-                                setVideoReady(true);
-                                onReadyRef.current?.();
-                            }, 1200);
-                        }}
-                        onEnd={onEnded}
-                    />
-                </div>
-            )}
-        </div>
-    );
+      <div className="absolute inset-0 z-10 bg-black/45" />
+    </div>
+  );
 }

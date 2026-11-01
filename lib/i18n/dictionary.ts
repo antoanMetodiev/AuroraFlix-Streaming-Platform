@@ -112,12 +112,9 @@ export const dictionary = {
   "hero.watchNow": { en: "Watch Now", bg: "Гледай сега" },
   "hero.previous": { en: "Previous movie", bg: "Предишен филм" },
   "hero.next": { en: "Next movie", bg: "Следващ филм" },
-  "hero.mute": { en: "Mute", bg: "Изключи звука" },
-  "hero.unmute": { en: "Unmute", bg: "Включи звука" },
   "hero.show": { en: "Show", bg: "Покажи" },
   "hero.upNext": { en: "Up next", bg: "Следва" },
-  "hero.volume": { en: "Volume", bg: "Сила на звука" },
-  "hero.trailers": { en: "Trending trailers", bg: "Трейлъри в тренда" },
+  "hero.trailers": { en: "Trending now", bg: "В тренда" },
   "hero.badgeMovie": { en: "Movie", bg: "Филм" },
   "hero.badgeSeries": { en: "Series", bg: "Сериал" },
 

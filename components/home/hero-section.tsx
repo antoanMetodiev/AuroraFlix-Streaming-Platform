@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { formatReleaseDate } from "@/lib/dates";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Volume1, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { HeroBackground } from "@/components/home/hero-background";
 import type { HeroItem } from "@/components/home/hero-item";
 import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
@@ -16,92 +16,12 @@ import { genreLabel } from "@/lib/i18n/translate";
 import type { Series } from "@/types/series";
 import type { Movie } from "@/types/movie";
 
-/** Remembered across visits — but only read once the viewer unmutes. */
-const VOLUME_STORAGE_KEY = "aurora_hero_volume";
-const DEFAULT_VOLUME = 60;
-
 const SWIPE_THRESHOLD_PX = 50;
-
-function readSavedVolume(): number {
-  try {
-    const saved = Number(window.localStorage.getItem(VOLUME_STORAGE_KEY));
-    return saved > 0 && saved <= 100 ? saved : DEFAULT_VOLUME;
-  } catch {
-    return DEFAULT_VOLUME;
-  }
-}
-
-function saveVolume(volume: number) {
-  try {
-    window.localStorage.setItem(VOLUME_STORAGE_KEY, String(volume));
-  } catch {
-    // Private mode / blocked storage — the volume just isn't remembered.
-  }
-}
-
-/**
- * Speaker button + volume slider. The slider unfolds on hover/focus, and
- * only on mouse/trackpad devices — on phones (iOS above all) a page can't
- * set a video's volume at all, that's the hardware buttons' job, so there
- * it's just the mute toggle.
- *
- * While muted the slider sits at 0; unmuting (button, or dragging the
- * slider up) brings back the last volume, remembered across visits.
- */
-function VolumeControl({
-  muted,
-  volume,
-  disabled,
-  onMutedChange,
-  onVolumeChange,
-}: {
-  muted: boolean;
-  volume: number;
-  disabled: boolean;
-  onMutedChange: (muted: boolean) => void;
-  onVolumeChange: (volume: number) => void;
-}) {
-  const { t } = useTranslation();
-  const shown = muted ? 0 : volume;
-  const Icon = muted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
-
-  return (
-    <div
-      className={`group/volume flex items-center rounded-full border border-white/15 bg-black/45 p-1 backdrop-blur-md transition-opacity ${
-        disabled ? "pointer-events-none opacity-40" : ""
-      }`}
-    >
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => onMutedChange(!muted)}
-        aria-label={muted ? t("hero.unmute") : t("hero.mute")}
-        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white hover:text-black sm:h-10 sm:w-10"
-      >
-        <Icon size={18} />
-      </button>
-      <div className="hidden w-0 overflow-hidden transition-[width] duration-300 ease-out pointer-fine:flex pointer-fine:group-hover/volume:w-28 pointer-fine:group-focus-within/volume:w-28">
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={shown}
-          disabled={disabled}
-          aria-label={t("hero.volume")}
-          onChange={(event) => onVolumeChange(Number(event.target.value))}
-          className="hero-volume mx-3 w-22"
-          style={{ "--fill": `${shown}%` } as CSSProperties}
-        />
-      </div>
-    </div>
-  );
-}
 
 type ProgressStore = ReturnType<typeof createProgressStore>;
 
 /**
- * The playing trailer's progress (0–1), kept outside React state: it ticks
+ * How far the current title's slideshow has got (0–1), kept outside React state: it ticks
  * every 250ms, and as HeroSection state each tick re-rendered the whole hero
  * and all of its rail cards. Only RailProgress subscribes to it.
  */
@@ -141,9 +61,9 @@ function RailProgress({ store }: { store: ProgressStore }) {
 const DRAG_THRESHOLD_PX = 6;
 
 /**
- * The strip of trailers along the bottom: each title's backdrop as a
- * thumbnail, the playing one lit up with a bar filling as its trailer
- * plays. Slides sideways like a carousel — fingers natively, a mouse by
+ * The strip of titles along the bottom: each title's backdrop as a
+ * thumbnail, the current one lit up with a bar filling as its slideshow
+ * runs. Slides sideways like a carousel — fingers natively, a mouse by
  * grabbing and dragging (scrollbar hidden either way) — and keeps the
  * playing card centred, by scrolling the strip itself, never the page.
  */
@@ -273,13 +193,7 @@ function TrailerRail({
 export function HeroSection({ items }: { items: HeroItem[] }) {
   const { t, locale } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [muted, setMuted] = useState(true);
-  const [volume, setVolume] = useState(DEFAULT_VOLUME);
-  // Whether `volume` has been loaded from storage yet — done lazily on the
-  // first unmute (an event, so no hydration mismatch from reading it during
-  // render).
-  const volumeLoadedRef = useRef(false);
-  // 0–1, how far the current trailer has played — fills its rail card.
+  // 0–1, how far the current title's slideshow has got — fills its rail card.
   const [progress] = useState(createProgressStore);
   const sectionRef = useRef<HTMLElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -289,22 +203,13 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
   // A plain setTimeout rather than requestAnimationFrame — rAF is paused for
   // backgrounded/hidden tabs (e.g. a middle-click "open in new tab"), which
   // would leave the entrance stuck invisible until the tab is focused.
-  // Gates the mute/unmute button — toggling mute against a player that
-  // hasn't started yet (or is still buffering) is what triggers the
-  // pause-instead-of-unmute bug on some mobile browsers, so the button stays
-  // inert until HeroBackground reports its player is actually ready.
-  const [isVideoReady, setIsVideoReady] = useState(false);
 
   const current = items[currentIndex];
 
-  // Resetting isVideoReady lives in these event handlers rather than a
-  // useEffect keyed on the current record — HeroBackground already fully
-  // remounts on change (key={...}), so every path that changes currentIndex
-  // is a plain user-triggered event, not something that needs to be derived
-  // reactively from a prop.
+  // HeroBackground remounts per title (key={...}) and restarts its own
+  // clock; only the rail's progress bar needs resetting here.
   const goTo = useCallback(
     (resolveIndex: (prev: number) => number) => {
-      setIsVideoReady(false);
       progress.set(0);
       setCurrentIndex((prev) => {
         const next = resolveIndex(prev);
@@ -317,28 +222,8 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
   const goToPrevious = useCallback(() => goTo((prev) => prev - 1), [goTo]);
   const goToNext = useCallback(() => goTo((prev) => prev + 1), [goTo]);
 
-  function changeMuted(nextMuted: boolean) {
-    if (!nextMuted && !volumeLoadedRef.current) {
-      volumeLoadedRef.current = true;
-      setVolume(readSavedVolume());
-    }
-    setMuted(nextMuted);
-  }
-
-  function changeVolume(nextVolume: number) {
-    volumeLoadedRef.current = true;
-    if (nextVolume === 0) {
-      setMuted(true);
-      return;
-    }
-    setVolume(nextVolume);
-    saveVolume(nextVolume);
-    setMuted(false);
-  }
-
-  // ←/→ switch trailers while the hero is what's on screen — not once the
-  // page is scrolled past it, and never while typing or on a slider (the
-  // volume one uses the arrow keys itself).
+  // ←/→ switch titles while the hero is what's on screen — not once the
+  // page is scrolled past it, and never while typing or on a slider.
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -405,15 +290,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
       }}
       className="bg-grain relative isolate -mt-16 h-[85vh] min-h-[624px] w-full overflow-hidden bg-black sm:h-[100dvh]"
     >
-      <HeroBackground
-        key={record.id}
-        record={record}
-        muted={muted}
-        volume={volume}
-        onEnded={goToNext}
-        onReady={() => setIsVideoReady(true)}
-        onProgress={progress.set}
-      />
+      <HeroBackground key={record.id} record={record} type={type} onEnded={goToNext} onProgress={progress.set} />
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/85 sm:via-black/10 sm:to-transparent" />
 
@@ -521,13 +398,6 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
             )}
           </div>
 
-          <VolumeControl
-            muted={muted}
-            volume={volume}
-            disabled={!isVideoReady}
-            onMutedChange={changeMuted}
-            onVolumeChange={changeVolume}
-          />
         </div>
 
         <div data-hero-rail>
