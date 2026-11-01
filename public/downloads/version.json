@@ -1,18 +1,18 @@
 {
-  "versionCode": 8,
-  "versionName": "0.3.2",
+  "versionCode": 13,
+  "versionName": "0.3.7",
   "url": "https://auroraflix.cloud/downloads/auroraflix.apk",
   "notes": {
-    "bg": "Поправка: плейърът спира, когато отидеш на друга страница или таб, вместо да продължава да върви на заден план. Включва всички досегашни поправки и нов дизайн.",
-    "en": "Fix: the player stops when you go to another page or tab instead of playing on in the background. Includes all fixes so far and the new design."
+    "bg": "Плейър с БГ дублаж без реклами, филтър „БГ аудио“ при филмите и по-лек начален екран с кадри вместо трейлъри.",
+    "en": "A Bulgarian-dub player without ads, a BG audio filter for movies and a lighter home screen with stills instead of trailers."
   },
   "tv": {
-    "versionCode": 11,
-    "versionName": "0.3.5",
+    "versionCode": 12,
+    "versionName": "0.3.6",
     "url": "https://auroraflix.cloud/downloads/auroraflix-tv.apk",
     "notes": {
-      "bg": "БГ аудио плейър: при филми с български дублаж Плейър 1 пуска дублажа без реклами, с бутони БГ/EN.",
-      "en": "BG audio player: for movies with a Bulgarian dub, player 1 plays the dub without ads, with BG/EN buttons."
+      "bg": "Нов начален екран с кадри вместо трейлъри, филтър „БГ аудио“ при филмите и плейър с БГ дублаж.",
+      "en": "New home screen with stills instead of trailers, a BG audio filter for movies and a player for Bulgarian dubs."
     }
   }
 }
