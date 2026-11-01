@@ -482,6 +482,15 @@ type ProviderId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 const BG_AUDIO_PLAYER: ProviderId = 7;
 
 /**
+ * Off for now. VidHide signs each playlist link for the network (ASN) that
+ * resolved it: resolved on Render (asn=7029), the CDN answers a viewer's
+ * browser with 403 — verified 2026-11-01. And a browser can't resolve it
+ * itself, the embed page sends no CORS headers. Needs either a proxy that
+ * resolves *and* streams from one network, or the app (no CORS there).
+ */
+const BG_AUDIO_PLAYER_ENABLED = false;
+
+/**
  * VidSpark — plays inside our sandbox (no sandbox checks anywhere in its
  * player; its pop-under ad script can't open anything there), so no ads.
  *
@@ -752,7 +761,7 @@ export const PlayerSection = forwardRef<
    * this page if the stream fails to play.
    */
   const bgAudioCheckUrl =
-    vidsrcRef?.kind === "movie"
+    BG_AUDIO_PLAYER_ENABLED && vidsrcRef?.kind === "movie"
       ? `/api/bg-audio/${encodeURIComponent(vidsrcRef.tmdbId)}`
       : null;
   const [bgAudio, setBgAudio] = useState<{
