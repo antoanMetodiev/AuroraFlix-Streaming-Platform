@@ -10,13 +10,12 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 const MAX_AVATARS = 3;
 
 /**
- * Real phones (<640px) have no room in the header row for a "who's
- * watching" cluster (see Navigation.tsx — that's exactly what overflowed it
- * once already) and no fixed-width real estate for WatchingFriendsSidebar's
- * rail either. This floats independently of the header instead: a small
- * avatar-stack pill above MobileTabBar, mirroring WatchingToastManager's
- * bottom-right toast on the opposite corner so the two never collide. Tap
- * opens the same rich cards FriendsNavButton's sm..xl popover shows.
+ * Who of your friends is watching right now — on every screen size the same
+ * small pill as in the Android app: just their avatars, bottom-right (above
+ * MobileTabBar on phones). Only a click opens the cards with what each one
+ * is watching. It replaced the header's avatar cluster and the xl "active
+ * now" rail, which spelled every title out at the top of the page.
+ * WatchingToastManager's toasts stack above it in the same corner.
  */
 export function WatchingFriendsMobilePill() {
   const { t } = useTranslation();
@@ -37,9 +36,9 @@ export function WatchingFriendsMobilePill() {
   if (watchingFriends.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="fixed bottom-20 left-3 z-40 sm:hidden">
+    <div ref={containerRef} className="fixed right-3 bottom-20 z-40 md:right-4 md:bottom-4">
       <div
-        className={`absolute bottom-full left-0 mb-2 flex max-h-[60vh] w-[calc(100vw-1.5rem)] max-w-xs flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/10 bg-surface p-2 shadow-[0_20px_45px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-200 ease-out ${
+        className={`absolute right-0 bottom-full mb-2 flex max-h-[60vh] w-[calc(100vw-1.5rem)] max-w-xs origin-bottom-right flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/10 bg-surface p-2 shadow-[0_20px_45px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-200 ease-out ${
           isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >

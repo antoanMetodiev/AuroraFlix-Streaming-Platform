@@ -84,7 +84,7 @@ export function WatchingToastManager() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed right-4 bottom-20 z-50 flex flex-col gap-3 md:bottom-4">
+    <div className="pointer-events-none fixed right-4 bottom-32 z-50 flex flex-col gap-3 md:bottom-16">
       {toasts.map((toast) => {
         const TypeIcon = toast.watching.type === "movie" ? Film : Tv;
         const backdrop = tmdbImage(toast.preview?.backgroundImg_URL ?? toast.preview?.posterImgURL, "w780");

@@ -20,12 +20,10 @@ function hrefFor(watching: WatchingTarget) {
 }
 
 /**
- * One friend's "currently watching" row, full detail always shown (no
- * separate hover state) — used inside an already-open popover/sheet, so
- * unlike WatchingFriendsSidebar's rail item there's no compact form to
- * expand from. Fetches its own poster/genres/rating/description preview on
- * mount (cached by id in lib/api-public.ts), same data WatchingSidebarItem
- * and WatchingToastManager both already pull from for the same reason.
+ * One friend's "currently watching" row, full detail always shown — used
+ * inside WatchingFriendsMobilePill's popover, opened on click. Fetches its
+ * own poster/genres/rating/description preview on mount (cached by id in
+ * lib/api-public.ts), the same data WatchingToastManager pulls.
  */
 export function WatchingFriendCard({ friend, watching, onNavigate }: { friend: Friend; watching: WatchingTarget; onNavigate?: () => void }) {
   const { t } = useTranslation();

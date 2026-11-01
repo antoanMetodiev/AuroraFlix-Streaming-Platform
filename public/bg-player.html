@@ -18,6 +18,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>AuroraFlix — БГ аудио</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: system-ui, sans-serif; }
   video { width: 100%; height: 100%; background: #000; display: block; }
@@ -79,7 +80,10 @@
   }
 
   if (window.Hls && Hls.isSupported()) {
-    var hls = new Hls({ enableWorker: true });
+    // Start on the first segment as soon as it's in, and fetch it while the
+    // playlist is still being parsed; a short forward buffer gets playback
+    // going sooner (the stream is one quality, so there's nothing to pick).
+    var hls = new Hls({ enableWorker: true, startFragPrefetch: true, maxBufferLength: 20, backBufferLength: 30 });
     var fatal = 0;
 
     function drawTracks() {

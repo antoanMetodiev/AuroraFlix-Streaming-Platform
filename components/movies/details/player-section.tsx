@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { preconnect } from "react-dom";
 import { AudioLines, Captions, Download, MonitorPlay, Play, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
@@ -1024,6 +1025,8 @@ export const PlayerSection = forwardRef<
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { embedUrl?: string } | null) => {
         if (cancelled || !data?.embedUrl) return;
+        // Warm the connection now, so Play doesn't wait for DNS + TLS.
+        preconnect(new URL(data.embedUrl).origin);
         setBgAudio({ url, embedUrl: data.embedUrl });
         if (!hasStartedRef.current && !userChangedPlayerRef.current) {
           setActivePlayer(BG_AUDIO_PLAYER);

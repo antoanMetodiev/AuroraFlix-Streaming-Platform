@@ -5,7 +5,6 @@ import { Navigation } from "@/components/layout/navigation";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { FriendsSocketManager } from "@/components/friends/friends-socket-manager";
 import { WatchingToastManager } from "@/components/friends/watching-toast";
-import { WatchingFriendsSidebar } from "@/components/friends/watching-sidebar";
 import { WatchingFriendsMobilePill } from "@/components/friends/watching-friends-mobile-pill";
 
 // Rendered once from the root layout so it's identical and always present
@@ -39,7 +38,6 @@ export function SiteHeader() {
       <FriendsSocketManager />
       <MobileTabBar />
       <WatchingToastManager />
-      <WatchingFriendsSidebar />
       <WatchingFriendsMobilePill />
     </>
   );
