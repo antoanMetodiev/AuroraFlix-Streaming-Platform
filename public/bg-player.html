@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+  AuroraFlix "БГ аудио" player — what the Android app embeds for a movie with
+  a Bulgarian dub (its player 1). The app resolves ZenoPlay's VidHide stream
+  itself (the signed links only play on the network that asked for them, and
+  a browser can't read the embed page — no CORS), then opens this page as:
+
+    /bg-player.html#master=<master.m3u8 URL>&sub=<our .vtt URL>&title=<title>
+
+  (in the fragment, so the links never reach our server's logs). The page
+  plays it with hls.js — iPhone-style native HLS where there's no MSE — with
+  the Bulgarian rendition picked, БГ/EN buttons when there's more than one,
+  and our subtitles as a captions track, off by default.
+-->
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AuroraFlix — БГ аудио</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: system-ui, sans-serif; }
+  video { width: 100%; height: 100%; background: #000; display: block; }
+  #tracks { position: absolute; top: 10px; right: 10px; display: none; gap: 2px; padding: 3px; border-radius: 999px;
+            background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(8px); z-index: 2; }
+  #tracks button { border: 0; border-radius: 999px; padding: 6px 12px; font: 700 12px system-ui, sans-serif; cursor: pointer;
+                   background: transparent; color: rgba(255,255,255,.8); }
+  #tracks button.on { background: #fff; color: #111; }
+  #spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 1; }
+  #spinner::after { content: ""; width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255,255,255,.2);
+                    border-top-color: #fff; animation: spin 0.8s linear infinite; }
+  #error { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center;
+           color: rgba(255,255,255,.75); font-size: 14px; padding: 24px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<video id="video" controls playsinline autoplay crossorigin="anonymous"></video>
+<div id="tracks" role="group" aria-label="Аудио"></div>
+<div id="spinner"></div>
+<div id="error">Стриймът не се зарежда. Избери друг плейър.</div>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.4/dist/hls.min.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.hash.slice(1));
+  var master = params.get("master");
+  var sub = params.get("sub");
+  var video = document.getElementById("video");
+  var tracksBox = document.getElementById("tracks");
+  var spinner = document.getElementById("spinner");
+  var errorBox = document.getElementById("error");
+
+  if (params.get("title")) document.title = params.get("title");
+
+  function fail() {
+    spinner.style.display = "none";
+    errorBox.style.display = "flex";
+    // The app listens for this and moves on to the next player.
+    try { parent.postMessage({ type: "BG_AUDIO_FAILED" }, "*"); } catch (e) {}
+  }
+
+  if (!master) return fail();
+
+  if (sub) {
+    var track = document.createElement("track");
+    track.kind = "subtitles";
+    track.srclang = "bg";
+    track.label = "Български";
+    track.src = sub;
+    video.appendChild(track);
+  }
+
+  ["playing", "loadeddata"].forEach(function (name) {
+    video.addEventListener(name, function () { spinner.style.display = "none"; });
+  });
+
+  function isBg(track) {
+    return /^(bg|bul)/i.test(track.lang || "") || /българ/i.test(track.name || "");
+  }
+
+  if (window.Hls && Hls.isSupported()) {
+    var hls = new Hls({ enableWorker: true });
+    var fatal = 0;
+
+    function drawTracks() {
+      var list = hls.audioTracks || [];
+      tracksBox.innerHTML = "";
+      tracksBox.style.display = list.length > 1 ? "flex" : "none";
+      list.forEach(function (track, index) {
+        var button = document.createElement("button");
+        button.textContent = isBg(track) ? "БГ" : (track.lang ? track.lang.slice(0, 2).toUpperCase() : track.name);
+        button.title = track.name || "";
+        if (index === hls.audioTrack) button.className = "on";
+        button.onclick = function () { hls.audioTrack = index; };
+        tracksBox.appendChild(button);
+      });
+    }
+
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      var bg = (hls.audioTracks || []).findIndex(isBg);
+      if (bg >= 0 && hls.audioTrack !== bg) hls.audioTrack = bg;
+      drawTracks();
+      video.play().catch(function () {});
+    });
+    hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, drawTracks);
+    hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, drawTracks);
+    hls.on(Hls.Events.ERROR, function (event, data) {
+      if (!data.fatal) return;
+      fatal++;
+      if (fatal === 1 && data.type === Hls.ErrorTypes.NETWORK_ERROR && data.details !== Hls.ErrorDetails.MANIFEST_LOAD_ERROR) return hls.startLoad();
+      if (fatal === 1 && data.type === Hls.ErrorTypes.MEDIA_ERROR) return hls.recoverMediaError();
+      hls.destroy();
+      fail();
+    });
+    hls.loadSource(master);
+    hls.attachMedia(video);
+  } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = master;
+    video.addEventListener("error", fail);
+  } else {
+    fail();
+  }
+})();
+</script>
+</body>
+</html>
