@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SlidersHorizontal, User, X } from "lucide-react";
+import { AudioLines, SlidersHorizontal, User, X } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { Spinner } from "@/components/ui/loader";
@@ -34,7 +34,7 @@ const SOCIAL_LINKS = [
   { key: "youtubeChannel", Icon: FaYoutube, href: (v: string) => `https://www.youtube.com/${v}`, hover: "hover:text-[#ff0000]" },
 ] as const satisfies { key: keyof Actor; Icon: typeof FaInstagram; href: (value: string) => string; hover: string }[];
 
-type Filters = { genre?: string; year?: string; actor?: string; sort?: SortOption };
+type Filters = { genre?: string; year?: string; actor?: string; sort?: SortOption; bgAudio?: boolean };
 
 export function DiscoverFilters({
   type,
@@ -42,12 +42,15 @@ export function DiscoverFilters({
   year,
   actor,
   sort,
+  bgAudio,
 }: {
   type: "movies" | "series";
   genre?: string;
   year?: string;
   actor?: string;
   sort?: SortOption;
+  /** Movies only: just the ones with a Bulgarian dub. */
+  bgAudio?: boolean;
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -133,18 +136,19 @@ export function DiscoverFilters({
   }, [isSuggestOpen]);
 
   const navigate = (next: Filters) => {
-    const merged: Filters = { genre, year, actor, sort, ...next };
+    const merged: Filters = { genre, year, actor, sort, bgAudio, ...next };
     const params = new URLSearchParams();
     if (merged.genre) params.set("genre", merged.genre);
     if (merged.year) params.set("year", merged.year);
     if (merged.actor) params.set("actor", merged.actor);
     if (merged.sort && merged.sort !== "newest") params.set("sort", merged.sort);
+    if (merged.bgAudio) params.set("audio", "bg");
 
     const query = params.toString();
     router.push(query ? `/${type}?${query}` : `/${type}`);
   };
 
-  const activeCount = [genre, year, actor, sort && sort !== "newest" ? sort : undefined].filter(Boolean).length;
+  const activeCount = [genre, year, actor, sort && sort !== "newest" ? sort : undefined, bgAudio].filter(Boolean).length;
 
   const sortOptions = [
     { value: "newest", label: t("filters.sortNewest") },
@@ -179,6 +183,23 @@ export function DiscoverFilters({
         onChange={(value) => navigate({ sort: value as SortOption })}
         className="w-full lg:w-auto"
       />
+
+      {/* Only movies carry the flag so far (ZenoPlay's БГ Аудио category). */}
+      {type === "movies" && (
+        <button
+          type="button"
+          onClick={() => navigate({ bgAudio: !bgAudio })}
+          aria-pressed={!!bgAudio}
+          className={`flex w-full items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold backdrop-blur-md transition-all duration-300 lg:w-auto ${
+            bgAudio
+              ? "border-transparent bg-white text-neutral-900"
+              : "border-foreground/10 bg-foreground/5 text-foreground/80 hover:border-foreground/25 hover:bg-foreground/10"
+          }`}
+        >
+          <AudioLines size={15} />
+          {t("filters.bgAudio")}
+        </button>
+      )}
 
       <div ref={actorFieldRef} className="relative w-full lg:w-56">
         <div className="relative flex items-center">
@@ -319,6 +340,7 @@ export function DiscoverFilters({
               removeLabel={t("filters.removeFilter")}
             />
           )}
+          {bgAudio && <FilterChip label={t("filters.bgAudio")} onRemove={() => navigate({ bgAudio: false })} removeLabel={t("filters.removeFilter")} />}
           {sort && sort !== "newest" && (
             <FilterChip
               label={sort === "top_rated" ? t("filters.sortTopRated") : t("filters.sortOldest")}

@@ -105,6 +105,7 @@ export const dictionary = {
   "filters.actorPlaceholder": { en: "Search by actor...", bg: "Търси по актьор..." },
   "filters.noActorResults": { en: "No actors found", bg: "Няма намерени актьори" },
   "filters.clearAll": { en: "Clear all", bg: "Изчисти всички" },
+  "filters.bgAudio": { en: "Bulgarian audio", bg: "БГ аудио" },
   "filters.removeFilter": { en: "Remove filter", bg: "Премахни филтъра" },
 
   "hero.welcome": { en: "Welcome to AuroraFlix", bg: "Добре дошъл в AuroraFlix" },

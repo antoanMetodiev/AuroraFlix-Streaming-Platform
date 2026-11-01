@@ -64,6 +64,7 @@ export const esDictionary = {
   "filters.actorPlaceholder": "Buscar por actor...",
   "filters.noActorResults": "No se encontraron actores",
   "filters.clearAll": "Borrar todo",
+  "filters.bgAudio": "Audio búlgaro",
   "filters.removeFilter": "Quitar filtro",
   "hero.welcome": "Bienvenido a AuroraFlix",
   "hero.watchNow": "Ver ahora",

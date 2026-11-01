@@ -64,6 +64,7 @@ export const elDictionary = {
   "filters.actorPlaceholder": "Αναζήτηση ηθοποιού...",
   "filters.noActorResults": "Δεν βρέθηκαν ηθοποιοί",
   "filters.clearAll": "Καθαρισμός όλων",
+  "filters.bgAudio": "Βουλγαρικός ήχος",
   "filters.removeFilter": "Αφαίρεση φίλτρου",
   "hero.welcome": "Καλώς ήρθες στο AuroraFlix",
   "hero.watchNow": "Δες τώρα",

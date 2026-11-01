@@ -159,6 +159,8 @@ export type DiscoverFilters = {
   year?: string;
   actor?: string;
   sort?: SortOption;
+  /** Only titles with a Bulgarian dub (movies; the series service ignores it). */
+  bgAudio?: boolean;
 };
 
 function discoverParams(filters: DiscoverFilters, page: number) {
@@ -167,6 +169,7 @@ function discoverParams(filters: DiscoverFilters, page: number) {
     year: filters.year,
     actorName: filters.actor,
     sort: filters.sort,
+    audio: filters.bgAudio ? "bg" : undefined,
     page: page - 1,
     size: PAGE_SIZE,
   };
@@ -202,7 +205,7 @@ export async function getAllSeries(): Promise<Series[]> {
 }
 
 export async function getMoviesDiscoverCount(filters: DiscoverFilters): Promise<number> {
-  return getCount("/discover-movies-count", { genre: filters.genre, year: filters.year, actorName: filters.actor }, LISTING_CACHE_TTL_S);
+  return getCount("/discover-movies-count", { genre: filters.genre, year: filters.year, actorName: filters.actor, audio: filters.bgAudio ? "bg" : undefined }, LISTING_CACHE_TTL_S);
 }
 
 export async function getSeriesDiscoverCount(filters: DiscoverFilters): Promise<number> {
