@@ -24,10 +24,23 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tmd
     });
 
     if (response.ok) {
-      const data = (await response.json()) as { tmdbId?: string; embedUrl?: string; audioLanguages?: string[] };
-      if (data.tmdbId === tmdbId && data.embedUrl) {
+      const data = (await response.json()) as {
+        tmdbId?: string;
+        embedUrl?: string;
+        audioLanguages?: string[];
+        filmi2kEmbedUrl?: string;
+      };
+      // embedUrl: ZenoPlay's VidHide (the app resolves it as HLS; "" when
+      // there's none). filmi2kEmbedUrl: the second source, a plain embed —
+      // the site's БГ аудио 2 player.
+      if (data.tmdbId === tmdbId && (data.embedUrl || data.filmi2kEmbedUrl)) {
         return Response.json(
-          { tmdbId, embedUrl: data.embedUrl, audioLanguages: data.audioLanguages ?? [] },
+          {
+            tmdbId,
+            embedUrl: data.embedUrl ?? "",
+            audioLanguages: data.audioLanguages ?? [],
+            filmi2kEmbedUrl: data.filmi2kEmbedUrl ?? "",
+          },
           { headers: { "Cache-Control": "public, max-age=3600" } }
         );
       }

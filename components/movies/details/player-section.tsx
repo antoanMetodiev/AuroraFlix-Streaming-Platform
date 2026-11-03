@@ -487,9 +487,20 @@ function UploadSubtitlesGuide({
  * beforeunload guard like the other unsandboxed players. The Android app
  * has our own ad-free player instead (it can read the embed: no CORS there).
  */
-type ProviderId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type ProviderId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const BG_AUDIO_PLAYER: ProviderId = 7;
+
+/**
+ * 8 is the second БГ аудио source: a player from filmi2k.com's "BG Audio"
+ * tag (LuluStream, VOE, Uqload, Streamtape, DoodStream…), its embed page as
+ * it is — the taker service picks the host. Sent with no Referer: DoodStream
+ * answers "Video embed restricted for this domain" to ours, and the others
+ * play either way (checked 2026-11-03). After ZenoPlay's when both exist.
+ */
+const BG_AUDIO_PLAYER_2: ProviderId = 8;
+
+const BG_AUDIO_PLAYERS: ReadonlySet<ProviderId> = new Set([BG_AUDIO_PLAYER, BG_AUDIO_PLAYER_2]);
 
 /**
  * VidSpark — plays inside our sandbox (no sandbox checks anywhere in its
@@ -766,7 +777,10 @@ export const PlayerSection = forwardRef<
       : null;
   const [bgAudio, setBgAudio] = useState<{
     url: string;
+    /** ZenoPlay's VidHide — "" when only filmi2k has the movie. */
     embedUrl: string;
+    /** filmi2k's player — "" when only ZenoPlay has it. */
+    filmi2kEmbedUrl: string;
   } | null>(null);
   const currentBgAudio =
     bgAudio && bgAudio.url === bgAudioCheckUrl ? bgAudio : null;
@@ -780,7 +794,11 @@ export const PlayerSection = forwardRef<
           ? [5, 1, 4, 2, 3, 6]
           : [5, 1, 2, 3, 6]
         : [1, 2, 3, 6];
-      return currentBgAudio ? [BG_AUDIO_PLAYER, ...embeds] : embeds;
+      const bgAudioPlayers: ProviderId[] = [
+        ...(currentBgAudio?.embedUrl ? [BG_AUDIO_PLAYER] : []),
+        ...(currentBgAudio?.filmi2kEmbedUrl ? [BG_AUDIO_PLAYER_2] : []),
+      ];
+      return [...bgAudioPlayers, ...embeds];
     },
     [hasOwnSubtitles, currentBgAudio]
   );
@@ -992,7 +1010,7 @@ export const PlayerSection = forwardRef<
         if (
           !hasStartedRef.current &&
           !userChangedPlayerRef.current &&
-          activePlayerRef.current !== BG_AUDIO_PLAYER
+          !BG_AUDIO_PLAYERS.has(activePlayerRef.current)
         ) {
           setActivePlayer(5);
         }
@@ -1023,13 +1041,15 @@ export const PlayerSection = forwardRef<
 
     fetch(url)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { embedUrl?: string } | null) => {
-        if (cancelled || !data?.embedUrl) return;
+      .then((data: { embedUrl?: string; filmi2kEmbedUrl?: string } | null) => {
+        const embedUrl = data?.embedUrl ?? "";
+        const filmi2kEmbedUrl = data?.filmi2kEmbedUrl ?? "";
+        if (cancelled || (!embedUrl && !filmi2kEmbedUrl)) return;
         // Warm the connection now, so Play doesn't wait for DNS + TLS.
-        preconnect(new URL(data.embedUrl).origin);
-        setBgAudio({ url, embedUrl: data.embedUrl });
+        preconnect(new URL(embedUrl || filmi2kEmbedUrl).origin);
+        setBgAudio({ url, embedUrl, filmi2kEmbedUrl });
         if (!hasStartedRef.current && !userChangedPlayerRef.current) {
-          setActivePlayer(BG_AUDIO_PLAYER);
+          setActivePlayer(embedUrl ? BG_AUDIO_PLAYER : BG_AUDIO_PLAYER_2);
         }
       })
       .catch(() => {
@@ -1108,7 +1128,8 @@ export const PlayerSection = forwardRef<
     4: player4Url,
     5: player5Url,
     6: player6Url,
-    7: currentBgAudio?.embedUrl ?? null,
+    7: currentBgAudio?.embedUrl || null,
+    8: currentBgAudio?.filmi2kEmbedUrl || null,
   };
   const activeSrc = playerUrls[activePlayer] || player1Url;
 
@@ -1343,21 +1364,21 @@ export const PlayerSection = forwardRef<
                         className={isActive ? "text-emerald-600" : "text-emerald-400"}
                       />
                     )}
-                    {provider === BG_AUDIO_PLAYER && (
+                    {BG_AUDIO_PLAYERS.has(provider) && (
                       <AudioLines
                         size={16}
                         aria-label={t("player.bgAudio")}
                         className={isActive ? "text-sky-600" : "text-sky-300"}
                       />
                     )}
-                    {(subtitlesMode || SANDBOXED_PLAYERS.has(provider) || provider === BG_AUDIO_PLAYER) && (
+                    {(subtitlesMode || SANDBOXED_PLAYERS.has(provider) || BG_AUDIO_PLAYERS.has(provider)) && (
                       // Small tags stacked on the button's top edge — "no
                       // ads" first, how the subtitles work under it — so the
                       // button itself stays the same size as the others.
                       // One line each; the buttons are a bit wider (sm up)
                       // so the subtitles one fits over its own button.
                       <span className="pointer-events-none absolute bottom-[calc(100%-0.5rem)] left-1/2 flex -translate-x-1/2 flex-col items-center gap-0.5">
-                        {provider === BG_AUDIO_PLAYER && (
+                        {BG_AUDIO_PLAYERS.has(provider) && (
                           <span className="flex items-center gap-0.5 rounded-full bg-sky-400 px-1.5 py-px text-[0.5625rem] leading-tight font-bold tracking-wide whitespace-nowrap text-neutral-950 uppercase shadow-[0_2px_8px_rgba(56,189,248,0.45)]">
                             <AudioLines size={10} />
                             {t("player.bgAudio")}
@@ -1440,6 +1461,7 @@ export const PlayerSection = forwardRef<
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 sandbox={isSandboxed ? PLAYER_SANDBOX : undefined}
+                referrerPolicy={activePlayer === BG_AUDIO_PLAYER_2 ? "no-referrer" : undefined}
                 scrolling="no"
                 onLoad={() =>
                   setIsFrameLoading(false)
