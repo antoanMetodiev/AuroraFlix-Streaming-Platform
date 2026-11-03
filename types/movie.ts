@@ -10,6 +10,8 @@ export type Movie = {
   originalTitle?: string | null;
   description?: string | null;
   specialText?: string | null;
+  /** Has a Bulgarian dub — sent by the movie list endpoints, drives the card badge. */
+  hasBgAudio?: boolean;
   genres?: string | null;
   releaseDate?: string | null;
   tmdbRating: string;

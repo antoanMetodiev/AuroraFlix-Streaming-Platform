@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Flame, Star } from "lucide-react";
@@ -29,49 +35,84 @@ type RankedItem = TrendingShowcaseItem & { rank: number };
  */
 function RankedList({ items }: { items: RankedItem[] }) {
   const [atEnd, setAtEnd] = useState(false);
+  // Slim scroll indicator on the right: thumb size (share of the list that's
+  // visible) and position (how far down it's scrolled), both 0–1. Null when
+  // the list fits and there's nothing to indicate.
+  const [thumb, setThumb] = useState<{ size: number; offset: number } | null>(
+    null,
+  );
   const listRef = useRef<HTMLOListElement>(null);
 
-  const updateAtEnd = useCallback(() => {
+  const updateScroll = useCallback(() => {
     const list = listRef.current;
     if (!list) return;
-    setAtEnd(list.scrollTop + list.clientHeight >= list.scrollHeight - 4);
+    const { scrollTop, clientHeight, scrollHeight } = list;
+    setAtEnd(scrollTop + clientHeight >= scrollHeight - 4);
+    const overflow = scrollHeight - clientHeight;
+    setThumb(
+      overflow > 4
+        ? { size: clientHeight / scrollHeight, offset: scrollTop / overflow }
+        : null,
+    );
   }, []);
 
   // Also right away — a short list that doesn't overflow is "at the end"
-  // from the start and needs no fade.
+  // from the start and needs no fade or indicator.
   useEffect(() => {
-    updateAtEnd();
-  }, [items, updateAtEnd]);
+    updateScroll();
+    window.addEventListener("resize", updateScroll);
+    return () => window.removeEventListener("resize", updateScroll);
+  }, [items, updateScroll]);
 
   return (
-    <ol
-      ref={listRef}
-      onScroll={updateAtEnd}
-      className={`scrollbar-none mt-8 max-h-[332px] space-y-1 overflow-y-auto ${atEnd ? "" : "edge-fade-bottom"}`}
-    >
-      {items.map((item) => (
-        <li key={item.key}>
-          <Link
-            href={item.href}
-            className="group/row flex items-center gap-4 rounded-xl px-3 py-2.5 transition-colors duration-200 hover:bg-white/[0.06]"
-          >
-            <span className="w-8 shrink-0 text-2xl font-black text-white/25 tabular-nums transition-colors group-hover/row:text-sky-400">
-              {item.rank}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-white sm:text-base">{item.title}</span>
-              {item.year && <span className="text-xs text-white/45">{item.year}</span>}
-            </span>
-            {Number(item.rating) > 0 && (
-              <span className="flex shrink-0 items-center gap-1 text-xs text-white/60">
-                <Star size={12} className="fill-amber-400 text-amber-400" />
-                {Number(item.rating).toFixed(1)}
+    <div className="relative mt-8">
+      {thumb && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-2 right-0 bottom-2 w-[3px] rounded-full bg-white/[0.07]"
+        >
+          <div
+            className="absolute inset-x-0 rounded-full bg-gradient-to-b from-sky-300 to-sky-500 shadow-[0_0_8px_rgba(56,189,248,0.6)] transition-[top] duration-150 ease-out"
+            style={{
+              height: `${thumb.size * 100}%`,
+              top: `${thumb.offset * (1 - thumb.size) * 100}%`,
+            }}
+          />
+        </div>
+      )}
+      <ol
+        ref={listRef}
+        onScroll={updateScroll}
+        className={`scrollbar-none max-h-[332px] space-y-1 overflow-y-auto ${thumb ? "pr-3" : ""} ${atEnd ? "" : "edge-fade-bottom"}`}
+      >
+        {items.map((item) => (
+          <li key={item.key}>
+            <Link
+              href={item.href}
+              className="group/row flex items-center gap-4 rounded-xl px-3 py-2.5 transition-colors duration-200 hover:bg-white/[0.06]"
+            >
+              <span className="w-8 shrink-0 text-2xl font-black text-white/25 tabular-nums transition-colors group-hover/row:text-sky-400">
+                {item.rank}
               </span>
-            )}
-          </Link>
-        </li>
-      ))}
-    </ol>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-white sm:text-base">
+                  {item.title}
+                </span>
+                {item.year && (
+                  <span className="text-xs text-white/45">{item.year}</span>
+                )}
+              </span>
+              {Number(item.rating) > 0 && (
+                <span className="flex shrink-0 items-center gap-1 text-xs text-white/60">
+                  <Star size={12} className="fill-amber-400 text-amber-400" />
+                  {Number(item.rating).toFixed(1)}
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -88,7 +129,11 @@ const COLUMN_DURATIONS_S = [46, 54, 50];
  * cards, so even a short trending list fills the column's full height
  * before it loops.
  */
-function toColumns(items: RankedItem[], count: number, minPerColumn: number): RankedItem[][] {
+function toColumns(
+  items: RankedItem[],
+  count: number,
+  minPerColumn: number,
+): RankedItem[][] {
   const columns: RankedItem[][] = Array.from({ length: count }, () => []);
   items.forEach((item, index) => columns[index % count].push(item));
 
@@ -123,7 +168,9 @@ function PosterCard({ item, hidden }: { item: RankedItem; hidden: boolean }) {
             #{item.rank}
             {item.year && ` · ${item.year}`}
           </p>
-          <p className="mt-0.5 line-clamp-2 text-sm leading-snug font-semibold text-white">{item.title}</p>
+          <p className="mt-0.5 line-clamp-2 text-sm leading-snug font-semibold text-white">
+            {item.title}
+          </p>
           {Number.isFinite(rating) && rating > 0 && (
             <p className="mt-1 flex items-center gap-1 text-xs text-white/70">
               <Star size={11} className="fill-amber-400 text-amber-400" />
@@ -152,15 +199,25 @@ function PosterColumns({ columns }: { columns: RankedItem[][] }) {
         <div key={columnIndex} className="min-w-0 flex-1 overflow-hidden">
           <ul
             className={`flex flex-col gap-3 pb-3 group-hover:[animation-play-state:paused] sm:gap-4 sm:pb-4 ${
-              columnIndex % 2 === 0 ? "animate-marquee-up" : "animate-marquee-down"
+              columnIndex % 2 === 0
+                ? "animate-marquee-up"
+                : "animate-marquee-down"
             } ${inView ? "" : "[animation-play-state:paused]"}`}
-            style={{ "--marquee-duration": `${COLUMN_DURATIONS_S[columnIndex % COLUMN_DURATIONS_S.length]}s` } as CSSProperties}
+            style={
+              {
+                "--marquee-duration": `${COLUMN_DURATIONS_S[columnIndex % COLUMN_DURATIONS_S.length]}s`,
+              } as CSSProperties
+            }
           >
             {[...column, ...column].map((item, index) => (
               // Only a title's first appearance is real; every repeat (the
               // fill-up and the whole second copy) is decoration, hidden from
               // screen readers and tab order.
-              <PosterCard key={`${item.key}-${index}`} item={item} hidden={column.indexOf(item) !== index} />
+              <PosterCard
+                key={`${item.key}-${index}`}
+                item={item}
+                hidden={column.indexOf(item) !== index}
+              />
             ))}
           </ul>
         </div>
@@ -188,7 +245,10 @@ function ShowcaseBlock({
 
   if (items.length === 0) return null;
 
-  const ranked: RankedItem[] = items.map((item, index) => ({ ...item, rank: index + 1 }));
+  const ranked: RankedItem[] = items.map((item, index) => ({
+    ...item,
+    rank: index + 1,
+  }));
 
   return (
     <section
@@ -208,7 +268,9 @@ function ShowcaseBlock({
         className={`relative mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:px-6 lg:gap-16 lg:px-8 ${
           // Grid tracks follow visual order, so the wider track has to swap
           // sides along with the columns.
-          flipped ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" : "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+          flipped
+            ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+            : "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
         }`}
       >
         <div className={flipped ? "lg:order-2" : ""}>
@@ -216,17 +278,26 @@ function ShowcaseBlock({
             <Flame size={14} />
             {t("home.trendingEyebrow")}
           </span>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">{heading}</h2>
-          <p className="mt-3 max-w-md text-sm text-white/60 sm:text-base">{text}</p>
+          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            {heading}
+          </h2>
+          <p className="mt-3 max-w-md text-sm text-white/60 sm:text-base">
+            {text}
+          </p>
 
           <RankedList items={ranked} />
         </div>
 
-        <div className={`h-[460px] sm:h-[560px] lg:h-[640px] ${flipped ? "lg:order-1" : ""}`}>
+        <div
+          className={`h-[460px] sm:h-[560px] lg:h-[640px] ${flipped ? "lg:order-1" : ""}`}
+        >
           {/* Two columns on phones, three from sm up — each split separately,
               so a phone still gets every title rather than losing a column.
               Only the one that fits is rendered, not both with one hidden. */}
-          <PosterColumns key={isPhone ? "phone" : "wide"} columns={toColumns(ranked, isPhone ? 2 : 3, 4)} />
+          <PosterColumns
+            key={isPhone ? "phone" : "wide"}
+            columns={toColumns(ranked, isPhone ? 2 : 3, 4)}
+          />
         </div>
       </div>
     </section>
@@ -239,13 +310,29 @@ function ShowcaseBlock({
  * full ranked list beside them. The two blocks mirror each other (columns
  * right, then left) so they don't read as one repeated section.
  */
-export function TrendingShowcase({ movies, series }: { movies: TrendingShowcaseItem[]; series: TrendingShowcaseItem[] }) {
+export function TrendingShowcase({
+  movies,
+  series,
+}: {
+  movies: TrendingShowcaseItem[];
+  series: TrendingShowcaseItem[];
+}) {
   const { t } = useTranslation();
 
   return (
     <>
-      <ShowcaseBlock heading={t("home.trendingMovies")} text={t("home.trendingMoviesText")} items={movies} flipped={false} />
-      <ShowcaseBlock heading={t("home.trendingShows")} text={t("home.trendingShowsText")} items={series} flipped />
+      <ShowcaseBlock
+        heading={t("home.trendingMovies")}
+        text={t("home.trendingMoviesText")}
+        items={movies}
+        flipped={false}
+      />
+      <ShowcaseBlock
+        heading={t("home.trendingShows")}
+        text={t("home.trendingShowsText")}
+        items={series}
+        flipped
+      />
     </>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Film, Play, Tv } from "lucide-react";
+import { Film, Play, Tv, Volume2 } from "lucide-react";
 import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
@@ -178,6 +178,13 @@ export function CinemaRecordCard({
               clear by two thirds — so the title reads on any poster. */}
           <div className="absolute inset-0 bg-gradient-to-t from-black from-0% via-black/75 via-35% to-transparent to-70% transition-opacity duration-500" />
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
+
+          {"hasBgAudio" in record && record.hasBgAudio && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full border border-sky-400/35 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold text-white shadow-[0_0_10px_rgba(56,189,248,0.25)] sm:top-2.5 sm:left-2.5 sm:px-2 sm:py-1 sm:text-xs">
+              <Volume2 size={11} className="shrink-0 text-sky-400 sm:size-3" />
+              {t("player.bgAudio")}
+            </div>
+          )}
 
           {rating !== null && (
             <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">
