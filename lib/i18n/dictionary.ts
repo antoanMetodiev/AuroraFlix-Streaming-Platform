@@ -453,6 +453,10 @@ export const dictionary = {
   "friends.watching": { en: "Watching", bg: "Гледа" },
   "friends.watchingAria": { en: "Friends watching now", bg: "Приятели гледат в момента" },
   "friends.watchingNow": { en: "Watching now", bg: "Гледат сега" },
+  "friends.atMinute": { en: "Minute {minute}", bg: "Минута {minute}" },
+  "friends.ofMinutes": { en: "of {total}", bg: "от {total}" },
+  "friends.paused": { en: "Paused", bg: "На пауза" },
+  "friends.episodeShort": { en: "S{season} E{episode}", bg: "С{season} Е{episode}" },
   "friends.watchToo": { en: "Watch too", bg: "Гледай и ти" },
   "friends.dismiss": { en: "Dismiss", bg: "Затвори" },
 

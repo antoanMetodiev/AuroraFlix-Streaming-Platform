@@ -6,6 +6,10 @@ export type WatchingTarget = {
   title: string;
   season?: number;
   episode?: number;
+  /** Where in it, in seconds — only from players that report it. */
+  position?: number;
+  duration?: number;
+  paused?: boolean;
 };
 
 export type FriendWatching = {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Film, Star, Tv } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { WatchingPlayback } from "@/components/friends/watching-playback";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { tmdbImage, getMovieSlug } from "@/lib/tmdb";
@@ -78,6 +79,7 @@ export function WatchingFriendCard({ friend, watching, onNavigate }: { friend: F
           {t("friends.watching")}
         </p>
         <p className="truncate text-sm font-semibold text-foreground/90">{watching.title}</p>
+        <WatchingPlayback watching={watching} />
 
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {rating !== null && (

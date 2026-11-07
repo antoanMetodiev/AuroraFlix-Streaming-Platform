@@ -1378,9 +1378,7 @@ export const PlayerSection = forwardRef<
         }
       : null;
 
-  useWatchingPresence(
-    watchingTarget
-  );
+  useWatchingPresence(watchingTarget, activePlayer);
 
   return (
     <div ref={forwardedRef}>

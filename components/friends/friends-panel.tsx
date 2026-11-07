@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Loader, Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { UserProfileModal } from "@/components/friends/user-profile-modal";
+import { WatchingPlayback } from "@/components/friends/watching-playback";
 import { useFriends } from "@/lib/use-friends";
 import { searchUsers, type FriendRequestItem, type FriendSearchResult } from "@/lib/friends";
 import type { WatchingTarget } from "@/lib/watching";
@@ -321,6 +322,7 @@ function FriendWatchingCard({ watching }: { watching: WatchingTarget }) {
           {t("friends.watching")}
         </p>
         <p className="truncate text-xs font-semibold text-foreground/90">{watching.title}</p>
+        <WatchingPlayback watching={watching} />
         <div className="mt-1 flex flex-wrap gap-1">
           {!loaded ? (
             <span className="h-3.5 w-12 animate-pulse rounded-full bg-foreground/10" />
