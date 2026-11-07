@@ -98,6 +98,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background pt-16 pb-24 text-foreground md:pb-0">
         <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(SITE_JSON_LD)} />
+        {/* Cloudflare Web Analytics — the dashboard's auto-inject never reaches
+            Worker-rendered pages, so the beacon is added here by hand. The
+            token is public by design (it's in every page's HTML anyway). */}
+        <script
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "20c70f629ffc4885ba3e883126be7ad8"}'
+        />
         <LocaleProvider initialLocale={initialLocale}>
           <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ScrollToTopOnNavigate />
