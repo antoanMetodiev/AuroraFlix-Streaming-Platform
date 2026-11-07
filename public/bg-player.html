@@ -5,12 +5,13 @@
   itself (the signed links only play on the network that asked for them, and
   a browser can't read the embed page — no CORS), then opens this page as:
 
-    /bg-player.html#master=<master.m3u8 URL>&sub=<our .vtt URL>&title=<title>
+    /bg-player.html#master=<master.m3u8 URL>&sub=<our .vtt URL>&title=<title>&start=<seconds>
 
   (in the fragment, so the links never reach our server's logs). The page
   plays it with hls.js — iPhone-style native HLS where there's no MSE — with
   the Bulgarian rendition picked, БГ/EN buttons when there's more than one,
-  and our subtitles as a captions track, off by default.
+  and our subtitles as a captions track, off by default. It posts its position
+  to the app every few seconds, for "continue watching".
 -->
 <html lang="bg">
 <head>
@@ -46,6 +47,7 @@
   var params = new URLSearchParams(location.hash.slice(1));
   var master = params.get("master");
   var sub = params.get("sub");
+  var start = parseFloat(params.get("start")) || 0;
   var video = document.getElementById("video");
   var tracksBox = document.getElementById("tracks");
   var spinner = document.getElementById("spinner");
@@ -75,6 +77,26 @@
     video.addEventListener(name, function () { spinner.style.display = "none"; });
   });
 
+  // The app saves where the viewer stopped from these.
+  var lastReport = 0;
+  function report(force) {
+    var now = Date.now();
+    if (!force && now - lastReport < 5000) return;
+    lastReport = now;
+    try {
+      parent.postMessage({ type: "BG_AUDIO_PROGRESS", currentTime: video.currentTime, duration: isFinite(video.duration) ? video.duration : null }, "*");
+    } catch (e) {}
+  }
+  video.addEventListener("timeupdate", function () { report(false); });
+  video.addEventListener("pause", function () { report(true); });
+  window.addEventListener("pagehide", function () { report(true); });
+
+  if (start > 0) {
+    video.addEventListener("loadedmetadata", function () {
+      if (video.currentTime < 1) video.currentTime = start;
+    }, { once: true });
+  }
+
   function isBg(track) {
     return /^(bg|bul)/i.test(track.lang || "") || /българ/i.test(track.name || "");
   }
@@ -83,7 +105,7 @@
     // Start on the first segment as soon as it's in, and fetch it while the
     // playlist is still being parsed; a short forward buffer gets playback
     // going sooner (the stream is one quality, so there's nothing to pick).
-    var hls = new Hls({ enableWorker: true, startFragPrefetch: true, maxBufferLength: 20, backBufferLength: 30 });
+    var hls = new Hls({ enableWorker: true, startFragPrefetch: true, maxBufferLength: 20, backBufferLength: 30, startPosition: start > 0 ? start : -1 });
     var fatal = 0;
 
     function drawTracks() {
