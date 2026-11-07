@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { preconnect } from "react-dom";
 import { AudioLines, Captions, Download, History, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
@@ -12,7 +12,7 @@ import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
 import { useEstimatedProgressRecorder, useWatchProgressRecorder } from "@/lib/use-watch-progress-recorder";
-import { clearProgress, formatPlaybackTime, getResumeSeconds } from "@/lib/watch-progress";
+import { clearProgress, formatPlaybackTime, getResumeSeconds, useWatchProgressReady } from "@/lib/watch-progress";
 import { embedmasterSeekCommand, isEmbedmasterReady } from "@/lib/player-telemetry";
 import type { WatchingTarget } from "@/lib/watching";
 
@@ -147,8 +147,10 @@ const DEFAULT_SUBTITLE_LANG = "bg";
  * to be absolute: their player fetches it from its own origin (our
  * /api/subtitles route already sends CORS headers for that).
  * Otherwise, ask it to preselect its own bundled Bulgarian track.
+ * `startAt` (seconds) is passed down through both of its wrapper pages to
+ * the player itself (checked 2026-11-07: `"startAt":500` in its config).
  */
-function toPlayableUrl(videoUrl: string, subtitleUrl?: string): string {
+function toPlayableUrl(videoUrl: string, subtitleUrl: string | undefined, startAt: string | undefined): string {
   const playableUrl = videoUrl.replace(
     "vidsrc.icu",
     "vidsrc2.ru"
@@ -158,6 +160,7 @@ function toPlayableUrl(videoUrl: string, subtitleUrl?: string): string {
     autoplay: "1",
     sub: DEFAULT_SUBTITLE_LANG,
     ds_lang: DEFAULT_SUBTITLE_LANG,
+    startAt,
     sub_url: subtitleUrl
       ? new URL(subtitleUrl, window.location.origin).toString()
       : undefined,
@@ -533,7 +536,7 @@ function toVidsparkUrl(ref: VidsrcRef, startAt: string | undefined): string {
 }
 
 /** The players that can be told where to start: by their URL, or EmbedMaster (5) by a message. */
-const RESUMABLE_PLAYERS: ReadonlySet<ProviderId> = new Set([2, 3, 4, 5, 6]);
+const RESUMABLE_PLAYERS: ReadonlySet<ProviderId> = new Set([1, 2, 3, 4, 5, 6]);
 
 const RESUME_HINT_MS = 10_000;
 
@@ -565,7 +568,6 @@ function ResumeManualHint({ seconds }: { seconds: number }) {
   );
 }
 
-const subscribeToNothing = () => () => {};
 
 /**
  * Pop-up / redirect ads. They run inside the provider's cross-origin
@@ -881,7 +883,8 @@ export const PlayerSection = forwardRef<
 
   // localStorage doesn't exist on the server, so nothing about the saved
   // position can show until hydration is done.
-  const hydrated = useSyncExternalStore(subscribeToNothing, () => true, () => false);
+  // Signed in, it's the account's, once they've loaded.
+  const progressReady = useWatchProgressReady();
   const [restartCount, setRestartCount] = useState(0);
 
   /**
@@ -890,9 +893,9 @@ export const PlayerSection = forwardRef<
    * URL, so following the live position would reload it every few seconds.
    */
   const resumeSeconds = useMemo(
-    () => (hydrated && vidsrcRef ? getResumeSeconds(vidsrcRef) : null),
+    () => (progressReady && vidsrcRef ? getResumeSeconds(vidsrcRef) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hydrated, vidsrcRef, activePlayer, restartCount]
+    [progressReady, vidsrcRef, activePlayer, restartCount]
   );
   const startAt = resumeSeconds ? String(resumeSeconds) : undefined;
 
@@ -1167,10 +1170,11 @@ export const PlayerSection = forwardRef<
       videoUrl
         ? toPlayableUrl(
             videoUrl,
-            vidsrcUsesOurSubs ? subtitleUrl : undefined
+            vidsrcUsesOurSubs ? subtitleUrl : undefined,
+            startAt
           )
         : "",
-    [videoUrl, vidsrcUsesOurSubs, subtitleUrl]
+    [videoUrl, vidsrcUsesOurSubs, subtitleUrl, startAt]
   );
 
   const player2Url = useMemo(

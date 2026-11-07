@@ -6,7 +6,7 @@ import { PlayerSection } from "@/components/movies/details/player-section";
 import { Loader } from "@/components/ui/loader";
 import { orderEpisodes } from "@/lib/episodes";
 import { tmdbImage } from "@/lib/tmdb";
-import { getAllProgress, latestProgress } from "@/lib/watch-progress";
+import { getAllProgress, latestProgress, useWatchProgressReady } from "@/lib/watch-progress";
 import type { Episode } from "@/types/episode";
 import type { Series } from "@/types/series";
 
@@ -25,10 +25,12 @@ export function SeriesWatchSection({ record }: { record: Series }) {
   const [currentVideo, setCurrentVideo] = useState(record.videoURL || orderEpisodes(episodes)[0]?.videoURL || "");
   const [resumeSeason, setResumeSeason] = useState<string | null>(null);
   const playerWrapperRef = useRef<HTMLDivElement>(null);
+  const progressReady = useWatchProgressReady();
 
   // Open on the episode the viewer was on, or the next one once it's finished.
   // In an effect because the saved position only exists in the browser.
   useEffect(() => {
+    if (!progressReady) return;
     const latest = latestProgress(getAllProgress(), "tv", record.tmdbId);
     if (!latest) return;
 
@@ -44,7 +46,7 @@ export function SeriesWatchSection({ record }: { record: Series }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentVideo(episode.videoURL);
     setResumeSeason(episode.season ?? null);
-  }, [record.tmdbId, record.allEpisodes]);
+  }, [progressReady, record.tmdbId, record.allEpisodes]);
 
   const handleSelectEpisode = (episode: Episode) => {
     setCurrentVideo(episode.videoURL);
