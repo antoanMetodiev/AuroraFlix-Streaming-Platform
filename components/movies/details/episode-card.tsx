@@ -1,14 +1,24 @@
 "use client";
 
-import { Play } from "lucide-react";
+import { Check, Play } from "lucide-react";
 import { formatReleaseDate } from "@/lib/dates";
 import { tmdbImage } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { progressPercent, type WatchProgress } from "@/lib/watch-progress";
 import type { Episode } from "@/types/episode";
 
-export function EpisodeCard({ episode, onSelect }: { episode: Episode; onSelect: () => void }) {
+export function EpisodeCard({
+  episode,
+  progress,
+  onSelect,
+}: {
+  episode: Episode;
+  progress?: WatchProgress;
+  onSelect: () => void;
+}) {
   const { t, locale } = useTranslation();
+  const percent = progress && !progress.finished ? progressPercent(progress) : null;
   const description =
     episode.description && episode.description.length > 219 ? `${episode.description.slice(0, 219)}..` : episode.description;
   const poster = tmdbImage(episode.posterImgURL, "w1280");
@@ -36,6 +46,17 @@ export function EpisodeCard({ episode, onSelect }: { episode: Episode; onSelect:
         {episode.tmdbRating && (
           <span className="absolute top-2.5 right-2.5 rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-md">
             ★ {Number(episode.tmdbRating).toFixed(1)}
+          </span>
+        )}
+        {progress?.finished && (
+          <span className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-md">
+            <Check size={13} className="text-emerald-400" />
+            {t("episodes.watched")}
+          </span>
+        )}
+        {percent !== null && (
+          <span className="absolute inset-x-0 bottom-0 h-1 bg-white/25">
+            <span className="block h-full bg-sky-400" style={{ width: `${percent}%` }} />
           </span>
         )}
       </div>

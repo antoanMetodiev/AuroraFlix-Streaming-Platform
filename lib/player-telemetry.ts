@@ -85,3 +85,51 @@ export function extractTelemetry(player: PlayerId, raw: unknown): TelemetryUpdat
 
   return Object.keys(update).length ? update : null;
 }
+
+export type ProgressUpdate = TelemetryUpdate & {
+  season?: number | string;
+  episode?: number | string;
+};
+
+/**
+ * Providers whose position can be saved for "continue watching", by their id
+ * in PlayerSection. VidLink (4) and VidSpark (6) document their events.
+ * EmbedMaster (5) and the БГ аудио players (7, 8) have no known telemetry.
+ */
+export const PROGRESS_ORIGIN: Record<number, string> = {
+  ...PLAYER_ORIGIN,
+  4: "https://vidlink.pro",
+  6: "https://vidspark.to",
+};
+
+function episodeFields(message: Record<string, unknown>): Pick<ProgressUpdate, "season" | "episode"> {
+  const fields = (message.data && typeof message.data === "object" ? message.data : message) as Record<string, unknown>;
+  const isId = (value: unknown): value is number | string =>
+    (typeof value === "number" || typeof value === "string") && value !== "" && Number.isFinite(Number(value));
+  return isId(fields.season) && isId(fields.episode) ? { season: fields.season, episode: fields.episode } : {};
+}
+
+/** The position (and, when the provider says, the episode) in one message. */
+export function extractProgress(provider: number, raw: unknown): ProgressUpdate | null {
+  if (!raw || typeof raw !== "object") return null;
+  const message = raw as Record<string, unknown>;
+
+  if (provider === 3 && message.type === "cinesrc:nextepisode") {
+    return episodeFields(message);
+  }
+
+  let update: TelemetryUpdate | null = null;
+  if (provider === 1 || provider === 2 || provider === 3) {
+    update = extractTelemetry(provider, raw);
+  } else if (provider === 4) {
+    // Same PLAYER_EVENT shape as VidFast.
+    update = extractTelemetry(2, raw);
+  } else if (provider === 6 && message.source === "vidspark-player") {
+    update = {
+      currentTime: numberOrUndefined(message.currentTime),
+      duration: numberOrUndefined(message.duration),
+    };
+  }
+
+  return update ? { ...update, ...episodeFields(message) } : null;
+}

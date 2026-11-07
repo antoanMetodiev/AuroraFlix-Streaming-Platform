@@ -1,8 +1,8 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { preconnect } from "react-dom";
-import { AudioLines, Captions, Download, MonitorPlay, Play, ShieldCheck, X } from "lucide-react";
+import { AudioLines, Captions, Download, History, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -11,6 +11,8 @@ import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
+import { useWatchProgressRecorder } from "@/lib/use-watch-progress-recorder";
+import { clearProgress, formatPlaybackTime, getResumeSeconds } from "@/lib/watch-progress";
 import type { WatchingTarget } from "@/lib/watching";
 
 type VidsrcRef =
@@ -189,7 +191,7 @@ const VIDFAST_THEME = "2980B9";
  * just the iframe and hide our subtitles.
  * Otherwise, same as vidsrc2.ru above: ask it to preselect Bulgarian.
  */
-function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
+function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean, startAt: string | undefined): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
@@ -201,6 +203,7 @@ function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
     poster: "true",
     theme: VIDFAST_THEME,
     chromecast: "false",
+    startAt,
     ...(ref.kind === "tv"
       ? { nextButton: "true", autoNext: "true" }
       : {}),
@@ -235,7 +238,7 @@ function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean): string {
  * The only way in for *our* file is its "Upload Subtitle" button (CC menu),
  * by hand — <UploadSubtitlesGuide> walks the viewer through it.
  */
-function toCinesrcUrl(ref: VidsrcRef): string {
+function toCinesrcUrl(ref: VidsrcRef, startAt: string | undefined): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
@@ -245,6 +248,10 @@ function toCinesrcUrl(ref: VidsrcRef): string {
     autoplay: "true",
     subtitles: "auto",
     subtitlelang: DEFAULT_SUBTITLE_LANG,
+    // Documented: `t` starts there; without continueprompt=false it first asks
+    // "Continue / Restart", which our own poster has already answered.
+    t: startAt,
+    continueprompt: startAt ? "false" : undefined,
     ...(ref.kind === "tv"
       ? {
           s: ref.season,
@@ -266,7 +273,7 @@ function toCinesrcUrl(ref: VidsrcRef): string {
  * absolute: their player fetches it from its own origin (our
  * /api/subtitles route already sends CORS headers for that).
  */
-function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
+function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string, startAt: string | undefined): string {
   const path =
     ref.kind === "movie"
       ? `movie/${ref.tmdbId}`
@@ -276,6 +283,7 @@ function toVidlinkUrl(ref: VidsrcRef, subtitleUrl: string): string {
     autoplay: "true",
     sub_file: new URL(subtitleUrl, window.location.origin).toString(),
     sub_label: "Български",
+    startAt,
   });
 }
 
@@ -514,11 +522,49 @@ const BG_AUDIO_PLAYERS: ReadonlySet<ProviderId> = new Set([BG_AUDIO_PLAYER, BG_A
  * "Upload Subtitles" item in its Captions menu (.srt/.vtt/.ass/.ssa) —
  * <UploadSubtitlesGuide> walks the viewer through putting ours in there.
  */
-function toVidsparkUrl(ref: VidsrcRef): string {
-  return ref.kind === "movie"
-    ? `https://vidspark.to/movie/${ref.tmdbId}`
-    : `https://vidspark.to/tv/${ref.tmdbId}/${ref.season}/${ref.episode}`;
+function toVidsparkUrl(ref: VidsrcRef, startAt: string | undefined): string {
+  return appendParams(
+    ref.kind === "movie"
+      ? `https://vidspark.to/movie/${ref.tmdbId}`
+      : `https://vidspark.to/tv/${ref.tmdbId}/${ref.season}/${ref.episode}`,
+    { startAt }
+  );
 }
+
+/** The players that can be told where to start through their URL. */
+const RESUMABLE_PLAYERS: ReadonlySet<ProviderId> = new Set([2, 3, 4, 6]);
+
+const RESUME_HINT_MS = 10_000;
+
+/**
+ * For players we can't send to a position. It lets clicks through, because it
+ * sits over their controls while it's up.
+ */
+function ResumeManualHint({ seconds }: { seconds: number }) {
+  const { t } = useTranslation();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), RESUME_HINT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center px-3">
+      <div
+        role="status"
+        className="flex max-w-md items-center gap-2.5 rounded-2xl border border-white/15 bg-black/75 px-3 py-2 text-xs text-white shadow-[0_8px_28px_rgba(0,0,0,0.55)] backdrop-blur-md sm:text-sm"
+      >
+        <History size={18} className="shrink-0 text-sky-400" />
+        <p className="min-w-0">{t("player.resumeManual", { time: formatPlaybackTime(seconds) })}</p>
+      </div>
+    </div>
+  );
+}
+
+const subscribeToNothing = () => () => {};
 
 /**
  * Pop-up / redirect ads. They run inside the provider's cross-origin
@@ -831,6 +877,31 @@ export const PlayerSection = forwardRef<
     activePlayerRef.current = activePlayer;
   }, [activePlayer]);
 
+  // localStorage doesn't exist on the server, so nothing about the saved
+  // position can show until hydration is done.
+  const hydrated = useSyncExternalStore(subscribeToNothing, () => true, () => false);
+  const [restartCount, setRestartCount] = useState(0);
+
+  /**
+   * Where to start. Read again only for another episode or player (their new
+   * iframe starts there) and never while playing: this goes into the iframe's
+   * URL, so following the live position would reload it every few seconds.
+   */
+  const resumeSeconds = useMemo(
+    () => (hydrated && vidsrcRef ? getResumeSeconds(vidsrcRef) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hydrated, vidsrcRef, activePlayer, restartCount]
+  );
+  const startAt = resumeSeconds ? String(resumeSeconds) : undefined;
+
+  useWatchProgressRecorder(vidsrcRef, activePlayer, hasStarted);
+
+  function handleStartOver() {
+    if (vidsrcRef) clearProgress(vidsrcRef);
+    setRestartCount((count) => count + 1);
+    setHasStarted(true);
+  }
+
   /**
    * "Big view" — a CSS `fixed inset-0` expansion of our wrapper (iframe +
    * subtitle overlay together), not the real browser Fullscreen API.
@@ -1081,25 +1152,25 @@ export const PlayerSection = forwardRef<
   const player2Url = useMemo(
     () =>
       vidsrcRef
-        ? toVidfastUrl(vidsrcRef, vidfastUsesOurSubs)
+        ? toVidfastUrl(vidsrcRef, vidfastUsesOurSubs, startAt)
         : null,
-    [vidsrcRef, vidfastUsesOurSubs]
+    [vidsrcRef, vidfastUsesOurSubs, startAt]
   );
 
   const player3Url = useMemo(
     () =>
       vidsrcRef
-        ? toCinesrcUrl(vidsrcRef)
+        ? toCinesrcUrl(vidsrcRef, startAt)
         : null,
-    [vidsrcRef]
+    [vidsrcRef, startAt]
   );
 
   const player4Url = useMemo(
     () =>
       vidsrcRef && subtitleUrl
-        ? toVidlinkUrl(vidsrcRef, subtitleUrl)
+        ? toVidlinkUrl(vidsrcRef, subtitleUrl, startAt)
         : null,
-    [vidsrcRef, subtitleUrl]
+    [vidsrcRef, subtitleUrl, startAt]
   );
 
   const player5Url = useMemo(
@@ -1113,9 +1184,9 @@ export const PlayerSection = forwardRef<
   const player6Url = useMemo(
     () =>
       vidsrcRef
-        ? toVidsparkUrl(vidsrcRef)
+        ? toVidsparkUrl(vidsrcRef, startAt)
         : null,
-    [vidsrcRef]
+    [vidsrcRef, startAt]
   );
 
   /**
@@ -1476,6 +1547,11 @@ export const PlayerSection = forwardRef<
                   />
                 )}
 
+              {resumeSeconds !== null &&
+                autoSwitchedFrom === null &&
+                !RESUMABLE_PLAYERS.has(activePlayer) && (
+                  <ResumeManualHint key={activeSrc} seconds={resumeSeconds} />
+                )}
               {((activePlayer === 5 && player5Url) ||
                 (activePlayer === 4 && player4Url)) && (
                 // Keyed so it shows again for each new title/episode — but
@@ -1545,6 +1621,7 @@ export const PlayerSection = forwardRef<
                 hasStarted ? (
                   playerBody
                 ) : (
+              <>
               <button
                 type="button"
                 onClick={() =>
@@ -1577,6 +1654,24 @@ export const PlayerSection = forwardRef<
                   />
                 </span>
               </button>
+
+              {resumeSeconds !== null && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 bg-gradient-to-t from-black/80 to-transparent px-3 pt-10 pb-3 sm:px-5 sm:pb-4">
+                  <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-white sm:text-base">
+                    <History size={18} className="shrink-0 text-sky-400" />
+                    {t("player.resumeFrom", { time: formatPlaybackTime(resumeSeconds) })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleStartOver}
+                    className="pointer-events-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/25 bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md transition-colors hover:bg-white/15 sm:text-sm"
+                  >
+                    <RotateCcw size={14} />
+                    {t("player.startOver")}
+                  </button>
+                </div>
+              )}
+              </>
             )
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">

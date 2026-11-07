@@ -11,6 +11,7 @@ import { ModernSelect } from "@/components/ui/modern-select";
 import { EpisodeCard } from "@/components/movies/details/episode-card";
 import { SectionHeading } from "@/components/movies/details/section-heading";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { progressKey, useWatchProgress } from "@/lib/watch-progress";
 import type { Episode } from "@/types/episode";
 
 const CHECK_COOLDOWN_MS = 60 * 1000;
@@ -18,11 +19,16 @@ const COOLDOWN_STORAGE_KEY = "lastCheckForNewEpisodesGlobal";
 
 export function EpisodesSection({
   episodes,
+  seriesTmdbId,
+  resumeSeason,
   recordId,
   recordTitle,
   onSelectEpisode,
 }: {
   episodes: Episode[];
+  seriesTmdbId: string;
+  /** The season of the episode the viewer is continuing with, if any. */
+  resumeSeason: string | null;
   recordId: string;
   recordTitle: string;
   onSelectEpisode: (episode: Episode) => void;
@@ -36,6 +42,12 @@ export function EpisodesSection({
   const [selectedSeason, setSelectedSeason] = useState(seasons[0] ?? "1");
   const [remainingMs, setRemainingMs] = useState(0);
   const [checking, setChecking] = useState(false);
+  const progress = useWatchProgress();
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (resumeSeason) setSelectedSeason(resumeSeason);
+  }, [resumeSeason]);
 
   useEffect(() => {
     const updateRemaining = () => {
@@ -126,7 +138,21 @@ export function EpisodesSection({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {seasonEpisodes.map((episode) => (
-          <EpisodeCard key={episode.id} episode={episode} onSelect={() => onSelectEpisode(episode)} />
+          <EpisodeCard
+            key={episode.id}
+            episode={episode}
+            progress={
+              progress[
+                progressKey({
+                  kind: "tv",
+                  tmdbId: seriesTmdbId,
+                  season: episode.season ?? "",
+                  episode: episode.episodeNumber ?? "",
+                })
+              ]
+            }
+            onSelect={() => onSelectEpisode(episode)}
+          />
         ))}
       </div>
     </section>

@@ -21,6 +21,10 @@ export type WorkCardItem = {
   tmdbId?: string | null;
   originalTitle?: string | null;
   releaseDate?: string | null;
+  /** 0-100 for the "continue watching" bar on the poster. */
+  progressPercent?: number | null;
+  /** The episode that bar is about, e.g. "С2 Е5". */
+  progressLabel?: string | null;
 };
 
 export function hrefFor(item: WorkCardItem) {
@@ -145,10 +149,18 @@ export function WorkCarousel({
                   {Number.isFinite(rating) && (
                     <RatingRing value={rating} size="xs" className="absolute right-2 bottom-2" />
                   )}
+                  {item.progressPercent != null && (
+                    <span className="absolute inset-x-0 bottom-0 h-1 bg-white/25">
+                      <span className="block h-full bg-sky-400" style={{ width: `${item.progressPercent}%` }} />
+                    </span>
+                  )}
                 </div>
                 <div className="mt-2 text-sm text-foreground/70">
                   <h4 className="mx-auto w-[13.5em] max-w-full truncate font-medium text-foreground">{item.title}</h4>
-                  <span>{item.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}</span>
+                  <span>
+                    {item.type === "SERIES" ? t("watchlist.series") : t("watchlist.movie")}
+                    {item.progressLabel && ` · ${item.progressLabel}`}
+                  </span>
                 </div>
               </Link>
             );

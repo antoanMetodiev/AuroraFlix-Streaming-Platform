@@ -335,6 +335,14 @@ export const dictionary = {
     bg: "Как да добавя български субтитри?",
   },
   "player.play": { en: "Play", bg: "Пусни" },
+  "player.resumeFrom": { en: "Continue from {time}", bg: "Продължи от {time}" },
+  "player.startOver": { en: "Start over", bg: "Отначало" },
+  "player.resumeManual": {
+    en: "You stopped at {time}. If the player does not continue by itself, skip to there.",
+    bg: "Спря на {time}. Ако плейърът не продължи сам, превърти дотам.",
+  },
+  "episodes.watched": { en: "Watched", bg: "Гледан" },
+  "carousel.episodeShort": { en: "S{season} E{episode}", bg: "С{season} Е{episode}" },
   "player.watchNow": { en: "Watch now", bg: "Гледай сега" },
   "episodes.jump": { en: "Go to episodes", bg: "Към епизодите" },
 
