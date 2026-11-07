@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { extractProgress, PROGRESS_ORIGIN } from "@/lib/player-telemetry";
-import { saveProgress, type ProgressTarget } from "@/lib/watch-progress";
+import { saveProgress, type ProgressMeta, type ProgressTarget } from "@/lib/watch-progress";
 
 const SAVE_EVERY_MS = 10_000;
 /** A bigger runtime change on a series means the player moved to another episode. */
@@ -15,8 +15,14 @@ const EPISODE_DURATION_TOLERANCE_SECONDS = 120;
 export function useWatchProgressRecorder(
   target: ProgressTarget | null,
   provider: number,
-  active: boolean
+  active: boolean,
+  meta?: ProgressMeta
 ) {
+  const metaRef = useRef(meta);
+  useEffect(() => {
+    metaRef.current = meta;
+  });
+
   useEffect(() => {
     const expectedOrigin = PROGRESS_ORIGIN[provider];
     if (!active || !target || !expectedOrigin) return;
@@ -30,7 +36,7 @@ export function useWatchProgressRecorder(
 
     function flush() {
       if (pendingSeconds === null) return;
-      saveProgress(current, pendingSeconds, duration);
+      saveProgress(current, pendingSeconds, duration, metaRef.current);
       pendingSeconds = null;
       lastSaveAt = Date.now();
     }

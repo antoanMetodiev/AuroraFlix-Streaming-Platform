@@ -10,6 +10,8 @@ export const LazyPricingSection = dynamic(() => import("./pricing-section").then
 
 export const LazyLastViewedSection = dynamic(() => import("./last-viewed-section").then((mod) => mod.LastViewedSection));
 
+export const LazyContinueWatchingSection = dynamic(() => import("./continue-watching-section").then((mod) => mod.ContinueWatchingSection));
+
 export const LazyTrendingSection = dynamic(() => import("./trending-section").then((mod) => mod.TrendingSection));
 
 export const LazyTrendingShowcase = dynamic(() => import("./trending-showcase").then((mod) => mod.TrendingShowcase));

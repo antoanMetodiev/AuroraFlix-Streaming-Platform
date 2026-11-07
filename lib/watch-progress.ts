@@ -17,13 +17,23 @@ export type WatchProgress = {
   duration: number | null;
   finished: boolean;
   updatedAt: number;
+  /** What the "continue watching" row shows, as the details page had it. */
+  title?: string;
+  image?: string;
 };
+
+export type ProgressMeta = { title?: string | null; image?: string | null };
 
 export type ProgressMap = Record<string, WatchProgress>;
 
 export type LatestProgress = WatchProgress & {
   season?: string;
   episode?: string;
+};
+
+export type ContinueWatchingEntry = LatestProgress & {
+  kind: "movie" | "tv";
+  tmdbId: string;
 };
 
 const STORAGE_KEY = "AURORAFLIX-WATCH-PROGRESS";
@@ -71,7 +81,12 @@ function write(next: ProgressMap) {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-export function saveProgress(target: ProgressTarget, seconds: number, duration: number | null) {
+export function saveProgress(
+  target: ProgressTarget,
+  seconds: number,
+  duration: number | null,
+  meta?: ProgressMeta
+) {
   if (!Number.isFinite(seconds) || seconds < MIN_SAVED_SECONDS) return;
   if (duration !== null && duration < MIN_DURATION_SECONDS) return;
 
@@ -82,6 +97,8 @@ export function saveProgress(target: ProgressTarget, seconds: number, duration: 
       duration,
       finished: duration !== null && seconds / duration >= FINISHED_RATIO,
       updatedAt: Date.now(),
+      ...(meta?.title ? { title: meta.title } : {}),
+      ...(meta?.image ? { image: meta.image } : {}),
     },
   });
 }
@@ -121,6 +138,42 @@ export function latestProgress(
   }
 
   return latest;
+}
+
+/**
+ * One entry per title, newest first: the position it was last left at. A title
+ * whose latest position is finished is done (a series opens on its next episode
+ * by itself), so it isn't offered.
+ */
+export function continueWatching(map: ProgressMap): ContinueWatchingEntry[] {
+  const latest = new Map<string, ContinueWatchingEntry>();
+
+  for (const [key, entry] of Object.entries(map)) {
+    const [kind, tmdbId, season, episode] = key.split(":");
+    const titleKey = `${kind}:${tmdbId}`;
+    const current = latest.get(titleKey);
+    if (current && current.updatedAt >= entry.updatedAt) continue;
+    latest.set(titleKey, { ...entry, kind: kind as "movie" | "tv", tmdbId, season, episode });
+  }
+
+  return [...latest.values()]
+    .filter((entry) => !entry.finished)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+/**
+ * Takes a title out of "continue watching". Finished episodes stay, so a series
+ * keeps its "Watched" marks and still opens on the next one.
+ */
+export function dismissContinueWatching(kind: "movie" | "tv", tmdbId: string) {
+  const prefix = `${kind}:${tmdbId}`;
+  write(
+    Object.fromEntries(
+      Object.entries(read()).filter(
+        ([key, entry]) => entry.finished || (key !== prefix && !key.startsWith(`${prefix}:`))
+      )
+    )
+  );
 }
 
 /** 0-100 for a progress bar, or null when the runtime isn't known. */

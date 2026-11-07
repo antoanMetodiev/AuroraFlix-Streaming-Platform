@@ -894,7 +894,7 @@ export const PlayerSection = forwardRef<
   );
   const startAt = resumeSeconds ? String(resumeSeconds) : undefined;
 
-  useWatchProgressRecorder(vidsrcRef, activePlayer, hasStarted);
+  useWatchProgressRecorder(vidsrcRef, activePlayer, hasStarted, { title, image: poster });
 
   function handleStartOver() {
     if (vidsrcRef) clearProgress(vidsrcRef);

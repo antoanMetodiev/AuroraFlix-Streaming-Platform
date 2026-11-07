@@ -5,6 +5,7 @@ import { SeoIntro } from "@/components/home/seo-intro";
 import { HeroSection } from "@/components/home/hero-section";
 import {
 	// PAYMENTS DISABLED: LazyPricingSection, LazyCheckoutResultOverlay
+	LazyContinueWatchingSection,
 	LazyLastViewedSection,
 	LazyTrendingSection,
 	LazyTrendingShowcase,
@@ -133,6 +134,10 @@ export default function Home() {
 			</Suspense>
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
+
+			<Reveal>
+				<LazyContinueWatchingSection />
+			</Reveal>
 
 			<Reveal>
 				<LazyLastViewedSection />
