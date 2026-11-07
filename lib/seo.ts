@@ -15,6 +15,7 @@
  */
 
 import type { Metadata } from "next";
+import { API_BASE_URL } from "@/lib/config";
 import { tmdbImage } from "@/lib/tmdb";
 
 export const SITE_URL =process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -206,10 +207,19 @@ type SeoRecord = {
 };
 
 /** generateMetadata for a movie / series details page; `path` is its URL path. */
-export function recordMetadata(record: SeoRecord, type: "movie" | "series", path: string): Metadata {
+/**
+ * The picture a shared link shows (Viber, Facebook, X…): drawn by the
+ * gateway (lumo-api-gateway's internal/ogcard) — too heavy for this Worker's
+ * free-plan CPU time. `id` is the one the details endpoint takes.
+ */
+export function shareImageUrl(type: "movie" | "series", id: string) {
+  return `${API_BASE_URL}/og/${type}/${encodeURIComponent(id)}.jpg`;
+}
+
+export function recordMetadata(record: SeoRecord, type: "movie" | "series", path: string, id: string): Metadata {
   const title = recordTitle(record.title, record.releaseDate, type, record.originalTitle);
   const description = recordDescription(record.title, record.releaseDate, record.description, type);
-  const backdrop = tmdbImage(record.backgroundImg_URL ?? record.posterImgURL, "w1280");
+  const image = { url: shareImageUrl(type, id), width: 1200, height: 630, alt: title, type: "image/jpeg" };
 
   return {
     title,
@@ -221,13 +231,13 @@ export function recordMetadata(record: SeoRecord, type: "movie" | "series", path
       url: path,
       title,
       description,
-      images: backdrop ? [{ url: backdrop }] : undefined,
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: backdrop ? [backdrop] : undefined,
+      images: [image.url],
     },
   };
 }

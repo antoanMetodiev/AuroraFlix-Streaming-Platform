@@ -18,7 +18,7 @@ export async function generateMetadata({
   const series = await loadSeries(id);
   if (!series) return { title: "Сериалът не е намерен", robots: { index: false } };
 
-  return recordMetadata(series, "series", `/series/${series.tmdbId || id}`);
+  return recordMetadata(series, "series", `/series/${series.tmdbId || id}`, id);
 }
 
 export default async function SeriesDetailsPage({

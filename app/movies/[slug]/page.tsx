@@ -43,11 +43,8 @@ export async function generateMetadata({
     };
   }
 
-  return recordMetadata(
-    movie,
-    "movie",
-    `/movies/${getMovieSlug({ ...movie, movieId: parseMovieIdFromSlug(slug) })}`
-  );
+  const movieId = parseMovieIdFromSlug(slug);
+  return recordMetadata(movie, "movie", `/movies/${getMovieSlug({ ...movie, movieId })}`, movieId);
 }
 
 export default async function MovieDetailsPage({
