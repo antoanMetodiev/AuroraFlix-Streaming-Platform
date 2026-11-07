@@ -11,8 +11,9 @@ import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
-import { useWatchProgressRecorder } from "@/lib/use-watch-progress-recorder";
+import { useEstimatedProgressRecorder, useWatchProgressRecorder } from "@/lib/use-watch-progress-recorder";
 import { clearProgress, formatPlaybackTime, getResumeSeconds } from "@/lib/watch-progress";
+import { embedmasterSeekCommand, isEmbedmasterReady } from "@/lib/player-telemetry";
 import type { WatchingTarget } from "@/lib/watching";
 
 type VidsrcRef =
@@ -531,8 +532,8 @@ function toVidsparkUrl(ref: VidsrcRef, startAt: string | undefined): string {
   );
 }
 
-/** The players that can be told where to start through their URL. */
-const RESUMABLE_PLAYERS: ReadonlySet<ProviderId> = new Set([2, 3, 4, 6]);
+/** The players that can be told where to start: by their URL, or EmbedMaster (5) by a message. */
+const RESUMABLE_PLAYERS: ReadonlySet<ProviderId> = new Set([2, 3, 4, 5, 6]);
 
 const RESUME_HINT_MS = 10_000;
 
@@ -867,6 +868,7 @@ export const PlayerSection = forwardRef<
   // (and re-fetch) every time playback starts or the viewer switches
   // players — it only needs the *latest* values at the moment the check
   // resolves, not to react to their changes itself.
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const hasStartedRef = useRef(hasStarted);
   useEffect(() => {
     hasStartedRef.current = hasStarted;
@@ -894,7 +896,29 @@ export const PlayerSection = forwardRef<
   );
   const startAt = resumeSeconds ? String(resumeSeconds) : undefined;
 
-  useWatchProgressRecorder(vidsrcRef, activePlayer, hasStarted, { title, image: poster });
+  const progressMeta = { title, image: poster };
+  useWatchProgressRecorder(vidsrcRef, activePlayer, hasStarted, progressMeta);
+  useEstimatedProgressRecorder(
+    vidsrcRef,
+    hasStarted && BG_AUDIO_PLAYERS.has(activePlayer),
+    resumeSeconds,
+    frameRef,
+    progressMeta
+  );
+
+  // EmbedMaster takes no start position in its URL, only a seek once it has loaded.
+  useEffect(() => {
+    if (!hasStarted || activePlayer !== 5 || !resumeSeconds) return;
+
+    function handleMessage(event: MessageEvent) {
+      if (!isEmbedmasterReady(event.data)) return;
+      window.removeEventListener("message", handleMessage);
+      frameRef.current?.contentWindow?.postMessage(embedmasterSeekCommand(resumeSeconds!), "*");
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [hasStarted, activePlayer, resumeSeconds]);
 
   function handleStartOver() {
     if (vidsrcRef) clearProgress(vidsrcRef);
@@ -1523,6 +1547,7 @@ export const PlayerSection = forwardRef<
                       }
                     : undefined
                 }
+                ref={frameRef}
                 src={activeSrc}
                 title={
                   title

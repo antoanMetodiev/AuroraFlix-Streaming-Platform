@@ -205,6 +205,7 @@ export const esDictionary = {
   "continue.title": "Sigue viendo",
   "continue.timeLeft": "Quedan {time}",
   "continue.stoppedAt": "Te quedaste en {time}",
+  "continue.stoppedAround": "Te quedaste sobre {time}",
   "continue.hoursMinutes": "{hours} h {minutes} min",
   "continue.minutes": "{minutes} min",
   "continue.movie": "Película",

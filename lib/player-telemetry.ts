@@ -93,14 +93,38 @@ export type ProgressUpdate = TelemetryUpdate & {
 
 /**
  * Providers whose position can be saved for "continue watching", by their id
- * in PlayerSection. VidLink (4) and VidSpark (6) document their events.
- * EmbedMaster (5) and the БГ аудио players (7, 8) have no known telemetry.
+ * in PlayerSection. VidLink (4) and VidSpark (6) document their events;
+ * EmbedMaster (5) sends {source:"embedmaster_player", event, info} (captured
+ * 2026-11-07). The БГ аудио players (7, 8) send nothing, so their position can
+ * only be estimated: see useEstimatedProgressRecorder.
  */
 export const PROGRESS_ORIGIN: Record<number, string> = {
   ...PLAYER_ORIGIN,
   4: "https://vidlink.pro",
+  5: "https://embdmstrplayer.com",
   6: "https://vidspark.to",
 };
+
+const EMBEDMASTER_SOURCE = "embedmaster_player";
+
+/** The message EmbedMaster's player takes to jump to a position, in seconds. */
+export function embedmasterSeekCommand(seconds: number) {
+  return { source: "embedmaster_player_command", command: "seek", value: seconds };
+}
+
+/** EmbedMaster has told us it's ready for a seek: it knows the runtime. */
+export function isEmbedmasterReady(raw: unknown) {
+  const message = raw as Record<string, unknown> | null;
+  return message?.source === EMBEDMASTER_SOURCE && message.event === "duration";
+}
+
+/** Did this message come from the given provider's player? */
+export function isFromProvider(provider: number, event: MessageEvent) {
+  // embedmaster.link redirects to a player domain of theirs that may change,
+  // so it's told apart by its own marker instead.
+  if (provider === 5) return (event.data as Record<string, unknown> | null)?.source === EMBEDMASTER_SOURCE;
+  return event.origin === PROGRESS_ORIGIN[provider];
+}
 
 function episodeFields(message: Record<string, unknown>): Pick<ProgressUpdate, "season" | "episode"> {
   const fields = (message.data && typeof message.data === "object" ? message.data : message) as Record<string, unknown>;
@@ -124,6 +148,10 @@ export function extractProgress(provider: number, raw: unknown): ProgressUpdate 
   } else if (provider === 4) {
     // Same PLAYER_EVENT shape as VidFast.
     update = extractTelemetry(2, raw);
+  } else if (provider === 5 && message.source === EMBEDMASTER_SOURCE) {
+    const value = numberOrUndefined(message.info);
+    if (message.event === "duration") return { duration: value };
+    return message.event === "time" || message.event === "seek" ? { currentTime: value } : null;
   } else if (provider === 6 && message.source === "vidspark-player") {
     update = {
       currentTime: numberOrUndefined(message.currentTime),

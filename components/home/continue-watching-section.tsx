@@ -45,7 +45,7 @@ function ContinueCard({ entry, title, image, href }: CardProps) {
             ? t("continue.hoursMinutes", { hours, minutes })
             : t("continue.minutes", { minutes: Math.max(1, minutes) }),
       })
-    : t("continue.stoppedAt", { time: stoppedAt });
+    : t(entry.approximate ? "continue.stoppedAround" : "continue.stoppedAt", { time: stoppedAt });
 
   return (
     <div className="group relative w-[300px] shrink-0 sm:w-[400px]">
@@ -89,6 +89,7 @@ function ContinueCard({ entry, title, image, href }: CardProps) {
               <Play size={13} fill="currentColor" />
               <Volume2 size={15} />
               <span className="text-xs font-medium tabular-nums">
+                {entry.approximate ? "≈ " : ""}
                 {stoppedAt}
                 {entry.duration ? <span className="text-white/55"> / {formatPlaybackTime(entry.duration)}</span> : null}
               </span>

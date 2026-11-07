@@ -20,9 +20,11 @@ export type WatchProgress = {
   /** What the "continue watching" row shows, as the details page had it. */
   title?: string;
   image?: string;
+  /** Counted by us, the player doesn't report its position: see useEstimatedProgressRecorder. */
+  approximate?: boolean;
 };
 
-export type ProgressMeta = { title?: string | null; image?: string | null };
+export type ProgressMeta = { title?: string | null; image?: string | null; approximate?: boolean };
 
 export type ProgressMap = Record<string, WatchProgress>;
 
@@ -68,6 +70,15 @@ function read(): ProgressMap {
   return cache;
 }
 
+/**
+ * What's stored right now. Another tab may have saved since this one last read,
+ * and writing from the cached copy would wipe what it saved.
+ */
+function readFresh(): ProgressMap {
+  cache = null;
+  return read();
+}
+
 function write(next: ProgressMap) {
   const newest = Object.entries(next)
     .sort(([, a], [, b]) => b.updatedAt - a.updatedAt)
@@ -90,33 +101,39 @@ export function saveProgress(
   if (!Number.isFinite(seconds) || seconds < MIN_SAVED_SECONDS) return;
   if (duration !== null && duration < MIN_DURATION_SECONDS) return;
 
+  const saved = readFresh();
+  const key = progressKey(target);
+  // Some players say the runtime only once, as they load.
+  const knownDuration = duration ?? saved[key]?.duration ?? null;
+
   write({
-    ...read(),
-    [progressKey(target)]: {
+    ...saved,
+    [key]: {
       seconds,
-      duration,
-      finished: duration !== null && seconds / duration >= FINISHED_RATIO,
+      duration: knownDuration,
+      finished: knownDuration !== null && seconds / knownDuration >= FINISHED_RATIO,
       updatedAt: Date.now(),
       ...(meta?.title ? { title: meta.title } : {}),
       ...(meta?.image ? { image: meta.image } : {}),
+      ...(meta?.approximate ? { approximate: true } : {}),
     },
   });
 }
 
 export function clearProgress(target: ProgressTarget) {
-  const next = { ...read() };
+  const next = { ...readFresh() };
   delete next[progressKey(target)];
   write(next);
 }
 
 /** Every saved position, right now (for code outside of rendering). */
 export function getAllProgress(): ProgressMap {
-  return read();
+  return readFresh();
 }
 
 /** The second to start from, or null for "from the beginning". */
 export function getResumeSeconds(target: ProgressTarget): number | null {
-  const saved = read()[progressKey(target)];
+  const saved = readFresh()[progressKey(target)];
   if (!saved || saved.finished) return null;
   return Math.max(0, Math.floor(saved.seconds) - RESUME_REWIND_SECONDS);
 }
@@ -169,7 +186,7 @@ export function dismissContinueWatching(kind: "movie" | "tv", tmdbId: string) {
   const prefix = `${kind}:${tmdbId}`;
   write(
     Object.fromEntries(
-      Object.entries(read()).filter(
+      Object.entries(readFresh()).filter(
         ([key, entry]) => entry.finished || (key !== prefix && !key.startsWith(`${prefix}:`))
       )
     )

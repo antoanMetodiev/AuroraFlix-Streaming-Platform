@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { extractProgress, PROGRESS_ORIGIN } from "@/lib/player-telemetry";
+import { useEffect, useRef, type RefObject } from "react";
+import { extractProgress, isFromProvider, PROGRESS_ORIGIN } from "@/lib/player-telemetry";
 import { saveProgress, type ProgressMeta, type ProgressTarget } from "@/lib/watch-progress";
 
 const SAVE_EVERY_MS = 10_000;
@@ -42,7 +42,7 @@ export function useWatchProgressRecorder(
     }
 
     function handleMessage(event: MessageEvent) {
-      if (event.origin !== expectedOrigin) return;
+      if (!isFromProvider(provider, event)) return;
       const update = extractProgress(provider, event.data);
       if (!update) return;
 
@@ -100,4 +100,52 @@ export function useWatchProgressRecorder(
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [target, provider, active]);
+}
+
+const ESTIMATE_TICK_SECONDS = 10;
+
+/**
+ * For players that report nothing (their iframe can't be looked into): counts
+ * the time from the viewer's first click into the player, while this tab is
+ * visible. A pause can't be seen from here, so it's only an estimate and is
+ * saved as one. Starts from the position the viewer was told to skip to.
+ */
+export function useEstimatedProgressRecorder(
+  target: ProgressTarget | null,
+  active: boolean,
+  startSeconds: number | null,
+  frameRef: RefObject<HTMLIFrameElement | null>,
+  meta?: ProgressMeta
+) {
+  const metaRef = useRef(meta);
+  useEffect(() => {
+    metaRef.current = meta;
+  });
+
+  useEffect(() => {
+    if (!active || !target) return;
+
+    let position = startSeconds ?? 0;
+    let engaged = false;
+
+    // A click into an iframe takes the focus away from this window.
+    function handleBlur() {
+      window.setTimeout(() => {
+        if (document.activeElement === frameRef.current) engaged = true;
+      });
+    }
+
+    const timer = window.setInterval(() => {
+      if (document.activeElement === frameRef.current) engaged = true;
+      if (!engaged || document.visibilityState !== "visible") return;
+      position += ESTIMATE_TICK_SECONDS;
+      saveProgress(target, position, null, { ...metaRef.current, approximate: true });
+    }, ESTIMATE_TICK_SECONDS * 1000);
+
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [target, active, startSeconds, frameRef]);
 }

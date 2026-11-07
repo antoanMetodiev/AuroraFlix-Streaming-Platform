@@ -346,6 +346,7 @@ export const dictionary = {
   "continue.title": { en: "Continue watching", bg: "Продължете да гледате" },
   "continue.timeLeft": { en: "{time} left", bg: "Остават {time}" },
   "continue.stoppedAt": { en: "Stopped at {time}", bg: "Спря на {time}" },
+  "continue.stoppedAround": { en: "Stopped around {time}", bg: "Спря около {time}" },
   "continue.hoursMinutes": { en: "{hours}h {minutes}m", bg: "{hours} ч {minutes} мин" },
   "continue.minutes": { en: "{minutes} min", bg: "{minutes} мин" },
   "continue.movie": { en: "Movie", bg: "Филм" },
@@ -516,7 +517,7 @@ export const dictionary = {
   "actor.viewProfile": { en: "View profile", bg: "Виж профила" },
 
   "carousel.latestWorks": { en: "Latest Works", bg: "Последни изяви" },
-  "carousel.lastViewed": { en: "Last Viewed", bg: "Последно гледани" },
+  "carousel.lastViewed": { en: "Last Viewed", bg: "Последно преглеждани" },
   "carousel.checkForMoreWith": { en: "Check for more movies with", bg: "Провери за още филми с" },
   "carousel.checkForMoreGeneric": { en: "Check for more movies with this actor", bg: "Провери за още филми с този актьор" },
   "carousel.checkingStarted": { en: "Checking started.. try again in", bg: "Проверката започна.. опитай пак след" },

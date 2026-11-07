@@ -205,6 +205,7 @@ export const elDictionary = {
   "continue.title": "Συνέχισε να βλέπεις",
   "continue.timeLeft": "Απομένουν {time}",
   "continue.stoppedAt": "Σταμάτησες στο {time}",
+  "continue.stoppedAround": "Σταμάτησες περίπου στο {time}",
   "continue.hoursMinutes": "{hours} ώ {minutes} λ",
   "continue.minutes": "{minutes} λεπτά",
   "continue.movie": "Ταινία",
