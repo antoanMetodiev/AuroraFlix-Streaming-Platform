@@ -157,7 +157,7 @@ export function PlaylistCard({
           <CoverMosaic posters={coverPosters} />
 
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{playlist.name}</h2>
+            <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold tracking-tight break-words text-foreground sm:line-clamp-1 sm:text-2xl">{playlist.name}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${
