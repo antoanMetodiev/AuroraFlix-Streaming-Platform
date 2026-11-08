@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { CalendarDays, Cake, Clapperboard, Flame, MapPin, Maximize2, Sparkles, Tv } from "lucide-react";
+import { CalendarDays, Cake, Clapperboard, Flame, MapPin, Maximize2, Search, Sparkles, Tv, X } from "lucide-react";
 import { FaFacebook, FaImdb, FaInstagram, FaXTwitter } from "react-icons/fa6";
 import { Footer } from "@/components/layout/footer";
 import { BlurredPageBackdrop } from "@/components/movies/details/details-background";
@@ -12,7 +12,7 @@ import { FullScreenLoader, Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { RatingRing } from "@/components/ui/rating-ring";
 import { consumePendingActor } from "@/lib/actor-session";
-import { getActorLatestWorksClient, requestMoreMoviesForActor } from "@/lib/api-public";
+import { getActorClient, getActorLatestWorksClient, requestMoreMoviesForActor } from "@/lib/api-public";
 import { tmdbImage } from "@/lib/tmdb";
 import { calculateAge, formatReleaseDate, releaseDateValue } from "@/lib/dates";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -37,6 +37,11 @@ const EAGER_POSTERS = 6;
 
 type Filter = "all" | "movies" | "series";
 
+/** Lower-cased, accents stripped — "pokemon" finds "Pokémon". */
+function normalize(text: string) {
+  return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
+}
+
 export function ActorDetailsView({ id }: { id: string }) {
   const { t, locale } = useTranslation();
   const [pending, setPending] = useState<{ actor: Actor | null; backgroundPath?: string | null } | undefined>(undefined);
@@ -44,6 +49,7 @@ export function ActorDetailsView({ id }: { id: string }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [showLightbox, setShowLightbox] = useState(false);
   const [bioExpanded, setBioExpanded] = useState(false);
+  const [query, setQuery] = useState("");
   const actor = pending?.actor;
 
   useEffect(() => {
@@ -53,6 +59,22 @@ export function ActorDetailsView({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPending({ actor: saved?.actor ?? null, backgroundPath: saved?.backgroundImgUrl });
   }, [id]);
+
+  // The saved copy is in whatever language the site was in when the cast was
+  // opened — after a language switch it would be stale, so the actor is asked
+  // for again in the current one (name, biography, place of birth).
+  const imdbId = actor?.imdbId;
+  useEffect(() => {
+    if (!imdbId) return;
+    let cancelled = false;
+    getActorClient(imdbId).then((fresh) => {
+      if (cancelled || !fresh) return;
+      setPending((current) => (current?.actor ? { ...current, actor: { ...current.actor, ...fresh, id: current.actor.id } } : current));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [imdbId, locale]);
 
   useEffect(() => {
     if (!actor?.imdbId) return;
@@ -82,8 +104,14 @@ export function ActorDetailsView({ id }: { id: string }) {
     const series = list.filter((work) => work.type === "SERIES").length;
     return { all: list.length, movies: list.length - series, series };
   }, [works]);
-  const shownWorks = (works ?? []).filter((work) =>
-    filter === "all" ? true : filter === "series" ? work.type === "SERIES" : work.type !== "SERIES"
+  const needle = normalize(query);
+  const shownWorks = (works ?? []).filter(
+    (work) =>
+      (filter === "all" ? true : filter === "series" ? work.type === "SERIES" : work.type !== "SERIES") &&
+      (!needle ||
+        normalize(work.title ?? "").includes(needle) ||
+        normalize(work.originalTitle ?? "").includes(needle) ||
+        (work.releaseDate ?? "").startsWith(needle))
   );
 
   if (pending === undefined) return <FullScreenLoader />;
@@ -238,6 +266,8 @@ export function ActorDetailsView({ id }: { id: string }) {
         counts={counts}
         filter={filter}
         onFilter={setFilter}
+        query={query}
+        onQuery={setQuery}
         actorName={actor.nameInRealLife}
         actorImdbId={actor.imdbId}
       />
@@ -256,6 +286,8 @@ function Filmography({
   counts,
   filter,
   onFilter,
+  query,
+  onQuery,
   actorName,
   actorImdbId,
 }: {
@@ -264,6 +296,8 @@ function Filmography({
   counts: { all: number; movies: number; series: number };
   filter: Filter;
   onFilter: (filter: Filter) => void;
+  query: string;
+  onQuery: (query: string) => void;
   actorName: string;
   actorImdbId?: string | null;
 }) {
@@ -285,8 +319,10 @@ function Filmography({
         <RequestMoreButton actorName={actorName} actorImdbId={actorImdbId} />
       </div>
 
-      {works && counts.movies > 0 && counts.series > 0 && (
-        <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+      {works && counts.all > 0 && (
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      {counts.movies > 0 && counts.series > 0 ? (
+        <div className="inline-flex w-fit gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
           {tabs.map(({ value, label, count, Icon }) => (
             <button
               key={value}
@@ -302,6 +338,33 @@ function Filmography({
             </button>
           ))}
         </div>
+      ) : (
+        <span aria-hidden className="hidden sm:block" />
+      )}
+          <div className="relative w-full sm:w-80">
+            <Search size={15} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-foreground/40" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => onQuery(event.target.value)}
+              onKeyDown={(event) => event.key === "Escape" && onQuery("")}
+              placeholder={t("actor.searchWorks")}
+              aria-label={t("actor.searchWorks")}
+              autoComplete="off"
+              className="w-full rounded-full border border-white/10 bg-white/[0.05] py-2.5 pr-10 pl-11 text-sm text-foreground placeholder:text-foreground/35 outline-none transition-all duration-300 [&::-webkit-search-cancel-button]:hidden focus:border-transparent focus:bg-white/[0.08] focus:shadow-[0_0_0_1.5px_#ffffff]"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => onQuery("")}
+                aria-label={t("actor.clearSearch")}
+                className="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-colors hover:bg-white/10 hover:text-foreground"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       {works === null ? (
@@ -311,7 +374,9 @@ function Filmography({
           ))}
         </div>
       ) : shown.length === 0 ? (
-        <p className="rounded-3xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center text-foreground/60">{t("actor.noWorks")}</p>
+        <p className="rounded-3xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center text-foreground/60">
+          {query.trim() ? t("actor.noSearchResults", { query: query.trim() }) : t("actor.noWorks")}
+        </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {shown.map((work, index) => {

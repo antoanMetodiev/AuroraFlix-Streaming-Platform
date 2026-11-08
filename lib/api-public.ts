@@ -83,6 +83,17 @@ export async function requestMoreMoviesForActor(imdbId: string) {
   await fetch(`${PROXY_BASE_URL}/add-movies-by-actor/${encodeURIComponent(imdbId)}`, { method: "POST" });
 }
 
+/** One actor in the visitor's language (/api/backend adds ?lang); null when unknown or on failure. */
+export async function getActorClient(imdbId: string): Promise<Actor | null> {
+  try {
+    const response = await fetch(`${PROXY_BASE_URL}/actor/${encodeURIComponent(imdbId)}`);
+    if (!response.ok) return null;
+    return (await response.json()) as Actor;
+  } catch {
+    return null;
+  }
+}
+
 export async function getActorLatestWorksClient(imdbId: string): Promise<ActorLatestWork[]> {
   const response = await fetch(`${PROXY_BASE_URL}/actor/latest-works/${encodeURIComponent(imdbId)}`);
   if (!response.ok) return [];
