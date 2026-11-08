@@ -17,7 +17,7 @@ import {
   type ContinueWatchingEntry,
 } from "@/lib/watch-progress";
 
-const MAX_ITEMS = 12;
+const MAX_ITEMS = 20;
 
 type CardProps = {
   entry: ContinueWatchingEntry;
