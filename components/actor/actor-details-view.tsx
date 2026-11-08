@@ -310,19 +310,44 @@ function Filmography({
 
   return (
     <section className="mx-auto max-w-[100rem] px-4 pb-20 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 sm:mb-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 sm:mb-8">
         <div className="flex items-center gap-3">
           <span className="h-6 w-1 shrink-0 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
           <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{t("actor.filmography")}</h2>
           {works && <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-foreground/70">{counts.all}</span>}
         </div>
-        <RequestMoreButton actorName={actorName} actorImdbId={actorImdbId} />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          {works && counts.all > 0 && (
+            <div className="relative w-full sm:w-72">
+              <Search size={15} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-foreground/40" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => onQuery(event.target.value)}
+                onKeyDown={(event) => event.key === "Escape" && onQuery("")}
+                placeholder={t("actor.searchWorks")}
+                aria-label={t("actor.searchWorks")}
+                autoComplete="off"
+                className="w-full rounded-full border border-white/10 bg-white/[0.05] py-2.5 pr-10 pl-11 text-sm text-foreground placeholder:text-foreground/35 outline-none transition-all duration-300 [&::-webkit-search-cancel-button]:hidden focus:border-transparent focus:bg-white/[0.08] focus:shadow-[0_0_0_1.5px_#ffffff]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => onQuery("")}
+                  aria-label={t("actor.clearSearch")}
+                  className="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-colors hover:bg-white/10 hover:text-foreground"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          )}
+          <RequestMoreButton actorName={actorName} actorImdbId={actorImdbId} />
+        </div>
       </div>
 
-      {works && counts.all > 0 && (
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-      {counts.movies > 0 && counts.series > 0 ? (
-        <div className="inline-flex w-fit gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+      {works && counts.movies > 0 && counts.series > 0 && (
+        <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
           {tabs.map(({ value, label, count, Icon }) => (
             <button
               key={value}
@@ -337,33 +362,6 @@ function Filmography({
               <span className={filter === value ? "text-neutral-500" : "text-foreground/40"}>{count}</span>
             </button>
           ))}
-        </div>
-      ) : (
-        <span aria-hidden className="hidden sm:block" />
-      )}
-          <div className="relative w-full sm:w-80">
-            <Search size={15} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-foreground/40" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => onQuery(event.target.value)}
-              onKeyDown={(event) => event.key === "Escape" && onQuery("")}
-              placeholder={t("actor.searchWorks")}
-              aria-label={t("actor.searchWorks")}
-              autoComplete="off"
-              className="w-full rounded-full border border-white/10 bg-white/[0.05] py-2.5 pr-10 pl-11 text-sm text-foreground placeholder:text-foreground/35 outline-none transition-all duration-300 [&::-webkit-search-cancel-button]:hidden focus:border-transparent focus:bg-white/[0.08] focus:shadow-[0_0_0_1.5px_#ffffff]"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => onQuery("")}
-                aria-label={t("actor.clearSearch")}
-                className="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-colors hover:bg-white/10 hover:text-foreground"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
         </div>
       )}
 
