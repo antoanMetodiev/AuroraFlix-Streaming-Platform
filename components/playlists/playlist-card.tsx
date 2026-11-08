@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { Check, ChevronDown, Film, Globe, Lock, Pencil, Plus, Search, Trash2, Tv, X } from "lucide-react";
+import { Check, ChevronDown, Film, Globe, ListVideo, Lock, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { Loader, Spinner } from "@/components/ui/loader";
-import { getRatingColor } from "@/components/ui/rating-ring";
+import { LibraryPosterCard } from "@/components/library/library-poster-card";
 import { tmdbImage, getMovieSlug } from "@/lib/tmdb";
 import { searchMatchingMovies, searchMatchingSeries } from "@/lib/api-public";
 import { addPlaylistItem, getPlaylistItems, removePlaylistItem, type Playlist, type PlaylistItem } from "@/lib/playlists";
@@ -105,13 +104,25 @@ export function PlaylistCard({
     await onDelete?.(playlist.id);
   };
 
+  const coverPosters = (items ?? [])
+    .map((item) => tmdbImage(item.posterImgURL, "w342"))
+    .filter((poster): poster is string => Boolean(poster))
+    .slice(0, 4);
+
   return (
     <div
-      className={`group/card relative overflow-hidden rounded-3xl border bg-surface transition-all duration-300 ${
-        isExpanded ? "border-white/20 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]" : "border-foreground/10 hover:border-foreground/20"
+      className={`group/card relative overflow-hidden rounded-[2rem] border bg-white/[0.04] backdrop-blur-md transition-all duration-500 ${
+        isExpanded ? "border-white/15 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.8)]" : "border-white/10 hover:border-white/20"
       }`}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.05] to-transparent" />
+      {/* The newest title's poster, blurred behind the header. */}
+      {coverPosters[0] && (
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 overflow-hidden">
+          <FadeInImage src={coverPosters[0]} alt="" sizes="600px" className="scale-125 object-cover opacity-30 blur-2xl" />
+          <span className="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-[#0b0b0c]/90" />
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent" />
 
       {isEditing ? (
         <EditForm
@@ -141,25 +152,26 @@ export function PlaylistCard({
           }}
           aria-expanded={isExpanded}
           aria-label={isExpanded ? t("playlists.collapse") : t("playlists.expand")}
-          className="group relative flex w-full cursor-pointer items-center gap-4 px-5 py-4 text-left transition-colors duration-150 hover:bg-foreground/5 sm:px-6 sm:py-5"
+          className="group relative flex w-full cursor-pointer items-center gap-4 px-4 py-4 text-left transition-colors duration-200 hover:bg-white/[0.03] sm:gap-5 sm:px-6 sm:py-5"
         >
-          <span className="rounded-2xl bg-gradient-to-br from-white/20 to-white/5 p-[1.5px]">
-            <span
-              className={`flex h-10 w-10 items-center justify-center rounded-[0.95rem] ${
-                playlist.isPublic ? "bg-white/10 text-white" : "bg-surface text-foreground/50"
-              }`}
-            >
-              {playlist.isPublic ? <Globe size={17} /> : <Lock size={17} />}
-            </span>
-          </span>
+          <CoverMosaic posters={coverPosters} />
 
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">{playlist.name}</h2>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-foreground/45">
-              {playlist.isPublic ? t("playlists.visibilityPublic") : t("playlists.visibilityPrivate")}
-              <span aria-hidden>·</span>
-              {t("playlists.itemCount", { count: playlist.itemCount })}
-            </p>
+            <h2 className="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{playlist.name}</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${
+                  playlist.isPublic ? "bg-white text-neutral-900" : "border border-white/15 bg-white/[0.06] text-foreground/75"
+                }`}
+              >
+                {playlist.isPublic ? <Globe size={11} /> : <Lock size={11} />}
+                {playlist.isPublic ? t("playlists.visibilityPublic") : t("playlists.visibilityPrivate")}
+              </span>
+              <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[0.6875rem] font-semibold text-foreground/75">
+                <Film size={11} />
+                {t("playlists.itemCount", { count: items?.length ?? playlist.itemCount })}
+              </span>
+            </div>
           </div>
 
           {canManage && (
@@ -169,15 +181,14 @@ export function PlaylistCard({
             </div>
           )}
 
-          <ChevronDown
-            size={18}
-            className={`shrink-0 text-foreground/40 transition-all duration-300 group-hover:text-foreground/70 ${isExpanded ? "rotate-180" : ""}`}
-          />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/50 transition-all duration-300 group-hover:border-white/25 group-hover:text-foreground">
+            <ChevronDown size={17} className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+          </span>
         </div>
       )}
 
       {isExpanded && !isEditing && !isConfirmingDelete && (
-        <div className="relative border-t border-foreground/10 px-5 pt-5 pb-6 sm:px-6">
+        <div className="relative border-t border-white/10 px-4 pt-5 pb-6 sm:px-6">
           {canManage && (
             <AddItemsPanel
               playlistId={playlist.id}
@@ -199,11 +210,22 @@ export function PlaylistCard({
             </div>
           ) : (
             <>
-              <div className={`grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 ${canManage ? "mt-5" : ""}`}>
+              <div className={`grid grid-cols-2 gap-3 min-[460px]:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${canManage ? "mt-5" : ""}`}>
                 {items.slice(0, visibleItemsCount).map((item, index) => (
-                  <div key={item.id} className="animate-card-in" style={{ animationDelay: `${Math.min(index, 10) * 30}ms`, animationDuration: "0.4s" }}>
-                    <ItemTile item={item} onRemove={canManage ? () => handleRemove(item.id) : undefined} onNavigate={onNavigate} />
-                  </div>
+                  <LibraryPosterCard
+                    key={item.id}
+                    href={hrefFor(item)}
+                    title={item.title ?? ""}
+                    poster={tmdbImage(item.posterImgURL, "w342")}
+                    rating={item.tmdbRating}
+                    isSeries={item.type === "TV-SHOW"}
+                    onRemove={canManage ? () => handleRemove(item.id) : undefined}
+                    removeLabel={t("playlists.removeItemAria")}
+                    onNavigate={onNavigate}
+                    index={index}
+                    sizes="(min-width: 1280px) 180px, (min-width: 768px) 22vw, 45vw"
+                    compact
+                  />
                 ))}
               </div>
               {itemsPageSize && items.length > visibleItemsCount && (
@@ -318,57 +340,26 @@ function EditForm({
   );
 }
 
-function ItemTile({ item, onRemove, onNavigate }: { item: PlaylistItem; onRemove?: () => void; onNavigate?: () => void }) {
-  const poster = tmdbImage(item.posterImgURL, "w500");
-  const rating = item.tmdbRating ? Math.max(0, Math.min(10, Number(item.tmdbRating) || 0)) : null;
-  const TypeIcon = item.type === "TV-SHOW" ? Tv : Film;
-
+/** The playlist's cover: its first four posters in a 2×2 tile (fewer: the first one fills it, none: an icon). */
+function CoverMosaic({ posters }: { posters: string[] }) {
   return (
-    <div className="group relative">
-      <Link href={hrefFor(item)} onClick={onNavigate} className="block">
-        <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-foreground/5 ring-1 ring-white/10 transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:ring-white/40 group-hover:shadow-[0_16px_36px_-10px_rgba(0,0,0,0.7)]">
-          {poster && (
-            <FadeInImage
-              src={poster}
-              alt={item.title ?? ""}
-              // Every playlist starts expanded, so most tiles sit below the fold.
-              loading="lazy"
-              sizes="150px"
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-          )}
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/5 to-transparent" />
-
-          {rating !== null && rating > 0 && (
-            <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/75 px-1.5 py-0.5 text-[0.5625rem] font-bold">
-              <span aria-hidden style={{ color: getRatingColor(rating) }}>
-                ★
-              </span>
-              <span className="text-white">{rating.toFixed(1)}</span>
-            </div>
-          )}
-
-          <div className="absolute inset-x-0 bottom-0 p-2">
-            <p className="line-clamp-2 text-[0.6875rem] leading-tight font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{item.title}</p>
-            <TypeIcon size={10} className="mt-1 text-white/60" />
-          </div>
-        </div>
-      </Link>
-
-      {onRemove && (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.preventDefault();
-            onRemove();
-          }}
-          className="absolute top-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-all duration-200 hover:bg-red-500/90 group-hover:opacity-100"
-        >
-          <X size={12} />
-        </button>
+    <span className="relative block h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-white/20 to-white/[0.04] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] ring-1 ring-white/15 sm:h-24 sm:w-24">
+      {posters.length === 0 ? (
+        <span className="flex h-full w-full items-center justify-center text-white/60">
+          <ListVideo size={26} />
+        </span>
+      ) : posters.length < 4 ? (
+        <FadeInImage src={posters[0]} alt="" sizes="96px" className="object-cover" />
+      ) : (
+        <span className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-black">
+          {posters.map((poster) => (
+            <span key={poster} className="relative overflow-hidden">
+              <FadeInImage src={poster} alt="" sizes="48px" className="object-cover" />
+            </span>
+          ))}
+        </span>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -465,8 +456,8 @@ function AddItemsPanel({
       <button
         type="button"
         onClick={onToggle}
-        className={`group flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed py-3 text-sm font-semibold transition-all duration-200 ${
-          isOpen ? "border-white/30 bg-foreground/5 text-foreground" : "border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:bg-foreground/[0.03] hover:text-foreground"
+        className={`group flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed py-3.5 text-sm font-semibold transition-all duration-300 ${
+          isOpen ? "border-white/30 bg-white/[0.06] text-foreground" : "border-white/15 text-foreground/60 hover:border-white/35 hover:bg-white/[0.04] hover:text-foreground"
         }`}
       >
         {isOpen ? <X size={15} /> : <Plus size={15} className="transition-transform duration-200 group-hover:rotate-90" />}
@@ -476,7 +467,7 @@ function AddItemsPanel({
       {limitReached && <p className="mt-2 px-1 text-xs font-medium text-foreground/60">{t("playlists.itemLimitReached")}</p>}
 
       {isOpen && (
-        <div className="mt-3 rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-3">
+        <div className="animate-card-in mt-3 rounded-3xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:p-4" style={{ animationDuration: "0.3s" }}>
           <div className="mb-3 flex gap-1 rounded-full border border-foreground/10 bg-foreground/5 p-1">
             {(["movie", "series"] as const).map((value) => (
               <button
