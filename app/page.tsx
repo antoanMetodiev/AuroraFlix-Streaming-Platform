@@ -12,7 +12,7 @@ import {
 } from "@/components/home/lazy-sections";
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
-import { BlurredPageBackdrop } from "@/components/movies/details/details-background";
+import { HomeBackdrop } from "@/components/home/home-backdrop";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -115,14 +115,14 @@ async function TrendingShowcaseSection() {
 
 /**
  * Everything below the hero sits on the same blurred-poster background as
- * the Watchlist, instead of flat black: the #1 trending movie (#1 series if
- * there are no movies). Fixed behind the page, so the hero simply covers it
- * at the top.
+ * the Watchlist, instead of flat black — a random trending title, a new one
+ * on every visit (see HomeBackdrop). Fixed behind the page, so the hero
+ * simply covers it at the top.
  */
-async function HomeBackdrop() {
+async function TrendingBackdrop() {
 	const [movies, series] = await loadTrending();
-	const top = [...toShowcaseItems(movies, "movie"), ...toShowcaseItems(series, "series")][0];
-	return <BlurredPageBackdrop path={top?.posterURL} />;
+	const posters = [...toShowcaseItems(movies, "movie"), ...toShowcaseItems(series, "series")].map((item) => item.posterURL);
+	return <HomeBackdrop posters={posters} />;
 }
 
 export default function Home() {
@@ -131,7 +131,7 @@ export default function Home() {
 	return (
 		<main className="flex-1">
 			<Suspense fallback={null}>
-				<HomeBackdrop />
+				<TrendingBackdrop />
 			</Suspense>
 
 			{/* PAYMENTS DISABLED — nobody is charged for now; uncomment the
