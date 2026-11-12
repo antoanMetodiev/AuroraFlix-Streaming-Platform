@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense, cache } from "react";
 import { Reveal } from "@/components/ui/reveal";
-import { SeoIntro } from "@/components/home/seo-intro";
 import { HeroSection } from "@/components/home/hero-section";
 import {
 	// PAYMENTS DISABLED: LazyPricingSection, LazyCheckoutResultOverlay
@@ -169,12 +168,6 @@ export default function Home() {
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
 
-			<Reveal>
-				<SeoIntro />
-			</Reveal>
-
-			{/* Fades the page background out into the footer's solid black. */}
-			<div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
 
 		</main>
 	);

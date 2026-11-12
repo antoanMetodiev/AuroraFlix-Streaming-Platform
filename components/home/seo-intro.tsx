@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale } from "@/lib/i18n/locale-context";
 import type { Locale } from "@/lib/i18n/dictionary";
 import { genreLabel } from "@/lib/i18n/translate";
@@ -8,7 +9,9 @@ import { ALL_GENRES } from "@/lib/genres";
 import { genreHeading } from "@/lib/seo";
 
 /**
- * The homepage's only <h1> and its plain-text intro, just above the footer —
+ * Shown above the footer on every page (root layout). On the homepage the
+ * title is its only <h1>; elsewhere it is an <h2>, as those pages have their
+ * own <h1>. The plain-text intro is
  * what tells Google, in words, that this is a place to watch movies and
  * series online with Bulgarian subtitles (the hero and carousels above are
  * all images). Bulgarian is what gets indexed (see app/layout.tsx); the
@@ -62,6 +65,7 @@ const COPY = {
 export function SeoIntro() {
   const { locale } = useLocale();
   const copy = COPY[locale];
+  const Title = usePathname() === "/" ? "h1" : "h2";
 
   function genreLinkLabel(genre: string, type: "movie" | "series") {
     if (locale === "bg") return genreHeading(genre, type);
@@ -73,7 +77,7 @@ export function SeoIntro() {
   return (
     <section className="relative z-10 px-6 pt-16 pb-4 sm:px-10 lg:px-16">
       <div className="mx-auto max-w-7xl border-t border-white/10 pt-12">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{copy.title}</h1>
+        <Title className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{copy.title}</Title>
         <div className="mt-4 flex max-w-4xl flex-col gap-3 text-sm leading-relaxed text-foreground/65 sm:text-base">
           {copy.paragraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>

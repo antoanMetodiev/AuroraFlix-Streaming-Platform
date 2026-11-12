@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist_Mono, Manrope, Noto_Serif_Display } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Footer } from "@/components/layout/footer";
+import { SeoIntro } from "@/components/home/seo-intro";
+import { Reveal } from "@/components/ui/reveal";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
@@ -117,9 +119,18 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 that must cover the header portal to <body> instead. */}
             <div className="relative isolate flex flex-1 flex-col">
               {children}
-              {/* One footer for every page, under whatever the page rendered.
-                  Page roots are flex-1, so a short page still pins it to the
-                  bottom of the screen. */}
+              {/* Shared by every page, under whatever the page rendered: the
+                  "watch online" intro + genre links, then the footer. Page
+                  roots are flex-1, so a short page still pins these to the
+                  bottom of the screen. z-[2]: above the fade below. */}
+              <Reveal className="relative z-[2]">
+                <SeoIntro />
+              </Reveal>
+              {/* Fades the page background (the blurred poster, where a page
+                  has one) out into the footer's solid black. z-[1], not
+                  negative: pages whose root is isolated paint their backdrop
+                  at layer 0, which would otherwise cover it. */}
+              <div aria-hidden className="pointer-events-none relative z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
               <Footer />
             </div>
           </ClerkLocalizedProvider>
