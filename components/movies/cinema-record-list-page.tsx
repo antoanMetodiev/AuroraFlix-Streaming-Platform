@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { Footer } from "@/components/layout/footer";
 import { AutoOrderNotice } from "@/components/movies/auto-order-notice";
 import { DiscoverFilters } from "@/components/movies/discover-filters";
 import { ListBackground } from "@/components/movies/list-background";
+import { BlurredPageBackdrop } from "@/components/movies/details/details-background";
 import { CinemaRecordGrid } from "@/components/movies/cinema-record-grid";
 import { ListPageHeading } from "@/components/movies/list-page-heading";
 import { PaginationControls } from "@/components/movies/pagination-controls";
@@ -45,12 +45,12 @@ export function CinemaRecordListPage({
   const listType = type === "movie" ? "movies" : "series";
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden">
+    <div className="relative isolate flex flex-1 w-full flex-col overflow-x-hidden">
       <ListBackground />
 
       {/*
        * flex-col so a short result set (few/no matches) still pins the footer
-       * to the viewport bottom instead of leaving min-h-screen's slack trail
+       * to the viewport bottom instead of leaving flex-1's slack trail
        * as dead space below it — the pre-footer content grows via flex-1 to
        * fill that slack instead.
        */}
@@ -77,7 +77,6 @@ export function CinemaRecordListPage({
         {/* Fades the page background out into the footer's solid black, like the details page. */}
         <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
 
-        <Footer />
       </article>
     </div>
   );
@@ -136,6 +135,11 @@ async function CinemaRecordResults({
 
   return (
     <>
+      {/* Same blurred-poster page background as the Watchlist: the first
+          title on this page. Painted over ListBackground, which stays as
+          the fallback while results stream in or when nothing matches. */}
+      <BlurredPageBackdrop path={records.find((record) => record.posterImgURL)?.posterImgURL} />
+
       <ListPageHeading type={type} genre={genre} searchTitle={searchTitle} />
 
       {/* A title search with no match orders it right away instead of a dead end. */}

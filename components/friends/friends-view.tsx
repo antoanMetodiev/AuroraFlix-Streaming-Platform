@@ -1,6 +1,5 @@
 "use client";
 
-import { Footer } from "@/components/layout/footer";
 import { FriendsPanel } from "@/components/friends/friends-panel";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
@@ -10,7 +9,7 @@ export function FriendsView() {
   const { t } = useTranslation();
 
   return (
-    <div className="relative min-h-screen w-full">
+    <div className="relative flex-1 w-full">
       <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-10 sm:px-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t("friends.title")}</h1>
         <div className="mt-6">
@@ -18,7 +17,6 @@ export function FriendsView() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

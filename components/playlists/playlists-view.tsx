@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { Check, Film, Globe, ListVideo, Plus, X } from "lucide-react";
-import { Footer } from "@/components/layout/footer";
 import { Loader } from "@/components/ui/loader";
 import { LibraryHero, type LibraryStat } from "@/components/library/library-hero";
 import { PlaylistCard, VisibilityToggle } from "@/components/playlists/playlist-card";
 import { usePlaylists } from "@/lib/use-playlists";
+import { tmdbImage } from "@/lib/tmdb";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 export function PlaylistsView() {
   const { t } = useTranslation();
   const { playlists, isLoading, create, update, remove } = usePlaylists();
   const [isCreating, setIsCreating] = useState(false);
+  // The first playlist's first poster, reported by its card once its titles load.
+  const [coverPoster, setCoverPoster] = useState<string | null>(null);
 
   const stats: LibraryStat[] =
     playlists.length > 0
@@ -24,12 +26,13 @@ export function PlaylistsView() {
       : [];
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative flex-1 w-full overflow-x-hidden">
       <div className="mx-auto max-w-6xl px-4 pt-10 pb-20 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
         <LibraryHero
           title={t("playlists.title")}
           subtitle={t("playlists.subtitle")}
           stats={stats}
+          backdropPoster={playlists.length > 0 && coverPoster ? tmdbImage(coverPoster, "w780") : null}
           action={
             <button
               type="button"
@@ -82,7 +85,13 @@ export function PlaylistsView() {
           <div className="flex flex-col gap-5">
             {playlists.map((playlist, index) => (
               <div key={playlist.id} className="animate-card-in" style={{ animationDelay: `${Math.min(index, 10) * 40}ms`, animationDuration: "0.4s" }}>
-                <PlaylistCard playlist={playlist} canManage onSave={update} onDelete={remove} />
+                <PlaylistCard
+                  playlist={playlist}
+                  canManage
+                  onSave={update}
+                  onDelete={remove}
+                  onCoverPoster={index === 0 ? setCoverPoster : undefined}
+                />
               </div>
             ))}
           </div>
@@ -91,7 +100,6 @@ export function PlaylistsView() {
 
       {/* Fades the page background out into the footer's solid black. */}
       <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
-      <Footer />
     </div>
   );
 }

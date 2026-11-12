@@ -1,6 +1,5 @@
 "use client";
 
-import { Footer } from "@/components/layout/footer";
 import { useLocale } from "@/lib/i18n/locale-context";
 
 const CONTACT_EMAIL = "antoan.0418@gmail.com";
@@ -206,9 +205,8 @@ export function PrivacyPolicyView() {
   const { locale } = useLocale();
 
   return (
-    <div className="relative min-h-screen w-full">
+    <div className="relative flex-1 w-full">
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">{locale === "bg" ? <PrivacyBG /> : <PrivacyEN />}</div>
-      <Footer />
     </div>
   );
 }

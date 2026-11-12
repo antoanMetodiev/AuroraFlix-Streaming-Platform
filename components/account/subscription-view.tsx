@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { Footer } from "@/components/layout/footer";
 import { Loader } from "@/components/ui/loader";
 import { useSubscription } from "@/lib/use-subscription";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -33,7 +32,7 @@ export function SubscriptionView() {
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="flex-1 bg-background">
         <Loader />
       </div>
     );
@@ -41,12 +40,11 @@ export function SubscriptionView() {
 
   if (!isSignedIn) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex flex-1 flex-col bg-background">
         <div className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
           <h1 className="text-2xl font-bold text-foreground">{t("subscription.signInTitle")}</h1>
           <p className="text-sm text-foreground/60">{t("subscription.signInDesc")}</p>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -61,7 +59,7 @@ export function SubscriptionView() {
     : null;
 
   return (
-    <div className="relative min-h-screen w-full bg-background">
+    <div className="relative flex-1 w-full bg-background">
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-16 sm:px-6 sm:pt-14 lg:px-8">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("subscription.title")}</h1>
         <p className="mt-2 text-sm text-foreground/50">{t("subscription.subtitle")}</p>
@@ -121,7 +119,6 @@ export function SubscriptionView() {
         {isPro && <p className="mt-6 text-xs text-foreground/40">{t("subscription.manageHint")}</p>}
       </div>
 
-      <Footer />
     </div>
   );
 }

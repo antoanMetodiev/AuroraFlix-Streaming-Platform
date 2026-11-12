@@ -12,7 +12,7 @@ export function TrendingSection({ movies, series }: { movies: MarqueeItem[]; ser
   const { ref: seriesRef, inView: seriesInView } = useInViewOnce<HTMLDivElement>(0.2);
 
   return (
-    <section aria-label={t("home.trendingAria")} className="relative z-10 bg-background pt-14 pb-8 sm:pt-20 sm:pb-10">
+    <section aria-label={t("home.trendingAria")} className="relative z-10 pt-14 pb-8 sm:pt-20 sm:pb-10">
       <div ref={moviesRef} className={`reveal ${moviesInView ? "" : "reveal-hidden"}`}>
         <SectionHeading className="px-4 sm:px-6 lg:px-8">{t("home.cultMovies")}</SectionHeading>
         <MarqueeRow items={movies} hrefBase="/movies" direction="left" ariaLabel={t("home.trendingMoviesAria")} />

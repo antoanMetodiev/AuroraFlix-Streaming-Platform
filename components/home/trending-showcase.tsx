@@ -254,7 +254,7 @@ function ShowcaseBlock({
     <section
       ref={ref}
       aria-label={heading}
-      className={`reveal relative overflow-hidden bg-background py-14 sm:py-20 ${inView ? "" : "reveal-hidden"}`}
+      className={`reveal relative overflow-hidden py-14 sm:py-20 ${inView ? "" : "reveal-hidden"}`}
     >
       {/* Soft glow behind the columns, on whichever side they sit. */}
       <div

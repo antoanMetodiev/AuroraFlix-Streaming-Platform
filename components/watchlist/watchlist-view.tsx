@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownWideNarrow, Bookmark, Clapperboard, Search, Sparkles, Star, Tv, X } from "lucide-react";
-import { Footer } from "@/components/layout/footer";
 import { Loader } from "@/components/ui/loader";
 import { LibraryHero, type LibraryStat } from "@/components/library/library-hero";
 import { LibraryPosterCard } from "@/components/library/library-poster-card";
@@ -76,7 +75,7 @@ export function WatchlistView() {
   ];
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative flex-1 w-full overflow-x-hidden">
       <div className="mx-auto max-w-[100rem] px-4 pt-10 pb-20 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
         <LibraryHero
           title={t("watchlist.title")}
@@ -191,7 +190,6 @@ export function WatchlistView() {
 
       {/* Fades the page background out into the footer's solid black. */}
       <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
-      <Footer />
     </div>
   );
 }

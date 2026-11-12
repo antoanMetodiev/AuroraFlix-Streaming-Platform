@@ -5,7 +5,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { CalendarDays, Cake, Clapperboard, Flame, MapPin, Maximize2, Search, Sparkles, Tv, X } from "lucide-react";
 import { FaFacebook, FaImdb, FaInstagram, FaXTwitter } from "react-icons/fa6";
-import { Footer } from "@/components/layout/footer";
 import { BlurredPageBackdrop } from "@/components/movies/details/details-background";
 import { hrefFor, type WorkCardItem } from "@/components/media/work-carousel";
 import { FullScreenLoader, Spinner } from "@/components/ui/loader";
@@ -118,7 +117,7 @@ export function ActorDetailsView({ id }: { id: string }) {
 
   if (!actor) {
     return (
-      <div className="relative min-h-screen w-full">
+      <div className="relative flex-1 w-full">
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center text-foreground">
           <h1 className="text-xl font-medium">{t("actor.notAvailable")}</h1>
           <p className="text-foreground/70">{t("actor.onlyFromCast")}</p>
@@ -159,7 +158,7 @@ export function ActorDetailsView({ id }: { id: string }) {
   const bioIsLong = biography.length > BIO_PREVIEW_CHARS;
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative flex-1 w-full overflow-x-hidden">
       {/* The background of the title this actor was opened from — same still, blur and shade. */}
       <BlurredPageBackdrop path={pending.backgroundPath} />
 
@@ -275,7 +274,6 @@ export function ActorDetailsView({ id }: { id: string }) {
       {/* Fades the page background out into the footer's solid black. */}
       <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
 
-      <Footer />
     </div>
   );
 }

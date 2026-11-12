@@ -1,6 +1,5 @@
 "use client";
 
-import { Footer } from "@/components/layout/footer";
 import { OrderForm } from "@/components/order/order-form";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
@@ -8,7 +7,7 @@ export function OrderTypePage({ type }: { type: "movie" | "series" }) {
   const { t } = useTranslation();
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative flex-1 w-full overflow-x-hidden">
       <div className="relative">
         <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
@@ -19,7 +18,6 @@ export function OrderTypePage({ type }: { type: "movie" | "series" }) {
           </div>
         </div>
 
-        <Footer />
       </div>
     </div>
   );

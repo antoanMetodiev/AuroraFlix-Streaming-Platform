@@ -71,7 +71,7 @@ export function SeoIntro() {
   }
 
   return (
-    <section className="relative z-10 bg-background px-6 pt-16 pb-4 sm:px-10 lg:px-16">
+    <section className="relative z-10 px-6 pt-16 pb-4 sm:px-10 lg:px-16">
       <div className="mx-auto max-w-7xl border-t border-white/10 pt-12">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{copy.title}</h1>
         <div className="mt-4 flex max-w-4xl flex-col gap-3 text-sm leading-relaxed text-foreground/65 sm:text-base">

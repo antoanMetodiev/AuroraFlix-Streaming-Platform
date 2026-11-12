@@ -150,7 +150,7 @@ export function ContinueWatchingSection() {
   if (cards.length === 0) return null;
 
   return (
-    <section className="relative w-full bg-background px-4 pt-3 pb-2 sm:px-6">
+    <section className="relative w-full px-4 pt-3 pb-2 sm:px-6">
       <h2 className="mt-8 mb-5 font-display text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
         {t("continue.title")}
       </h2>

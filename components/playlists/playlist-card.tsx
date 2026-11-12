@@ -48,6 +48,7 @@ export function PlaylistCard({
   onDelete,
   onNavigate,
   itemsPageSize,
+  onCoverPoster,
 }: {
   playlist: Playlist;
   canManage: boolean;
@@ -64,6 +65,10 @@ export function PlaylistCard({
   // "Shared playlists" section). Undefined (the /playlists page's own use)
   // just shows everything, since there's nothing else competing for space.
   itemsPageSize?: number;
+  // Reports the TMDB path of this playlist's first poster (null when it has
+  // none) whenever its titles load or change — the /playlists page uses the
+  // first card's as its blurred page background, like the Watchlist does.
+  onCoverPoster?: (posterPath: string | null) => void;
 }) {
   const { t } = useTranslation();
   // Starts expanded — per the user, browsing a playlist's titles shouldn't
@@ -89,6 +94,11 @@ export function PlaylistCard({
       cancelled = true;
     };
   }, [isExpanded, items, playlist.id]);
+
+  const firstPosterPath = items?.find((item) => item.posterImgURL)?.posterImgURL ?? null;
+  useEffect(() => {
+    if (items !== null) onCoverPoster?.(firstPosterPath);
+  }, [items, firstPosterPath, onCoverPoster]);
 
   const handleAdded = (item: PlaylistItem) => {
     setItems((prev) => (prev ? [item, ...prev] : [item]));

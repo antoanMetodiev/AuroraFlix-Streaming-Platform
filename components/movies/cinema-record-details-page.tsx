@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/footer";
 import { DetailsBackground, detailsBackgroundPath } from "@/components/movies/details/details-background";
 import { Suspense } from "react";
 import { DetailsHeader } from "@/components/movies/details/details-header";
@@ -33,7 +32,7 @@ export function CinemaRecordDetailsPage({
     // -mt-16 lifts the whole page (banner first) up under the floating header.
     // It has to be here, not on the banner: overflow-x-hidden also clips
     // vertically, so a banner pulled above this box would be cut off.
-    <div className="relative isolate -mt-16 min-h-screen w-full overflow-x-hidden">
+    <div className="relative isolate -mt-16 flex-1 w-full overflow-x-hidden">
       <DetailsBackground record={record} />
 
       <TrackLastViewed
@@ -142,7 +141,6 @@ export function CinemaRecordDetailsPage({
         {/* Fades the page background out into the footer's solid black. */}
         <div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
 
-        <Footer />
       </article>
     </div>
   );

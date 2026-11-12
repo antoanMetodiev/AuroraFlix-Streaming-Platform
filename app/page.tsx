@@ -12,7 +12,7 @@ import {
 } from "@/components/home/lazy-sections";
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
-import { Footer } from "@/components/layout/footer";
+import { BlurredPageBackdrop } from "@/components/movies/details/details-background";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -113,11 +113,27 @@ async function TrendingShowcaseSection() {
 	return <LazyTrendingShowcase movies={toShowcaseItems(movies, "movie")} series={toShowcaseItems(series, "series")} />;
 }
 
+/**
+ * Everything below the hero sits on the same blurred-poster background as
+ * the Watchlist, instead of flat black: the #1 trending movie (#1 series if
+ * there are no movies). Fixed behind the page, so the hero simply covers it
+ * at the top.
+ */
+async function HomeBackdrop() {
+	const [movies, series] = await loadTrending();
+	const top = [...toShowcaseItems(movies, "movie"), ...toShowcaseItems(series, "series")][0];
+	return <BlurredPageBackdrop path={top?.posterURL} />;
+}
+
 export default function Home() {
 	// Nothing awaited here: the header and page frame go out at once, and the
 	// trending-backed sections stream in behind their own Suspense boundaries.
 	return (
-		<main className="bg-black">
+		<main className="flex-1">
+			<Suspense fallback={null}>
+				<HomeBackdrop />
+			</Suspense>
+
 			{/* PAYMENTS DISABLED — nobody is charged for now; uncomment the
 			    checkout overlay and the pricing section (and their imports).
 
@@ -132,6 +148,9 @@ export default function Home() {
 			<Suspense fallback={<HeroSkeleton />}>
 				<TrendingHero />
 			</Suspense>
+
+			{/* Melts the hero's black bottom edge into the blurred background below it. */}
+			<div aria-hidden className="pointer-events-none relative -z-[1] -mb-40 h-40 bg-gradient-to-b from-black to-transparent" />
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
 
@@ -154,7 +173,9 @@ export default function Home() {
 				<SeoIntro />
 			</Reveal>
 
-			<Footer />
+			{/* Fades the page background out into the footer's solid black. */}
+			<div aria-hidden className="pointer-events-none relative -z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
+
 		</main>
 	);
 }

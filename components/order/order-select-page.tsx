@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Clapperboard, Tv } from "lucide-react";
-import { Footer } from "@/components/layout/footer";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
@@ -15,7 +14,7 @@ export function OrderSelectPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="relative min-h-screen w-full">
+    <div className="relative flex-1 w-full">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">{t("order.selectTitle")}</h1>
         <p className="mt-4 max-w-md text-sm text-foreground/50 sm:text-base">{t("order.selectDesc")}</p>
@@ -34,7 +33,6 @@ export function OrderSelectPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }
