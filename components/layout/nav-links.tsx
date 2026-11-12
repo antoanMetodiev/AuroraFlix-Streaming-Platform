@@ -96,12 +96,12 @@ export function NavLinks() {
     <div
       ref={rowRef}
       onMouseLeave={hideHoverPill}
-      className="relative hidden items-center gap-0.5 rounded-full border border-white/[0.06] bg-white/[0.03] p-1 md:flex"
+      className="relative hidden items-center gap-0.5 rounded-full border border-white/[0.08] bg-black/25 p-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] md:flex"
     >
       <span
         ref={hoverPillRef}
         aria-hidden
-        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white/10 opacity-0 transition-[transform,width,opacity] duration-300 ease-out"
+        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white/[0.12] opacity-0 transition-[transform,width,opacity] duration-300 ease-out"
       />
       <span
         ref={activePillRef}

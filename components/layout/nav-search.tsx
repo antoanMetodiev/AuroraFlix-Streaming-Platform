@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { SearchBox } from "@/components/movies/search-box";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { NAV_ICON_BUTTON, NAV_PANEL } from "@/components/layout/nav-styles";
 
 const TYPES = [
   { value: "movie", labelKey: "search.movies" },
@@ -41,7 +42,7 @@ export function NavSearch() {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-label={isOpen ? t("nav.closeSearch") : t("nav.openSearch")}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/70 backdrop-blur-xl transition-colors hover:bg-foreground/10 hover:text-foreground"
+        className={NAV_ICON_BUTTON}
       >
         {isOpen ? <X size={18} /> : <Search size={18} />}
       </button>
@@ -57,18 +58,18 @@ export function NavSearch() {
        * instead; from `sm` up there's enough room for the original anchored popover.
        */}
       <div
-        className={`fixed inset-x-3 top-[4.25rem] z-40 origin-top rounded-2xl border border-foreground/10 bg-surface p-3 shadow-[0_20px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ease-out sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 sm:origin-top-right sm:w-96 ${
+        className={`${NAV_PANEL} fixed inset-x-3 top-[4.25rem] z-40 origin-top p-3 transition-all duration-200 ease-out sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 sm:origin-top-right sm:w-96 ${
           isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >
-        <div className="mb-3 flex gap-1 rounded-full border border-foreground/10 bg-foreground/5 p-1">
+        <div className="mb-3 flex gap-1 rounded-full border border-white/[0.08] bg-black/30 p-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)]">
           {TYPES.map(({ value, labelKey }) => (
             <button
               key={value}
               type="button"
               onClick={() => setType(value)}
               className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-                type === value ? "bg-white text-neutral-900" : "text-foreground/60 hover:text-foreground"
+                type === value ? "bg-white text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.5)]" : "text-foreground/60 hover:text-foreground"
               }`}
             >
               {t(labelKey)}

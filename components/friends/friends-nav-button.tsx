@@ -1,5 +1,7 @@
 "use client";
 
+import { NAV_BADGE, NAV_ICON_BUTTON } from "@/components/layout/nav-styles";
+
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Users } from "lucide-react";
@@ -40,11 +42,11 @@ export function FriendsNavButton({ className = "" }: { className?: string }) {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label={t("friends.usersAria")}
-          className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/70 backdrop-blur-xl transition-colors hover:bg-foreground/10 hover:text-foreground ${className}`}
+          className={`${NAV_ICON_BUTTON} ${className}`}
         >
           <Users size={18} />
           {incomingCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.625rem] font-bold text-neutral-900">
+            <span className={NAV_BADGE}>
               {incomingCount}
             </span>
           )}

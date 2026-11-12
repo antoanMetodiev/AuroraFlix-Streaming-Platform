@@ -107,7 +107,7 @@ export function LanguageSelect({ className = "" }: { className?: string }) {
         className={`group flex h-10 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1.5 transition-all duration-300 ${
           isOpen
             ? "border-white/40 bg-white/15 shadow-[0_0_18px_-4px_rgba(255,255,255,0.45)]"
-            : "border-foreground/10 bg-foreground/5 hover:border-white/25 hover:bg-foreground/10"
+            : "border-white/10 bg-white/[0.05] hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.12]"
         }`}
       >
         <Flag locale={locale} className="h-7 w-7 transition-transform duration-300 group-hover:scale-105" />
@@ -121,7 +121,7 @@ export function LanguageSelect({ className = "" }: { className?: string }) {
       <div
         role="listbox"
         aria-label={t("nav.languageAria")}
-        className={`absolute top-[calc(100%+0.6rem)] right-0 z-50 w-56 origin-top-right rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur-xl transition-all duration-200 ease-out ${
+        className={`absolute top-[calc(100%+0.6rem)] right-0 z-50 w-56 origin-top-right rounded-[1.5rem] border border-white/15 bg-neutral-950/85 p-1.5 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-200 ease-out ${
           isOpen ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-1 scale-95 opacity-0"
         }`}
       >

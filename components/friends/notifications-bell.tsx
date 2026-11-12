@@ -1,5 +1,7 @@
 "use client";
 
+import { NAV_BADGE, NAV_ICON_BUTTON, NAV_PANEL } from "@/components/layout/nav-styles";
+
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Bell } from "lucide-react";
@@ -96,11 +98,11 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
         onClick={() => (isOpen ? handleClose() : handleOpen())}
         aria-expanded={isOpen}
         aria-label={t("friends.notificationsAria")}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/70 backdrop-blur-xl transition-colors hover:bg-foreground/10 hover:text-foreground ${className}`}
+        className={`${NAV_ICON_BUTTON} ${className}`}
       >
         <Bell size={18} />
         {count > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.625rem] font-bold text-neutral-900">
+          <span className={NAV_BADGE}>
             +{count}
           </span>
         )}
@@ -109,7 +111,7 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
       {isOpen && <div className="fixed inset-0 z-30" onClick={handleClose} />}
 
       <div
-        className={`fixed inset-x-3 top-[4.25rem] z-40 origin-top rounded-2xl border border-foreground/10 bg-surface p-2 shadow-[0_20px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ease-out sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 sm:origin-top-right sm:w-80 ${
+        className={`${NAV_PANEL} fixed inset-x-3 top-[4.25rem] z-40 origin-top p-2 transition-all duration-200 ease-out sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 sm:origin-top-right sm:w-80 ${
           isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >

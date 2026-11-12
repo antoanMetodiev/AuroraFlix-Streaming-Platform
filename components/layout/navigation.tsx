@@ -16,6 +16,7 @@ import { NotificationsBell } from "@/components/friends/notifications-bell";
 // ASSISTANT DISABLED: import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
 import { AndroidInstallDialog } from "@/components/layout/android-install-dialog";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { NAV_ICON_BUTTON, NAV_PANEL } from "@/components/layout/nav-styles";
 
 // The Android app (sideloaded — not on Google Play); see mobile-front-end/.
 const ANDROID_APK_URL = "/downloads/auroraflix.apk";
@@ -110,7 +111,7 @@ export function Navigation() {
         */}
       </div>
 
-      <span className="hidden h-5 w-px bg-white/10 md:block" />
+      <span aria-hidden className="hidden h-6 w-px bg-gradient-to-b from-transparent via-white/25 to-transparent md:block" />
 
       {/* Desktop: the link row with the sliding active pill, right after the logo */}
       <NavLinks />
@@ -126,7 +127,7 @@ export function Navigation() {
       </Link>
       */}
 
-      <span className="hidden h-5 w-px bg-white/10 md:block" />
+      <span aria-hidden className="hidden h-6 w-px bg-gradient-to-b from-transparent via-white/25 to-transparent md:block" />
 
       <NavSearch />
 
@@ -143,7 +144,7 @@ export function Navigation() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={t("nav.linkedinAria")}
-        className="hidden h-10 w-10 items-center justify-center rounded-full text-foreground/65 transition-all duration-300 hover:scale-110 hover:bg-foreground/10 hover:text-foreground md:flex"
+        className={`${NAV_ICON_BUTTON} max-md:hidden`}
       >
         <FaLinkedin size={16} />
       </a>
@@ -159,7 +160,7 @@ export function Navigation() {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-label={isOpen ? t("nav.closeMenu") : t("nav.openMenu")}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground backdrop-blur-xl transition-colors hover:bg-foreground/10 md:hidden"
+        className={`${NAV_ICON_BUTTON} md:hidden`}
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -173,7 +174,7 @@ export function Navigation() {
        * there: pricing, account/language, and the LinkedIn/credit line.
        */}
       <div
-        className={`absolute top-13 right-0 z-40 flex w-56 origin-top-right flex-col gap-1 rounded-2xl border border-foreground/10 bg-surface p-2 shadow-[0_20px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ease-out md:hidden ${
+        className={`${NAV_PANEL} absolute top-13 right-0 z-40 flex w-60 origin-top-right flex-col gap-1 p-2 transition-all duration-200 ease-out md:hidden ${
           isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
       >
