@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { BackdropImage } from "@/components/movies/details/backdrop-image";
 import { tmdbImage } from "@/lib/tmdb";
 import { getImagesByType } from "@/lib/images";
 import type { Movie } from "@/types/movie";
@@ -46,8 +46,8 @@ export function BlurredPageBackdrop({ path, src: imageSrc }: { path?: string | n
       style={{ height: "100lvh" }}
       className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-screen overflow-hidden [transform:translateZ(0)] will-change-transform"
     >
-      {/* scale-110 pushes the blur's soft, see-through edges off-screen. */}
-      <Image src={src} alt="" fill unoptimized sizes="100vw" className="scale-110 object-cover blur-md" />
+      {/* Keyed by src: a new title (e.g. the Watchlist's newest changing) fades in afresh. */}
+      <BackdropImage key={src} src={src} />
       <span className="absolute inset-0 bg-black/55" />
       {/* The "shadow": a vignette darkening the edges toward the page's black. */}
       <span className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.9)_100%)]" />
