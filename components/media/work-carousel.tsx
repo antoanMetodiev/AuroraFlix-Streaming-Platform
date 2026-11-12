@@ -98,7 +98,7 @@ export function WorkCarousel({
   if (items.length === 0) return null;
 
   return (
-    <div className={`relative w-full px-4 py-3 sm:px-6 ${mode === "latest-works" ? "" : "bg-background"}`}>
+    <div className="relative w-full px-4 py-3 sm:px-6">
       <div className="mt-8 mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
           {heading ?? (mode === "latest-works" ? t("carousel.latestWorks") : t("carousel.lastViewed"))}
