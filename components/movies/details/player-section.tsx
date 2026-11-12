@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { preconnect } from "react-dom";
-import { AudioLines, Captions, Download, History, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { AudioLines, Captions, History, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -240,7 +240,7 @@ function toVidfastUrl(ref: VidsrcRef, withOwnSubtitles: boolean, startAt: string
  *   every title (none for The Dark Knight).
  * - `subtitles` — "auto" / "off".
  * The only way in for *our* file is its "Upload Subtitle" button (CC menu),
- * by hand — <UploadSubtitlesGuide> walks the viewer through it.
+ * by hand. (The step-by-step guide for that was taken off 2026-11-13.)
  */
 function toCinesrcUrl(ref: VidsrcRef, startAt: string | undefined): string {
   const path =
@@ -376,115 +376,6 @@ function ManualSubtitlesHint(props: ManualSubtitlesHintProps) {
 }
 
 /**
- * Above VidSpark and CineSrc, while we have our own Bulgarian subtitles:
- * neither can be handed them (see toVidsparkUrl / toCinesrcUrl), so this
- * spells out, step by step, how to load ours through the player's own
- * upload item (`uploadButton` — its exact label there). Deliberately outside
- * the player rather than on top of it — visible before Play is pressed,
- * never covers the picture, doesn't fade out by itself. Closing it leaves a
- * small button to bring it back.
- */
-function UploadSubtitlesGuide({
-  subtitleUrl,
-  uploadButton,
-  stepImages = {},
-}: {
-  subtitleUrl: string;
-  uploadButton: string;
-  /** Cropped screenshots of the player's own UI, with what to click ringed
-   *  in yellow (public/images/player-guide/, taken 2026-10-11) — by step
-   *  number. A step without one just shows its text. */
-  stepImages?: Partial<Record<2 | 3, string>>;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(true);
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mb-4 inline-flex cursor-pointer items-center gap-2 self-start rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20"
-      >
-        <Captions size={16} />
-        {t("player.uploadGuideReopen")}
-      </button>
-    );
-  }
-
-  const steps = [
-    t("player.uploadGuideStep1"),
-    t("player.uploadGuideStep2"),
-    t("player.uploadGuideStep3", { button: uploadButton }),
-  ];
-
-  return (
-    <div
-      role="region"
-      aria-label={t("player.uploadGuideTitle")}
-      className="mb-4 w-full max-w-[80rem] rounded-2xl border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-500/20 via-emerald-500/[0.08] to-transparent p-4 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.55)] sm:p-5"
-    >
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-300/40">
-          <Captions size={20} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-white sm:text-lg">
-            {t("player.uploadGuideTitle")}
-          </p>
-          <p className="text-xs text-white/70 sm:text-sm">
-            {t("player.uploadGuideIntro")}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          aria-label={t("common.close")}
-          className="-m-1 shrink-0 cursor-pointer rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      <ol className="mt-4 grid gap-3 sm:grid-cols-3">
-        {steps.map((step, index) => (
-          <li
-            key={step}
-            className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-3"
-          >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
-              {index + 1}
-            </span>
-            <div className="min-w-0 text-sm text-white/90">
-              <p>{step}</p>
-              {stepImages[(index + 1) as 2 | 3] && (
-                // eslint-disable-next-line @next/next/no-img-element -- tiny static hint, nothing to optimise
-                <img
-                  src={stepImages[(index + 1) as 2 | 3]}
-                  alt=""
-                  loading="lazy"
-                  className="mt-2 w-full max-w-[18rem] rounded-lg border border-white/15"
-                />
-              )}
-              {index === 0 && (
-                <a
-                  href={subtitleUrl}
-                  download="Bulgarian.vtt"
-                  className="mt-2 inline-flex items-center gap-2 rounded-full border-2 border-white bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_16px_rgba(16,185,129,0.45)] transition-colors hover:bg-emerald-500"
-                >
-                  <Download size={16} />
-                  {t("player.uploadSubsDownload")}
-                </a>
-              )}
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-/**
  * 7 is ZenoPlay's VidHide player ("BG Player 2") for a movie with a
  * Bulgarian dub — its own embed page, Bulgarian audio by default (the
  * playlist's DEFAULT rendition). Listed first and selected when the movie
@@ -523,8 +414,8 @@ const BG_AUDIO_PLAYERS: ReadonlySet<ProviderId> = new Set([BG_AUDIO_PLAYER, BG_A
  * URL, the page comes back byte-for-byte the same with any `sub_url` /
  * `sub_file` / `sub` added, and its postMessage commands are playback only.
  * Its own subtitles come from its own backend. What it does have is an
- * "Upload Subtitles" item in its Captions menu (.srt/.vtt/.ass/.ssa) —
- * <UploadSubtitlesGuide> walks the viewer through putting ours in there.
+ * "Upload Subtitles" item in its Captions menu (.srt/.vtt/.ass/.ssa) for
+ * ours, by hand. (The step-by-step guide for that was taken off 2026-11-13.)
  */
 function toVidsparkUrl(ref: VidsrcRef, startAt: string | undefined): string {
   return appendParams(
@@ -622,7 +513,7 @@ function NoAdsBanner() {
  *   (EmbedMaster, vidsrc2.ru once its URL carries them)
  * - "builtin": built into the player (VidLink)
  * - "download": download ours and upload them into the player
- *   (CineSrc, VidSpark — see <UploadSubtitlesGuide>)
+ *   (CineSrc, VidSpark)
  * VidFast (our own overlay) gets none.
  */
 type SubtitlesMode = "select" | "builtin" | "download";
@@ -1505,25 +1396,6 @@ export const PlayerSection = forwardRef<
           <NoAdsBanner key={activeSrc} />
         )}
 
-        {videoUrl && activePlayer === 6 && player6Url && subtitleUrl && (
-          <UploadSubtitlesGuide
-            subtitleUrl={subtitleUrl}
-            uploadButton="Upload Subtitles"
-            stepImages={{
-              2: "/images/player-guide/vidspark-cc.webp",
-              3: "/images/player-guide/vidspark-upload.webp",
-            }}
-          />
-        )}
-
-        {videoUrl && activePlayer === 3 && player3Url && subtitleUrl && (
-          <UploadSubtitlesGuide
-            subtitleUrl={subtitleUrl}
-            uploadButton="Upload Subtitle"
-            stepImages={{ 2: "/images/player-guide/cinesrc-cc.webp" }}
-          />
-        )}
-
         {(() => {
           const playerBody = (
             <>
@@ -1605,8 +1477,7 @@ export const PlayerSection = forwardRef<
                *      hasOwnSubtitles &&
                *        (activePlayer === 3 ||
                *          (activePlayer === 2 && vidfastUsesOurSubs))
-               * 3. drop the CineSrc <UploadSubtitlesGuide> above the player, and
-               *    `subtitles`/`subtitlelang` from toCinesrcUrl (else its
+               * 3. drop `subtitles`/`subtitlelang` from toCinesrcUrl (else its
                *    own Bulgarian track shows under ours).
                * subtitle-overlay.tsx still has CineSrc's fullscreen-button
                * offset (`activePlayer === 3 ? 3 : 0`), untouched.
