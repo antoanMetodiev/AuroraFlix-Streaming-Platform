@@ -743,6 +743,9 @@ export const PlayerSection = forwardRef<
     [hasOwnSubtitles, currentBgAudio]
   );
 
+  /** More players than fit next to the picker's title — see its layout. */
+  const manyPlayers = playerOrder.length > 6;
+
   const [activePlayer, setActivePlayer] =
     useState<ProviderId>(1);
 
@@ -1293,10 +1296,15 @@ export const PlayerSection = forwardRef<
          * work for them. With three options there's room to show them all.
          */}
         {videoUrl && vidsrcRef && playerOrder.length > 1 && (
-          // Up to 8 players (2 БГ аудио + 6 embeds): the title sits above
-          // them until the screen is wide enough for both on one row, and
-          // the buttons wrap instead of running off the page.
-          <div className="mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:p-4 xl:flex-row xl:items-center xl:justify-between">
+          // Up to 6 players: title on the left, buttons on the right. More
+          // (up to 8: 2 БГ аудио + 6 embeds) don't fit next to the title, so
+          // the title goes on top and the buttons get the full width — one
+          // even row on desktop, two rows of four on tablets.
+          <div
+            className={`mb-4 flex w-full max-w-[80rem] flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:p-4 ${
+              manyPlayers ? "" : "sm:flex-row sm:items-center sm:justify-between"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
                 <MonitorPlay size={20} />
@@ -1314,8 +1322,10 @@ export const PlayerSection = forwardRef<
             <div
               role="radiogroup"
               aria-label={t("player.choose")}
-              className={`grid gap-x-2 gap-y-12 pt-10 sm:flex sm:flex-wrap sm:justify-center xl:min-w-0 xl:flex-1 xl:justify-end ${
-                playerOrder.length === 4 ? "grid-cols-2" : "grid-cols-3"
+              className={`grid gap-x-2 gap-y-12 pt-10 ${
+                manyPlayers
+                  ? "grid-cols-3 sm:grid-cols-4 lg:auto-cols-fr lg:grid-flow-col lg:grid-cols-none"
+                  : `sm:flex sm:shrink-0 ${playerOrder.length === 4 ? "grid-cols-2" : "grid-cols-3"}`
               }`}
             >
               {playerOrder.map((provider, index) => {
@@ -1341,7 +1351,9 @@ export const PlayerSection = forwardRef<
                       setAutoSwitchedFrom(null);
                       setActivePlayer(provider);
                     }}
-                    className={`relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:min-w-[8.5rem] sm:px-5 sm:text-sm ${
+                    className={`relative flex cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 sm:text-sm ${
+                      manyPlayers ? "" : "sm:min-w-[8.5rem]"
+                    } ${
                       isActive
                         ? "border-transparent bg-white text-neutral-900 shadow-[0_4px_24px_-4px_rgba(255,255,255,0.55)]"
                         : "border-white/20 bg-white/5 text-white/85 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:text-white"
