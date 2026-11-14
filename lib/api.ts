@@ -158,6 +158,8 @@ export type DiscoverFilters = {
   genre?: string;
   year?: string;
   actor?: string;
+  /** Series only: exact TMDB network name (the movies service ignores it). */
+  network?: string;
   sort?: SortOption;
   /** Only titles with a Bulgarian dub (movies; the series service ignores it). */
   bgAudio?: boolean;
@@ -168,6 +170,7 @@ function discoverParams(filters: DiscoverFilters, page: number) {
     genre: filters.genre,
     year: filters.year,
     actorName: filters.actor,
+    network: filters.network,
     sort: filters.sort,
     audio: filters.bgAudio ? "bg" : undefined,
     page: page - 1,
@@ -209,7 +212,7 @@ export async function getMoviesDiscoverCount(filters: DiscoverFilters): Promise<
 }
 
 export async function getSeriesDiscoverCount(filters: DiscoverFilters): Promise<number> {
-  return getCount("/discover-series-count", { genre: filters.genre, year: filters.year, actorName: filters.actor }, LISTING_CACHE_TTL_S);
+  return getCount("/discover-series-count", { genre: filters.genre, year: filters.year, actorName: filters.actor, network: filters.network }, LISTING_CACHE_TTL_S);
 }
 
 export async function searchMovies(title: string): Promise<Movie[]> {

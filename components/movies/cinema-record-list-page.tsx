@@ -26,6 +26,7 @@ export function CinemaRecordListPage({
   genre,
   year,
   actor,
+  network,
   sort,
   bgAudio,
   searchTitle,
@@ -35,6 +36,8 @@ export function CinemaRecordListPage({
   genre?: string;
   year?: string;
   actor?: string;
+  /** Series only: one of the top networks (?network=Netflix). */
+  network?: string;
   sort?: SortOption;
   /** Movies only: just the ones with a Bulgarian dub (?audio=bg). */
   bgAudio?: boolean;
@@ -57,7 +60,7 @@ export function CinemaRecordListPage({
       <article className="relative flex flex-1 flex-col">
         <div className="flex-1">
           {/* Title search stays its own separate, unfiltered flow — no discover filters shown there. */}
-          {!searchTitle && <DiscoverFilters type={listType} genre={genre} year={year} actor={actor} sort={sort} bgAudio={bgAudio} />}
+          {!searchTitle && <DiscoverFilters type={listType} genre={genre} year={year} actor={actor} network={network} sort={sort} bgAudio={bgAudio} />}
 
           {/*
            * Keyed by every param that changes the result set, so React treats a
@@ -67,10 +70,10 @@ export function CinemaRecordListPage({
            * never disappear or flash — only the results area clears to a spinner.
            */}
           <Suspense
-            key={`${type}-${genre ?? ""}-${year ?? ""}-${actor ?? ""}-${sort ?? ""}-${bgAudio ? "bg" : ""}-${searchTitle ?? ""}-${currentPage}`}
+            key={`${type}-${genre ?? ""}-${year ?? ""}-${actor ?? ""}-${network ?? ""}-${sort ?? ""}-${bgAudio ? "bg" : ""}-${searchTitle ?? ""}-${currentPage}`}
             fallback={<Loader className="min-h-[40vh]" />}
           >
-            <CinemaRecordResults type={type} genre={genre} year={year} actor={actor} sort={sort} bgAudio={bgAudio} searchTitle={searchTitle} page={currentPage} />
+            <CinemaRecordResults type={type} genre={genre} year={year} actor={actor} network={network} sort={sort} bgAudio={bgAudio} searchTitle={searchTitle} page={currentPage} />
           </Suspense>
         </div>
 
@@ -85,6 +88,7 @@ async function CinemaRecordResults({
   genre,
   year,
   actor,
+  network,
   sort,
   bgAudio,
   searchTitle,
@@ -94,6 +98,7 @@ async function CinemaRecordResults({
   genre?: string;
   year?: string;
   actor?: string;
+  network?: string;
   sort?: SortOption;
   bgAudio?: boolean;
   searchTitle?: string;
@@ -109,7 +114,7 @@ async function CinemaRecordResults({
     records = allMatches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     totalPages = Math.max(1, Math.ceil(allMatches.length / PAGE_SIZE));
   } else {
-    const filters = { genre, year, actor, sort, bgAudio };
+    const filters = { genre, year, actor, network, sort, bgAudio };
     const [pageRecords, count] =
       type === "movie"
         ? await Promise.all([getMoviesDiscover(filters, page), getMoviesDiscoverCount(filters)])
@@ -127,6 +132,7 @@ async function CinemaRecordResults({
     if (genre) filterQuery.set("genre", genre);
     if (year) filterQuery.set("year", year);
     if (actor) filterQuery.set("actor", actor);
+    if (network) filterQuery.set("network", network);
     if (sort && sort !== "newest") filterQuery.set("sort", sort);
     if (bgAudio) filterQuery.set("audio", "bg");
   }

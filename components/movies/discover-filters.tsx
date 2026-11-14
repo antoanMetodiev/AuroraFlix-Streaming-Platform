@@ -10,6 +10,7 @@ import { FadeInImage } from "@/components/ui/fade-in-image";
 import { suggestActors } from "@/lib/api-public";
 import { setPendingActor } from "@/lib/actor-session";
 import { tmdbImage } from "@/lib/tmdb";
+import { TOP_NETWORKS } from "@/lib/networks";
 import { calculateAge } from "@/lib/dates";
 import { ALL_GENRES } from "@/lib/genres";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -34,7 +35,7 @@ const SOCIAL_LINKS = [
   { key: "youtubeChannel", Icon: FaYoutube, href: (v: string) => `https://www.youtube.com/${v}`, hover: "hover:text-[#ff0000]" },
 ] as const satisfies { key: keyof Actor; Icon: typeof FaInstagram; href: (value: string) => string; hover: string }[];
 
-type Filters = { genre?: string; year?: string; actor?: string; sort?: SortOption; bgAudio?: boolean };
+type Filters = { genre?: string; year?: string; actor?: string; sort?: SortOption; bgAudio?: boolean; network?: string };
 
 export function DiscoverFilters({
   type,
@@ -43,6 +44,7 @@ export function DiscoverFilters({
   actor,
   sort,
   bgAudio,
+  network,
 }: {
   type: "movies" | "series";
   genre?: string;
@@ -51,6 +53,8 @@ export function DiscoverFilters({
   sort?: SortOption;
   /** Movies only: just the ones with a Bulgarian dub. */
   bgAudio?: boolean;
+  /** Series only: one of TOP_NETWORKS (exact TMDB network name). */
+  network?: string;
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -136,19 +140,20 @@ export function DiscoverFilters({
   }, [isSuggestOpen]);
 
   const navigate = (next: Filters) => {
-    const merged: Filters = { genre, year, actor, sort, bgAudio, ...next };
+    const merged: Filters = { genre, year, actor, sort, bgAudio, network, ...next };
     const params = new URLSearchParams();
     if (merged.genre) params.set("genre", merged.genre);
     if (merged.year) params.set("year", merged.year);
     if (merged.actor) params.set("actor", merged.actor);
     if (merged.sort && merged.sort !== "newest") params.set("sort", merged.sort);
     if (merged.bgAudio) params.set("audio", "bg");
+    if (merged.network) params.set("network", merged.network);
 
     const query = params.toString();
     router.push(query ? `/${type}?${query}` : `/${type}`);
   };
 
-  const activeCount = [genre, year, actor, sort && sort !== "newest" ? sort : undefined, bgAudio].filter(Boolean).length;
+  const activeCount = [genre, year, actor, sort && sort !== "newest" ? sort : undefined, bgAudio, network].filter(Boolean).length;
 
   const sortOptions = [
     { value: "newest", label: t("filters.sortNewest") },
@@ -324,6 +329,44 @@ export function DiscoverFilters({
         {controls}
       </div>
 
+      {/*
+       * Series only: the ten networks with the most series in the catalog,
+       * as logo buttons — always visible (also on phones, where they scroll
+       * sideways), since a logo is quicker to spot than a dropdown entry.
+       * The logos sit on light pills: most TMDB network logos are dark on
+       * transparent and would vanish on our dark background.
+       */}
+      {type === "series" && (
+        <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div role="group" aria-label={t("facts.networks")} className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+            {TOP_NETWORKS.map((n) => {
+              const isActive = network === n.name;
+              return (
+                <button
+                  key={n.tmdbId}
+                  type="button"
+                  onClick={() => navigate({ network: isActive ? undefined : n.name })}
+                  aria-pressed={isActive}
+                  aria-label={n.name}
+                  title={n.name}
+                  className={`relative flex h-11 w-24 shrink-0 cursor-pointer items-center justify-center rounded-xl border px-3 transition-all duration-200 sm:w-28 ${
+                    isActive
+                      ? "border-transparent bg-white shadow-[0_0_0_2px_var(--color-sky-400),0_6px_20px_-6px_rgba(56,189,248,0.6)]"
+                      : network
+                        ? "border-white/10 bg-white/55 opacity-60 hover:bg-white/80 hover:opacity-100"
+                        : "border-white/10 bg-white/85 hover:-translate-y-0.5 hover:bg-white"
+                  }`}
+                >
+                  <span className="relative h-6 w-full">
+                    <FadeInImage src={tmdbImage(n.logo, "w300")!} alt="" sizes="112px" className="object-contain" loading="lazy" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {activeCount > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {genre && (
@@ -341,6 +384,9 @@ export function DiscoverFilters({
             />
           )}
           {bgAudio && <FilterChip label={t("filters.bgAudio")} onRemove={() => navigate({ bgAudio: false })} removeLabel={t("filters.removeFilter")} />}
+          {network && (
+            <FilterChip label={`${t("facts.networks")}: ${network}`} onRemove={() => navigate({ network: undefined })} removeLabel={t("filters.removeFilter")} />
+          )}
           {sort && sort !== "newest" && (
             <FilterChip
               label={sort === "top_rated" ? t("filters.sortTopRated") : t("filters.sortOldest")}
