@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AudioLines, SlidersHorizontal, User, X } from "lucide-react";
+import { AudioLines, SlidersHorizontal, Tv, User, X } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { Spinner } from "@/components/ui/loader";
@@ -331,38 +331,53 @@ export function DiscoverFilters({
 
       {/*
        * Series only: the ten networks with the most series in the catalog,
-       * as logo buttons — always visible (also on phones, where they scroll
-       * sideways), since a logo is quicker to spot than a dropdown entry.
-       * The logos sit on light pills: most TMDB network logos are dark on
-       * transparent and would vanish on our dark background.
+       * as logo tiles — always visible (on phones they scroll sideways),
+       * since a logo is quicker to spot than a dropdown entry. Every logo is
+       * drawn white on glass (brightness-0 invert: the TMDB logos come in all
+       * colors, mostly dark) and gets its own colors back on hover and when
+       * picked, on a white tile.
        */}
       {type === "series" && (
-        <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div role="group" aria-label={t("facts.networks")} className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
-            {TOP_NETWORKS.map((n) => {
-              const isActive = network === n.name;
-              return (
-                <button
-                  key={n.tmdbId}
-                  type="button"
-                  onClick={() => navigate({ network: isActive ? undefined : n.name })}
-                  aria-pressed={isActive}
-                  aria-label={n.name}
-                  title={n.name}
-                  className={`relative flex h-11 w-24 shrink-0 cursor-pointer items-center justify-center rounded-xl border px-3 transition-all duration-200 sm:w-28 ${
-                    isActive
-                      ? "border-transparent bg-white shadow-[0_0_0_2px_var(--color-sky-400),0_6px_20px_-6px_rgba(56,189,248,0.6)]"
-                      : network
-                        ? "border-white/10 bg-white/55 opacity-60 hover:bg-white/80 hover:opacity-100"
-                        : "border-white/10 bg-white/85 hover:-translate-y-0.5 hover:bg-white"
-                  }`}
-                >
-                  <span className="relative h-6 w-full">
-                    <FadeInImage src={tmdbImage(n.logo, "w300")!} alt="" sizes="112px" className="object-contain" loading="lazy" />
-                  </span>
-                </button>
-              );
-            })}
+        <div className="mt-5">
+          <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold tracking-[0.08em] text-foreground/50 uppercase">
+            <Tv size={14} />
+            {t("facts.networks")}
+          </p>
+          <div className="-mx-4 overflow-x-auto px-4 pt-1 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div role="group" aria-label={t("facts.networks")} className="grid w-max auto-cols-[7.5rem] grid-flow-col gap-2.5 sm:w-full sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 lg:grid-cols-10">
+              {TOP_NETWORKS.map((n) => {
+                const isActive = network === n.name;
+                return (
+                  <button
+                    key={n.tmdbId}
+                    type="button"
+                    onClick={() => navigate({ network: isActive ? undefined : n.name })}
+                    aria-pressed={isActive}
+                    aria-label={n.name}
+                    title={n.name}
+                    className={`group relative flex h-14 cursor-pointer items-center justify-center rounded-2xl border px-4 backdrop-blur-md transition-all duration-300 ${
+                      isActive
+                        ? "border-transparent bg-white shadow-[0_0_0_2px_rgba(56,189,248,0.9),0_10px_30px_-10px_rgba(56,189,248,0.7)]"
+                        : "border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] hover:-translate-y-0.5 hover:border-white/25 hover:from-white/[0.12] hover:to-white/[0.05]"
+                    }`}
+                  >
+                    <span className="relative h-6 w-full">
+                      <FadeInImage
+                        src={tmdbImage(n.logo, "w300")!}
+                        alt=""
+                        sizes="120px"
+                        loading="lazy"
+                        className={`object-contain transition-all duration-300 ${
+                          isActive
+                            ? ""
+                            : "opacity-70 brightness-0 invert group-hover:opacity-100 group-hover:brightness-100 group-hover:invert-0"
+                        }`}
+                      />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
