@@ -1,10 +1,10 @@
 {
-  "versionCode": 13,
-  "versionName": "0.3.7",
+  "versionCode": 15,
+  "versionName": "0.3.9",
   "url": "https://auroraflix.cloud/downloads/auroraflix.apk",
   "notes": {
-    "bg": "Плейър с БГ дублаж без реклами, филтър „БГ аудио“ при филмите и по-лек начален екран с кадри вместо трейлъри.",
-    "en": "A Bulgarian-dub player without ads, a BG audio filter for movies and a lighter home screen with stills instead of trailers."
+    "bg": "Сподели точната карта от „Моята седмица“ в Instagram, Facebook, WhatsApp, Telegram и Reddit; плавна смяна на страниците.",
+    "en": "Share the exact My week card to Instagram, Facebook, WhatsApp, Telegram and Reddit; smooth page transitions."
   },
   "tv": {
     "versionCode": 14,
