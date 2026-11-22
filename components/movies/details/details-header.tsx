@@ -10,7 +10,6 @@ import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchli
 import { LikeButton } from "@/components/movies/details/like-button";
 import { WatchNowButton } from "@/components/movies/details/watch-now-button";
 import { ProgressiveBackdrop } from "@/components/movies/details/progressive-backdrop";
-import { PosterLandingTarget } from "@/components/movies/details/poster-landing-target";
 import { TitleAccent } from "@/components/movies/details/title-accent";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -84,9 +83,9 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
         <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-[1] h-80 bg-gradient-to-b from-background via-background/70 to-transparent" />
         <div className="mx-auto flex max-w-[100rem] flex-col gap-6 px-4 pt-8 pb-10 sm:flex-row sm:px-6 sm:pb-16 lg:px-8">
           {poster && (
-            <PosterLandingTarget className="accent-poster-glow relative z-10 aspect-2/3 w-32 shrink-0 self-start overflow-hidden rounded-xl ring-2 ring-black/40 sm:w-44 lg:w-52">
+            <div className="accent-poster-glow relative z-10 aspect-2/3 w-32 shrink-0 self-start overflow-hidden rounded-xl ring-2 ring-black/40 sm:w-44 lg:w-52">
               <FadeInImage src={poster} alt={record.title} sizes="208px" className="object-cover" priority />
-            </PosterLandingTarget>
+            </div>
           )}
 
           <div className="flex flex-1 flex-col items-start gap-3 sm:pt-2">

@@ -12,6 +12,8 @@ import {
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
 import { HomeBackdrop } from "@/components/home/home-backdrop";
+import { SeasonalEffects } from "@/components/home/seasonal-effects";
+import { SeasonalSection } from "@/components/home/seasonal-section";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -129,7 +131,12 @@ async function TrendingBackdrop() {
 	return <HomeBackdrop posters={posters} />;
 }
 
-export default function Home() {
+async function SeasonalRow({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+	const { season } = await searchParams;
+	return <SeasonalSection override={season} />;
+}
+
+export default function Home({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
 	// Nothing awaited here: the header and page frame go out at once, and the
 	// trending-backed sections stream in behind their own Suspense boundaries.
 	return (
@@ -170,6 +177,12 @@ export default function Home() {
 			<Suspense fallback={null}>
 				<TrendingShowcaseSection />
 			</Suspense>
+
+			{/* The season's themed row (lib/seasons.ts) — nothing outside a season. */}
+			<Suspense fallback={null}>
+				<SeasonalRow searchParams={searchParams} />
+			</Suspense>
+			<SeasonalEffects />
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
 

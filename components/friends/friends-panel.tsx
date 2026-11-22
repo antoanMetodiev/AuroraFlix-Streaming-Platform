@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/ui/empty-illustration";
 import { Check, Clock, Film, Inbox, Search, Tv, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader, Spinner } from "@/components/ui/loader";
@@ -209,7 +210,10 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
         (isLoading ? (
           <Loader className="min-h-[10rem] py-8" />
         ) : friends.length === 0 ? (
-          <p className="px-1 py-6 text-center text-sm text-foreground/50">{t("friends.friendsEmpty")}</p>
+          <div className="flex flex-col items-center px-1 py-6 text-center text-sm text-foreground/50">
+            <EmptyIllustration kind="friends" className="mb-3 h-24 w-32" />
+            {t("friends.friendsEmpty")}
+          </div>
         ) : (
           <ul className="flex max-h-96 flex-col gap-1 overflow-y-auto">
             {friends.map((friend) => (

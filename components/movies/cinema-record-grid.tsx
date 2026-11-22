@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyIllustration } from "@/components/ui/empty-illustration";
+import Link from "next/link";
 import { CinemaRecordCard } from "@/components/movies/cinema-record-card";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -34,9 +36,24 @@ export function CinemaRecordGrid({
 
   if (records.length === 0) {
     return (
-      <div className="relative flex min-h-[24em] flex-col items-center justify-center gap-2 text-center">
-        <h3 className="font-display text-3xl font-semibold tracking-tight text-foreground">{t("common.noResults")}</h3>
-        <p className="text-sm text-foreground/50">{t("common.noResultsDesc")}</p>
+      <div className="animate-card-in relative flex min-h-[24em] flex-col items-center justify-center gap-2 px-4 text-center">
+        <EmptyIllustration kind="search" className="mb-2 h-32 w-44 sm:h-36 sm:w-48" />
+        <h3 className="font-display text-3xl font-semibold tracking-tight text-foreground">{t("empty.resultsTitle")}</h3>
+        <p className="max-w-sm text-sm text-foreground/55">{t("empty.resultsDesc")}</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link
+            href={type === "movie" ? "/movies" : "/series"}
+            className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_-4px_rgba(255,255,255,0.4)] transition-transform duration-200 hover:-translate-y-0.5"
+          >
+            {t("empty.clearFilters")}
+          </Link>
+          <Link
+            href="/order"
+            className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-foreground/85 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:text-neutral-900"
+          >
+            {t("empty.orderTitle")}
+          </Link>
+        </div>
       </div>
     );
   }

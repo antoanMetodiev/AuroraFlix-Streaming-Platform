@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Film, Flame, Play, Tv, Volume2 } from "lucide-react";
-import { launchPoster } from "@/lib/poster-launch";
 import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
@@ -74,7 +73,6 @@ export function CinemaRecordCard({
   const galleryTimeoutRef = useRef<number | null>(null);
   const galleryIntervalRef = useRef<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const posterFrameRef = useRef<HTMLDivElement>(null);
 
   const clearGalleryTimers = () => {
     if (galleryTimeoutRef.current) window.clearTimeout(galleryTimeoutRef.current);
@@ -162,12 +160,11 @@ export function CinemaRecordCard({
     <div ref={wrapperRef} className="group/tile relative hover:z-40" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <Link
         href={href}
-        onClick={(event) => launchPoster(event, posterFrameRef.current, poster, href)}
         // A soft light glow rather than a dark drop shadow: the lists are plain
         // black, where a black shadow wouldn't show.
         className="group relative block w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-[0_10px_32px_-8px_rgba(255,255,255,0.14),0_1px_0_rgba(255,255,255,0.04)_inset] transition-[translate,box-shadow] duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_18px_44px_-8px_rgba(255,255,255,0.22),0_1px_0_rgba(255,255,255,0.04)_inset]"
       >
-        <div ref={posterFrameRef} className="relative aspect-2/3 w-full overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:ring-white/25 group-hover:shadow-[0_30px_60px_-18px_rgba(0,0,0,0.75)]">
+        <div className="relative aspect-2/3 w-full overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:ring-white/25 group-hover:shadow-[0_30px_60px_-18px_rgba(0,0,0,0.75)]">
           {poster && (
             <Image
               src={poster}

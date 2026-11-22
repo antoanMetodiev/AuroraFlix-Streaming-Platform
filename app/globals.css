@@ -565,3 +565,37 @@ html {
     transition: none;
   }
 }
+
+/* Player cinema mode (player-section.tsx): site chrome fades almost out. */
+[data-site-chrome] {
+  transition: opacity 700ms ease;
+}
+html[data-cinema-mode] [data-site-chrome] {
+  opacity: 0.06;
+}
+html[data-cinema-mode] [data-site-chrome]:hover {
+  opacity: 1;
+}
+.accent-player-glow {
+  background: radial-gradient(ellipse 60% 55% at 50% 50%, color-mix(in srgb, var(--title-tint) 35%, transparent), transparent 75%);
+  filter: blur(40px);
+}
+
+/* Empty-state illustrations (components/ui/empty-illustration.tsx). */
+@keyframes empty-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.animate-empty-float {
+  animation: empty-float 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-empty-float {
+    animation: none;
+  }
+}

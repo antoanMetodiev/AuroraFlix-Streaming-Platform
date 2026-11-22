@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EmptyIllustration } from "@/components/ui/empty-illustration";
 import { Check, Film, Globe, ListVideo, Plus, X } from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import { LibraryHero, type LibraryStat } from "@/components/library/library-hero";
@@ -67,9 +68,7 @@ export function PlaylistsView() {
         ) : playlists.length === 0 && !isCreating ? (
           <div className="animate-card-in relative mx-auto flex max-w-xl flex-col items-center overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent px-6 py-14 text-center">
             <span aria-hidden className="absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
-            <span className="relative flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-neutral-900 shadow-[0_10px_30px_-8px_rgba(255,255,255,0.55)]">
-              <ListVideo size={26} />
-            </span>
+            <EmptyIllustration kind="playlists" className="relative h-32 w-44" />
             <h2 className="relative mt-3 font-display text-2xl font-semibold text-foreground sm:text-3xl">{t("playlists.emptyTitle")}</h2>
             <p className="relative max-w-sm text-sm text-foreground/55">{t("playlists.emptyDesc")}</p>
             <button

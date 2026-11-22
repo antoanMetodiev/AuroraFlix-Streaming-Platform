@@ -42,6 +42,7 @@ export function WorkCarousel({
   actorName,
   actorImdbId,
   heading,
+  headingAside,
 }: {
   items: WorkCardItem[];
   mode: "latest-works" | "last-viewed" | "popular";
@@ -49,6 +50,8 @@ export function WorkCarousel({
   actorImdbId?: string | null;
   /** Overrides the mode's default title — the homepage's popular carousels pass their own. */
   heading?: string;
+  /** Shown at the right end of the heading row, e.g. the seasonal row's effects switch. */
+  headingAside?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const { containerRef, canScrollLeft, canScrollRight, scrollBy, dragHandlers } = useHorizontalScroll<HTMLDivElement>([items]);
@@ -103,6 +106,7 @@ export function WorkCarousel({
         <h2 className="font-display text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
           {heading ?? (mode === "latest-works" ? t("carousel.latestWorks") : t("carousel.lastViewed"))}
         </h2>
+        {headingAside}
 
         {mode === "latest-works" && actorImdbId && (
           <div className="w-full sm:w-auto">

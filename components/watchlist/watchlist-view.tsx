@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/ui/empty-illustration";
 import { ArrowDownWideNarrow, Bookmark, Clapperboard, Search, Sparkles, Star, Tv, X } from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import { LibraryHero, type LibraryStat } from "@/components/library/library-hero";
@@ -157,9 +158,10 @@ export function WatchlistView() {
             </div>
 
             {shown.length === 0 ? (
-              <p className="rounded-3xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center text-foreground/60">
+              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center text-foreground/60">
+                <EmptyIllustration kind="search" className="mb-3 h-24 w-32" />
                 {t("watchlist.noMatches", { query: query.trim() })}
-              </p>
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {shown.map((item, index) => {
@@ -197,10 +199,8 @@ function EmptyState() {
   return (
     <div className="animate-card-in relative mx-auto flex max-w-xl flex-col items-center overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent px-6 py-14 text-center">
       <span aria-hidden className="absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
-      <span className="relative flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-neutral-900 shadow-[0_10px_30px_-8px_rgba(255,255,255,0.55)]">
-        <Bookmark size={26} />
-      </span>
-      <h2 className="relative mt-6 font-display text-2xl font-semibold text-foreground sm:text-3xl">{t("watchlist.emptyTitle")}</h2>
+      <EmptyIllustration kind="watchlist" className="relative h-32 w-44" />
+      <h2 className="relative mt-4 font-display text-2xl font-semibold text-foreground sm:text-3xl">{t("watchlist.emptyTitle")}</h2>
       <p className="relative mt-2 max-w-sm text-sm text-foreground/55">{t("watchlist.emptyDesc")}</p>
       <div className="relative mt-7 flex flex-wrap justify-center gap-3">
         <Link
