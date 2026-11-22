@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Clapperboard, Flame, Moon, Play, Share2, Star } from "lucide-react";
 import { EmptyIllustration } from "@/components/ui/empty-illustration";
@@ -154,6 +154,8 @@ function RecapStory({
   const { t, locale } = useTranslation();
   const [index, setIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const captureCard = useCallback(() => cardRef.current, []);
 
   const posterOf = (title: RecapTitle) => tmdbImage(previews.get(keyOf(title))?.posterImgURL, "w342") ?? title.image;
   const dayName = (i: number) =>
@@ -495,16 +497,61 @@ function RecapStory({
 
   const isLast = index === slides.length - 1;
 
+  // Paused while the share sheet is open: it's sharing this card.
   useEffect(() => {
-    if (isLast) return;
+    if (isLast || shareOpen) return;
     const timer = window.setTimeout(() => setIndex((i) => Math.min(i + 1, slides.length - 1)), SLIDE_MS);
     return () => window.clearTimeout(timer);
-  }, [index, isLast, slides.length]);
+  }, [index, isLast, slides.length, shareOpen]);
 
   const slide = slides[Math.min(index, slides.length - 1)];
+
+  /** The message for the card on screen — what "Сподели" sends with its picture. */
+  const shareLines = (key: string): string[] => {
+    const header = `🎬 ${t("recap.shareHeader")} (${range})`;
+    const list = (titles: RecapTitle[]) => titles.slice(0, 4).map((title) => title.title).join(", ");
+    switch (key) {
+      case "time":
+        return [
+          header,
+          t("recap.shareTimeLine", { time: timeText }),
+          ...(recap.busiestDay !== null ? [t("recap.shareDaysLine", { n: recap.activeDays, day: dayName(recap.busiestDay) })] : []),
+          ...(change !== null && Math.abs(change) >= 5 ? [changeText] : []),
+        ];
+      case "top":
+        return top ? [header, t("recap.shareTopLine", { title: top.title, time: formatTime(top.seconds, t) })] : [header];
+      case "series":
+        return topSeries ? [header, t("recap.shareSeriesLine", { title: topSeries.title, count: topSeries.episodes.length })] : [header];
+      case "movies":
+        return [header, t("recap.shareMoviesLine", { list: list(recap.movies) })];
+      case "genres":
+        return [header, t("recap.shareGenresLine", { list: genres.map((g) => `${g.label} ${g.share}%`).join(", ") })];
+      case "when":
+        return [
+          header,
+          t("recap.shareWhenLine", { part: t(`recap.${favoriteTime}`).toLowerCase() }),
+          ...(recap.busiestDay !== null ? [t("recap.shareDaysLine", { n: recap.activeDays, day: dayName(recap.busiestDay) })] : []),
+          ...(recap.streak > 1 ? [`🔥 ${t("recap.streak", { n: recap.streak })}`] : []),
+        ];
+      case "continue":
+        return [header, t("recap.shareContinueLine", { list: list(recap.inProgress) })];
+      default:
+        // intro / summary: the whole week.
+        return [
+          header,
+          t("recap.shareTimeLine", { time: timeText }),
+          `🍿 ${t("recap.titlesTitle", { count: recap.titles.length })} (${t("nav.movies")}: ${recap.movies.length} · ${t("sections.episodes")}: ${recap.episodesWatched})`,
+          ...(top ? [t("recap.shareTopLine", { title: top.title, time: formatTime(top.seconds, t) })] : []),
+          ...(genres.length ? [t("recap.shareGenresLine", { list: genres.slice(0, 2).map((g) => g.label).join(", ") })] : []),
+        ];
+    }
+  };
   return (
     <div className="mx-auto w-full max-w-sm">
-      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[2rem] bg-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9),0_0_40px_-10px_rgba(255,255,255,0.15)] ring-1 ring-white/10">
+      <div
+        ref={cardRef}
+        className="relative aspect-[9/16] w-full overflow-hidden rounded-[2rem] bg-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9),0_0_40px_-10px_rgba(255,255,255,0.15)] ring-1 ring-white/10"
+      >
         <div key={`bg-${slide.key}`} className="animate-card-in absolute inset-0">
           {slide.image ? (
             // eslint-disable-next-line @next/next/no-img-element -- decorative, already-sized still
@@ -515,7 +562,7 @@ function RecapStory({
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/85" />
         </div>
 
-        <div className="absolute inset-x-4 top-4 z-10 flex gap-1">
+        <div data-capture-skip className="absolute inset-x-4 top-4 z-10 flex gap-1">
           {slides.map((s, i) => (
             <span key={s.key} className="h-1 flex-1 overflow-hidden rounded-full bg-white/25">
               <span
@@ -531,9 +578,19 @@ function RecapStory({
           {slide.body}
         </div>
 
+        {/* The site's mark in the corner — it travels with the shared picture. */}
+        <p className="pointer-events-none absolute right-5 bottom-4 z-[5] font-display text-xs font-semibold tracking-wide text-white/45">AuroraFlix · auroraflix.cloud</p>
+
         {/* Tap zones (under links/buttons inside the slide): left back, right forward. */}
-        <button type="button" aria-label={t("recap.prev")} onClick={() => setIndex((i) => Math.max(0, i - 1))} className="absolute inset-y-0 left-0 z-[4] w-1/4" />
         <button
+          data-capture-skip
+          type="button"
+          aria-label={t("recap.prev")}
+          onClick={() => setIndex((i) => Math.max(0, i - 1))}
+          className="absolute inset-y-0 left-0 z-[4] w-1/4"
+        />
+        <button
+          data-capture-skip
           type="button"
           aria-label={t("recap.next")}
           onClick={() => setIndex((i) => Math.min(slides.length - 1, i + 1))}
@@ -574,17 +631,7 @@ function RecapStory({
       </div>
 
       {shareOpen && (
-        <RecapShareSheet
-          recap={recap}
-          range={range}
-          timeText={timeText}
-          genres={genres.map((g) => g.label)}
-          images={recap.titles
-            .slice(0, 3)
-            .map((title) => posterOf(title))
-            .filter((src): src is string => Boolean(src))}
-          onClose={() => setShareOpen(false)}
-        />
+        <RecapShareSheet lines={shareLines(slide.key)} capture={captureCard} onClose={() => setShareOpen(false)} />
       )}
     </div>
   );
