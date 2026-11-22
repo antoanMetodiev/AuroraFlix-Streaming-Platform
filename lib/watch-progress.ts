@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { recordWatchTime } from "@/lib/watch-log";
 
 /**
  * Where the viewer stopped in each movie / episode. Signed out it's kept in
@@ -222,6 +223,9 @@ export function saveProgress(
 ) {
   if (!Number.isFinite(seconds) || seconds < MIN_SAVED_SECONDS) return;
   if (duration !== null && duration < MIN_DURATION_SECONDS) return;
+
+  // Real time watched, for the weekly recap (lib/watch-log.ts).
+  recordWatchTime(progressKey(target), seconds);
 
   const updatedAt = Date.now();
   whenKnown(() => {

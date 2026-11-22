@@ -6,13 +6,14 @@ import { ChevronRight, Sparkles } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { useWatchProgress, useWatchProgressReady } from "@/lib/watch-progress";
 import { weeklyRecap } from "@/lib/weekly-recap";
+import { readWatchLog } from "@/lib/watch-log";
 
 /** Homepage link to /week — only once there's something in this week's recap. */
 export function RecapPill() {
   const { t } = useTranslation();
   const progress = useWatchProgress();
   const ready = useWatchProgressReady();
-  const count = useMemo(() => (ready ? weeklyRecap(progress).titles.length : 0), [progress, ready]);
+  const count = useMemo(() => (ready ? weeklyRecap(progress, readWatchLog()).titles.length : 0), [progress, ready]);
   if (count === 0) return null;
 
   return (
