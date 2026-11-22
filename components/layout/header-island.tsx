@@ -27,7 +27,7 @@ export function HeaderIsland({ children }: { children: React.ReactNode }) {
       {/* The island hugs its content (w-fit) and sits centred, rather than
           stretching edge to edge. */}
       <div className="flex justify-center">
-        <div className="pointer-events-auto relative flex h-12 w-fit max-w-full items-center gap-3 rounded-full border border-white/15 bg-black/35 pr-2 pl-2.5 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.9),0_0_22px_-6px_rgba(255,255,255,0.18)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ease-out group-data-[scrolled=true]/header:border-white/20 group-data-[scrolled=true]/header:bg-black/60 group-data-[scrolled=true]/header:shadow-[0_22px_60px_-18px_rgba(0,0,0,0.95),0_0_28px_-6px_rgba(255,255,255,0.26)] sm:gap-5 sm:pl-3 lg:pl-4">
+        <div className="pointer-events-auto relative flex h-12 w-fit max-w-full items-center gap-3 rounded-full border border-white/15 bg-transparent pr-2 pl-2.5 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.9),0_0_22px_-6px_rgba(255,255,255,0.18)] backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-500 ease-out group-data-[scrolled=true]/header:border-white/20 group-data-[scrolled=true]/header:shadow-[0_22px_60px_-18px_rgba(0,0,0,0.95),0_0_28px_-6px_rgba(255,255,255,0.26)] sm:gap-5 sm:pl-3 lg:pl-4">
           {/* Light catching the glass from above, and a thin glow line along
               the bottom edge that brightens once the page scrolls under it.
               Decorative only — clipped to the pill, never takes clicks. */}

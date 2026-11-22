@@ -21,7 +21,7 @@ export function MobileTabBar() {
     <nav
       aria-label="Primary"
       data-site-chrome
-      className="fixed inset-x-3 bottom-3 z-40 overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/60 px-1.5 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-[0_-10px_40px_-14px_rgba(0,0,0,0.9),0_0_22px_-6px_rgba(255,255,255,0.18)] backdrop-blur-2xl backdrop-saturate-150 md:hidden"
+      className="fixed inset-x-3 bottom-3 z-40 overflow-hidden rounded-[1.75rem] border border-white/15 bg-transparent px-1.5 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-[0_-10px_40px_-14px_rgba(0,0,0,0.9),0_0_22px_-6px_rgba(255,255,255,0.18)] backdrop-blur-2xl md:hidden"
     >
       {/* Same sheen + glow line as the header island, mirrored to the top edge. */}
       <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent" />
