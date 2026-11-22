@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Bookmark } from "lucide-react";
+import { Burst, hapticTap } from "@/components/ui/burst";
 import { useWatchlist } from "@/lib/use-watchlist";
 import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -25,8 +27,12 @@ export function AddToWatchlistButton({
   // Keyed by TMDB id, not record.id — see lib/record-key.ts for why.
   const recordKey = getRecordKey(record, type);
   const added = has(recordKey);
+  // Bumped on add: remounts the bookmark (pop) and the burst.
+  const [celebrate, setCelebrate] = useState(0);
 
   const handleAdd = () => {
+    setCelebrate((n) => n + 1);
+    hapticTap();
     const videoId = record.videoURL?.split("/")[5] ?? "";
     add({
       id: recordKey,
@@ -46,7 +52,7 @@ export function AddToWatchlistButton({
       onClick={handleAdd}
       aria-pressed={added}
       aria-label={added ? t("watchlistButton.added") : t("watchlistButton.add")}
-      className={`flex shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 ${
+      className={`relative flex shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 ${
         variant === "overlay" ? "h-8 w-8 backdrop-blur-md" : "mt-2 h-11 w-11 self-end"
       } ${
         added
@@ -58,7 +64,8 @@ export function AddToWatchlistButton({
             : "border-foreground/15 bg-foreground/5 text-foreground/70 hover:bg-foreground/10"
       } ${isLoading ? "pointer-events-none opacity-50" : ""}`}
     >
-      <Bookmark size={variant === "overlay" ? 14 : 18} className={added ? "fill-current" : ""} />
+      <Bookmark key={celebrate} size={variant === "overlay" ? 14 : 18} className={`${added ? "fill-current" : ""} ${celebrate ? "animate-pop" : ""}`} />
+      {celebrate > 0 && <Burst key={celebrate} colors={["#ffffff", "#fcd34d", "#7dd3fc"]} distance={variant === "overlay" ? 20 : 28} />}
     </button>
   );
 }

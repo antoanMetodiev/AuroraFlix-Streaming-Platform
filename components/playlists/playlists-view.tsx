@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EmptyIllustration } from "@/components/ui/empty-illustration";
+import { Burst, hapticTap } from "@/components/ui/burst";
 import { Check, Film, Globe, ListVideo, Plus, X } from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import { LibraryHero, type LibraryStat } from "@/components/library/library-hero";
@@ -14,6 +15,8 @@ export function PlaylistsView() {
   const { t } = useTranslation();
   const { playlists, isLoading, create, update, remove } = usePlaylists();
   const [isCreating, setIsCreating] = useState(false);
+  // Bumped when a playlist is created: a burst from the "new" button.
+  const [celebrate, setCelebrate] = useState(0);
   // The first playlist's first poster, reported by its card once its titles load.
   const [coverPoster, setCoverPoster] = useState<string | null>(null);
 
@@ -38,7 +41,7 @@ export function PlaylistsView() {
             <button
               type="button"
               onClick={() => setIsCreating((prev) => !prev)}
-              className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all duration-300 ${
+              className={`relative flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all duration-300 ${
                 isCreating
                   ? "border border-white/15 bg-white/[0.05] text-foreground/75 backdrop-blur-sm hover:bg-white/10"
                   : "bg-white text-neutral-900 shadow-[0_10px_28px_-6px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-6px_rgba(255,255,255,0.6)]"
@@ -46,6 +49,7 @@ export function PlaylistsView() {
             >
               {isCreating ? <X size={16} /> : <Plus size={16} />}
               {t("playlists.new")}
+              {celebrate > 0 && <Burst key={celebrate} count={16} distance={48} size={6} colors={["#ffffff", "#fcd34d", "#7dd3fc", "#fb7185", "#a78bfa"]} />}
             </button>
           }
         />
@@ -56,7 +60,11 @@ export function PlaylistsView() {
               onCancel={() => setIsCreating(false)}
               onCreate={async (name, isPublic) => {
                 const created = await create(name, isPublic);
-                if (created) setIsCreating(false);
+                if (created) {
+                  setIsCreating(false);
+                  setCelebrate((n) => n + 1);
+                  hapticTap();
+                }
                 return created !== null;
               }}
             />

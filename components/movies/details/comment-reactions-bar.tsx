@@ -112,8 +112,8 @@ export function CommentReactionsBar({
               : "border-foreground/10 bg-foreground/[0.03] text-foreground/60 enabled:hover:border-foreground/20 enabled:hover:bg-foreground/10 enabled:hover:text-foreground"
           }`}
         >
-          <ThumbsUp size={14} />
-          <span>{likes.length}</span>
+          <ThumbsUp key={likes.length} size={14} className={iLiked ? "animate-pop" : ""} />
+          <span key={`n${likes.length}`} className="animate-count tabular-nums">{likes.length}</span>
         </button>
 
         {likes.length > 0 && (
@@ -144,8 +144,8 @@ export function CommentReactionsBar({
               : "border-foreground/10 bg-foreground/[0.03] text-foreground/60 enabled:hover:border-foreground/20 enabled:hover:bg-foreground/10 enabled:hover:text-foreground"
           }`}
         >
-          <ThumbsDown size={14} />
-          <span>{dislikes.length}</span>
+          <ThumbsDown key={dislikes.length} size={14} className={iDisliked ? "animate-pop" : ""} />
+          <span key={`n${dislikes.length}`} className="animate-count tabular-nums">{dislikes.length}</span>
         </button>
 
         {dislikes.length > 0 && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
+import { Burst, hapticTap } from "@/components/ui/burst";
 import { useLikes } from "@/lib/use-likes";
 import { getRecordKey } from "@/lib/record-key";
 import { useTranslation } from "@/lib/i18n/locale-context";
@@ -25,6 +26,8 @@ export function LikeButton({
   const recordKey = getRecordKey(record, type);
   const liked = has(recordKey);
   const [showLimitMessage, setShowLimitMessage] = useState(false);
+  // Bumped on each new like: remounts the heart (pop) and the burst.
+  const [celebrate, setCelebrate] = useState(0);
 
   useEffect(() => {
     if (!showLimitMessage) return;
@@ -37,6 +40,8 @@ export function LikeButton({
       remove(recordKey);
       return;
     }
+    setCelebrate((n) => n + 1);
+    hapticTap();
     const videoId = record.videoURL?.split("/")[5] ?? "";
     const result = await add({
       id: recordKey,
@@ -58,7 +63,7 @@ export function LikeButton({
         onClick={toggle}
         aria-pressed={liked}
         aria-label={liked ? t("likeButton.liked") : t("likeButton.like")}
-        className={`flex shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50 ${
+        className={`relative flex shrink-0 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50 ${
           variant === "overlay" ? "h-8 w-8 backdrop-blur-md" : "h-11 w-11"
         } ${
           liked
@@ -68,7 +73,8 @@ export function LikeButton({
               : "border-foreground/15 bg-foreground/5 text-foreground/70 hover:bg-foreground/10"
         }`}
       >
-        <Heart size={variant === "overlay" ? 14 : 18} className={liked ? "fill-current" : ""} />
+        <Heart key={celebrate} size={variant === "overlay" ? 14 : 18} className={`${liked ? "fill-current" : ""} ${celebrate ? "animate-pop" : ""}`} />
+        {celebrate > 0 && <Burst key={celebrate} colors={["#fb7185", "#f43f5e", "#fda4af"]} distance={variant === "overlay" ? 20 : 28} />}
       </button>
 
       {showLimitMessage && (
