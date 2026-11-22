@@ -14,65 +14,8 @@ const NATIVE_NAMES: Record<Locale, string> = {
 };
 
 /**
- * Small round flags, drawn inline: emoji flags don't render on Windows, and
- * these stay crisp at any size. Each is scaled to cover the circle.
- */
-function Flag({ locale, className = "" }: { locale: Locale; className?: string }) {
-  const svg = (() => {
-    switch (locale) {
-      case "bg":
-        return (
-          <svg viewBox="0 0 30 18" preserveAspectRatio="xMidYMid slice">
-            <rect width="30" height="6" fill="#ffffff" />
-            <rect y="6" width="30" height="6" fill="#00966e" />
-            <rect y="12" width="30" height="6" fill="#d62612" />
-          </svg>
-        );
-      case "el":
-        return (
-          <svg viewBox="0 0 27 18" preserveAspectRatio="xMidYMid slice">
-            <rect width="27" height="18" fill="#0d5eaf" />
-            {[1, 3, 5, 7].map((stripe) => (
-              <rect key={stripe} y={stripe * 2} width="27" height="2" fill="#ffffff" />
-            ))}
-            <rect width="10" height="10" fill="#0d5eaf" />
-            <rect x="4" width="2" height="10" fill="#ffffff" />
-            <rect y="4" width="10" height="2" fill="#ffffff" />
-          </svg>
-        );
-      case "es":
-        return (
-          <svg viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">
-            <rect width="30" height="20" fill="#aa151b" />
-            <rect y="5" width="30" height="10" fill="#f1bf00" />
-          </svg>
-        );
-      default:
-        return (
-          <svg viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice">
-            <rect width="60" height="30" fill="#012169" />
-            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#ffffff" strokeWidth="6" />
-            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" strokeWidth="2.5" />
-            <path d="M30,0 V30 M0,15 H60" stroke="#ffffff" strokeWidth="10" />
-            <path d="M30,0 V30 M0,15 H60" stroke="#c8102e" strokeWidth="6" />
-          </svg>
-        );
-    }
-  })();
-
-  return (
-    <span
-      aria-hidden
-      className={`block shrink-0 overflow-hidden rounded-full ring-1 ring-white/25 [&>svg]:block [&>svg]:h-full [&>svg]:w-full ${className}`}
-    >
-      {svg}
-    </span>
-  );
-}
-
-/**
- * The language picker: a pill with the current flag and code that opens a
- * glass dropdown of every language — flag, its own name, a check on the
+ * The language picker: a pill with the current language code (text only, no
+ * flags) that opens a glass dropdown of every language — its own name, a check on the
  * current one. Closes on outside click, Escape, or after picking.
  */
 export function LanguageSelect({ className = "" }: { className?: string }) {
@@ -104,13 +47,12 @@ export function LanguageSelect({ className = "" }: { className?: string }) {
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={t("nav.languageAria")}
-        className={`group flex h-10 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1.5 transition-all duration-300 ${
+        className={`group flex h-10 items-center gap-2 rounded-full border py-1 pr-2.5 pl-3.5 transition-all duration-300 ${
           isOpen
             ? "border-white/40 bg-white/15 shadow-[0_0_18px_-4px_rgba(255,255,255,0.45)]"
             : "border-white/10 bg-white/[0.05] hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.12]"
         }`}
       >
-        <Flag locale={locale} className="h-7 w-7 transition-transform duration-300 group-hover:scale-105" />
         <span className="text-xs font-bold tracking-wide text-foreground uppercase">{locale}</span>
         <ChevronDown
           size={14}
@@ -143,7 +85,6 @@ export function LanguageSelect({ className = "" }: { className?: string }) {
                 isOpen ? "translate-x-0 opacity-100" : "translate-x-1 opacity-0"
               } ${isActive ? "bg-white/10" : "hover:bg-white/[0.06]"}`}
             >
-              <Flag locale={option} className="h-8 w-8 transition-transform duration-300 group-hover/item:scale-110" />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className={`text-sm font-semibold ${isActive ? "text-white" : "text-foreground/85"}`}>{NATIVE_NAMES[option]}</span>
                 <span className="text-[0.6875rem] font-medium tracking-wide text-foreground/40 uppercase">{option}</span>

@@ -8,7 +8,14 @@ import {
   Info,
   Maximize2,
   Minimize2,
+  SlidersHorizontal,
 } from "lucide-react";
+import {
+  SUBTITLE_DELAY_MAX,
+  SUBTITLE_DELAY_STEP,
+  useSubtitleSettings,
+  type SubtitleSettings,
+} from "@/lib/subtitle-settings";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { findActiveCue, parseSubtitles, type SubtitleCue } from "@/lib/vtt-parser";
 import { extractTelemetry, PLAYER_ORIGIN, type PlayerId } from "@/lib/player-telemetry";
@@ -61,6 +68,25 @@ const TELEMETRY_LEAD_SECONDS = 0;
 
 type Mode = "detecting" | "telemetry" | "manual";
 
+/** Font size per setting — the same viewport-relative clamp, scaled. */
+const SIZE_CLASS: Record<SubtitleSettings["size"], string> = {
+  s: "text-[clamp(0.7rem,2.1vw,2.2rem)]",
+  m: "text-[clamp(0.8rem,2.6vw,2.75rem)]",
+  l: "text-[clamp(0.95rem,3.2vw,3.4rem)]",
+  xl: "text-[clamp(1.1rem,3.9vw,4.1rem)]",
+};
+const COLOR_CLASS: Record<SubtitleSettings["color"], string> = {
+  white: "text-white",
+  yellow: "text-yellow-300",
+  cyan: "text-cyan-300",
+};
+const BACKGROUND_CLASS: Record<SubtitleSettings["background"], string> = {
+  // No box: a heavy outline-like shadow keeps it readable on any picture.
+  none: "bg-transparent [text-shadow:0_0_3px_#000,0_0_3px_#000,0_2px_6px_#000]",
+  soft: "bg-black/70 shadow-[0_2px_14px_rgba(0,0,0,0.7)]",
+  solid: "bg-black shadow-[0_2px_14px_rgba(0,0,0,0.7)]",
+};
+
 type Telemetry = {
   currentTime: number;
   duration: number | null;
@@ -101,6 +127,14 @@ export function SubtitleOverlay({
   const [visible, setVisible] = useState(true);
   const [activeText, setActiveText] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { settings, update: updateSettings, reset: resetSettings } = useSubtitleSettings();
+  // Read inside the rAF loop, which doesn't re-run on every settings change.
+  const delayRef = useRef(settings.delay);
+  useEffect(() => {
+    delayRef.current = settings.delay;
+  }, [settings.delay]);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>("detecting");
 
   // Manual-mode (fallback) clock state.
@@ -230,7 +264,8 @@ export function SubtitleOverlay({
       const isPaused = modeRef.current === "telemetry" && telemetryRef.current?.playing === false;
 
       const activeCues = cuesRef.current;
-      const cue = activeCues && !isPaused ? findActiveCue(activeCues, elapsedRef.current) : null;
+      // The viewer's sync correction: a positive delay shows each line later.
+      const cue = activeCues && !isPaused ? findActiveCue(activeCues, elapsedRef.current - delayRef.current) : null;
       setActiveText(cue?.text ?? null);
 
       rafRef.current = requestAnimationFrame(tick);
@@ -244,6 +279,15 @@ export function SubtitleOverlay({
       lastFrameRef.current = null;
     };
   }, [active, manualDuration]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) setSettingsOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!infoOpen) return;
@@ -266,7 +310,7 @@ export function SubtitleOverlay({
     <>
       {visible && activeText && (
         <div
-          className={`pointer-events-none absolute inset-x-0 z-20 flex justify-center px-16 ${portraitBigView ? "" : "bottom-4 sm:bottom-6"}`}
+          className={`pointer-events-none absolute inset-x-0 z-20 flex justify-center px-16 ${portraitBigView ? "" : settings.position === "raised" ? "bottom-[18%]" : "bottom-4 sm:bottom-6"}`}
           // px-16 keeps long lines clear of our fullscreen button in the
           // bottom-right corner.
           // The picture is the full width and 16:9, centered — so its bottom
@@ -275,7 +319,9 @@ export function SubtitleOverlay({
           // and on top of the provider's control bar.
           style={portraitBigView ? { bottom: "calc(50% - 28.125vw + 8px)" } : undefined}
         >
-          <p className="max-w-[92%] whitespace-pre-line rounded-md bg-black/70 px-2.5 py-1 text-center font-semibold text-white shadow-[0_2px_14px_rgba(0,0,0,0.7)] text-[clamp(0.8rem,2.6vw,2.75rem)] leading-tight sm:rounded-lg sm:px-4 sm:py-2">
+          <p
+            className={`max-w-[92%] whitespace-pre-line rounded-md px-2.5 py-1 text-center font-semibold leading-tight sm:rounded-lg sm:px-4 sm:py-2 ${SIZE_CLASS[settings.size]} ${COLOR_CLASS[settings.color]} ${BACKGROUND_CLASS[settings.background]}`}
+          >
             {activeText}
           </p>
         </div>
@@ -314,6 +360,25 @@ export function SubtitleOverlay({
             >
               <Download size={isMobile ? 16 : 19} />
             </a>
+
+            <div ref={settingsRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSettingsOpen((prev) => !prev)}
+                aria-label={t("subtitles.settings")}
+                title={t("subtitles.settings")}
+                aria-expanded={settingsOpen}
+                className={`flex items-center rounded-full p-1.5 transition-colors sm:p-2 hover:bg-white/10 hover:text-white ${
+                  settingsOpen ? "bg-white/10 text-white" : "text-white/80"
+                }`}
+              >
+                <SlidersHorizontal size={isMobile ? 16 : 19} />
+              </button>
+
+              {settingsOpen && (
+                <SubtitleSettingsPanel settings={settings} onChange={updateSettings} onReset={resetSettings} compact={isMobile} />
+              )}
+            </div>
 
             <div ref={infoRef} className="relative">
               <button
@@ -422,5 +487,116 @@ export function SubtitleOverlay({
         );
       })()}
     </>
+  );
+}
+
+/** The overlay's settings popover: look (size, colour, background, position) and timing. */
+function SubtitleSettingsPanel({
+  settings,
+  onChange,
+  onReset,
+  compact,
+}: {
+  settings: SubtitleSettings;
+  onChange: (patch: Partial<SubtitleSettings>) => void;
+  onReset: () => void;
+  compact: boolean;
+}) {
+  const { t } = useTranslation();
+  const chip = (active: boolean) =>
+    `flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${active ? "bg-white text-neutral-900" : "bg-white/[0.06] text-white/75 hover:bg-white/15"}`;
+  const shiftDelay = (by: number) =>
+    onChange({ delay: Math.max(-SUBTITLE_DELAY_MAX, Math.min(SUBTITLE_DELAY_MAX, Math.round((settings.delay + by) * 10) / 10)) });
+
+  return (
+    <div
+      className={`absolute top-full right-0 z-40 mt-2 rounded-xl border border-white/10 bg-surface/95 p-3.5 text-sm text-foreground/85 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl ${
+        compact ? "max-h-[60vh] w-64 overflow-y-auto" : "w-72"
+      }`}
+    >
+      <p className="mb-3 text-xs font-bold tracking-wider text-foreground/50 uppercase">{t("subtitles.settings")}</p>
+
+      <p className="mb-1.5 text-xs text-foreground/60">{t("subtitles.size")}</p>
+      <div className="mb-3 flex gap-1.5">
+        {(["s", "m", "l", "xl"] as const).map((size, i) => (
+          <button key={size} type="button" onClick={() => onChange({ size })} className={chip(settings.size === size)}>
+            <span style={{ fontSize: 11 + i * 2.5 }}>A</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="mb-1.5 text-xs text-foreground/60">{t("subtitles.color")}</p>
+      <div className="mb-3 flex gap-2">
+        {(
+          [
+            ["white", "#ffffff"],
+            ["yellow", "#fde047"],
+            ["cyan", "#67e8f9"],
+          ] as const
+        ).map(([color, hex]) => (
+          <button
+            key={color}
+            type="button"
+            onClick={() => onChange({ color })}
+            aria-label={color}
+            aria-pressed={settings.color === color}
+            className={`h-7 w-7 rounded-full ring-2 ring-offset-2 ring-offset-surface transition-all ${settings.color === color ? "ring-white" : "ring-transparent hover:ring-white/40"}`}
+            style={{ background: hex }}
+          />
+        ))}
+      </div>
+
+      <p className="mb-1.5 text-xs text-foreground/60">{t("subtitles.background")}</p>
+      <div className="mb-3 flex gap-1.5">
+        {(
+          [
+            ["none", "subtitles.bgNone"],
+            ["soft", "subtitles.bgSoft"],
+            ["solid", "subtitles.bgSolid"],
+          ] as const
+        ).map(([background, label]) => (
+          <button key={background} type="button" onClick={() => onChange({ background })} className={chip(settings.background === background)}>
+            {t(label)}
+          </button>
+        ))}
+      </div>
+
+      <p className="mb-1.5 text-xs text-foreground/60">{t("subtitles.position")}</p>
+      <div className="mb-3 flex gap-1.5">
+        {(
+          [
+            ["bottom", "subtitles.posBottom"],
+            ["raised", "subtitles.posRaised"],
+          ] as const
+        ).map(([position, label]) => (
+          <button key={position} type="button" onClick={() => onChange({ position })} className={chip(settings.position === position)}>
+            {t(label)}
+          </button>
+        ))}
+      </div>
+
+      <p className="mb-1.5 text-xs text-foreground/60">{t("subtitles.delay")}</p>
+      <div className="flex items-center gap-1.5">
+        <button type="button" onClick={() => shiftDelay(-SUBTITLE_DELAY_STEP)} className={chip(false)}>
+          − {t("subtitles.earlier")}
+        </button>
+        <span className="w-14 shrink-0 text-center text-xs font-bold tabular-nums text-white">
+          {settings.delay > 0 ? "+" : ""}
+          {settings.delay.toFixed(1)}s
+        </span>
+        <button type="button" onClick={() => shiftDelay(SUBTITLE_DELAY_STEP)} className={chip(false)}>
+          {t("subtitles.later")} +
+        </button>
+      </div>
+      <p className="mt-1.5 text-[0.6875rem] leading-snug text-foreground/45">{t("subtitles.delayHint")}</p>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="mt-3 w-full rounded-lg border border-white/10 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        {t("subtitles.reset")}
+      </button>
+    </div>
   );
 }
