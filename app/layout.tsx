@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Manrope, Noto_Serif_Display } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
-import { PageTransition } from "@/components/layout/page-transition";
 import { Footer } from "@/components/layout/footer";
 import { SeoIntro } from "@/components/home/seo-intro";
 import { Reveal } from "@/components/ui/reveal";
@@ -119,8 +118,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 details banner) can ever paint over the fixed header. Overlays
                 that must cover the header portal to <body> instead. */}
             <div className="relative isolate flex flex-1 flex-col">
-              {/* Smooth page changes: the old page dims while the next loads, the new one rises in. */}
-              <PageTransition>{children}</PageTransition>
+              {children}
               {/* Shared by every page, under whatever the page rendered: the
                   "watch online" intro + genre links, then the footer. Page
                   roots are flex-1, so a short page still pins these to the

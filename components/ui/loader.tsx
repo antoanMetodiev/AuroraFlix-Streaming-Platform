@@ -26,7 +26,7 @@ export function Loader({ label, className = "" }: { label?: string; className?: 
 
 export function FullScreenLoader({ label }: { label?: string }) {
   return (
-    <div className="animate-loader-in fixed inset-0 z-100 flex flex-col items-center justify-center gap-4 bg-background">
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-4 bg-background">
       <Spinner size={56} />
       {label && <p className="text-xs font-medium tracking-[0.2em] text-foreground/50 uppercase">{label}</p>}
     </div>
