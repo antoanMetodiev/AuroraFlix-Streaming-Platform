@@ -23,10 +23,16 @@ export const metadata: Metadata = {
 	alternates: { canonical: "/" },
 };
 
-// How many of each kind the hero carousel shows. The trending endpoints
-// return up to 10 each; this is the slice actually put in front of the user.
-const HERO_MOVIES = 10;
-const HERO_SERIES = 10;
+// How many of each kind the homepage uses (hero, showcase, backdrop). The
+// trending endpoints return up to 10 each; only the top N are kept.
+const HOME_MOVIES = 5;
+const HOME_SERIES = 5;
+
+// The endpoints list #1 last (see toShowcaseItems), so the top N are the
+// last N entries — order is kept so the showcase's reverse() still works.
+function topTrending<T>(records: T[], count: number): T[] {
+	return records.slice(-count);
+}
 
 /**
  * The trending endpoints list newest-inserted first (ORDER BY created_at
@@ -80,7 +86,10 @@ function shuffle<T>(items: T[]): T[] {
 // rejects (it returns null / an empty list on failure), so one service
 // being down can't take the whole homepage with it. cache(): the hero and
 // the showcase both read it, one fetch per request.
-const loadTrending = cache(() => Promise.all([getTrendingMovies(), getTrendingSeries()]));
+const loadTrending = cache(async (): Promise<[Movie[], Series[]]> => {
+	const [movies, series] = await Promise.all([getTrendingMovies(), getTrendingSeries()]);
+	return [topTrending(movies, HOME_MOVIES), topTrending(series, HOME_SERIES)];
+});
 
 /** Holds the hero's place (same size, same black) while trending streams in. */
 function HeroSkeleton() {
@@ -95,12 +104,8 @@ async function TrendingHero() {
 	const [movies, series] = await loadTrending();
 
 	const heroItems = interleave(
-		shuffle<Movie>(movies)
-			.slice(0, HERO_MOVIES)
-			.map((record): HeroItem => ({ record, type: "movie" })),
-		shuffle<Series>(series)
-			.slice(0, HERO_SERIES)
-			.map((record): HeroItem => ({ record, type: "series" }))
+		shuffle<Movie>(movies).map((record): HeroItem => ({ record, type: "movie" })),
+		shuffle<Series>(series).map((record): HeroItem => ({ record, type: "series" }))
 	);
 
 	return <HeroSection items={heroItems} />;
