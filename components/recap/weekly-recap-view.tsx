@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, Clapperboard, Download, Flame, Moon, Play, Share2, Star } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Clapperboard, Flame, Moon, Play, Share2, Star } from "lucide-react";
 import { EmptyIllustration } from "@/components/ui/empty-illustration";
 import { Loader } from "@/components/ui/loader";
-import { renderRecapImage } from "@/components/recap/recap-image";
+import { RecapShareSheet } from "@/components/recap/recap-share-sheet";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
@@ -153,7 +153,7 @@ function RecapStory({
 }) {
   const { t, locale } = useTranslation();
   const [index, setIndex] = useState(0);
-  const [isSharing, setIsSharing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const posterOf = (title: RecapTitle) => tmdbImage(previews.get(keyOf(title))?.posterImgURL, "w342") ?? title.image;
   const dayName = (i: number) =>
@@ -501,41 +501,6 @@ function RecapStory({
     return () => window.clearTimeout(timer);
   }, [index, isLast, slides.length]);
 
-  const share = async () => {
-    setIsSharing(true);
-    try {
-      const blob = await renderRecapImage({
-        range,
-        heading: t("recap.subtitle"),
-        lines: [
-          `⏱ ${timeText}`,
-          `🎬 ${t("recap.titlesTitle", { count: recap.titles.length })} · ${recap.episodesWatched} ${t("recap.statEpisodes")}`,
-          ...(top ? [`🏆 ${top.title}`] : []),
-          ...(genres[0] ? [`🎭 ${genres.slice(0, 2).map((g) => g.label).join(" · ")}`] : []),
-          `📅 ${recap.activeDays}/7 ${t("recap.statDays")}`,
-        ],
-        images: recap.titles
-          .slice(0, 3)
-          .map((title) => posterOf(title))
-          .filter((src): src is string => Boolean(src)),
-      });
-      if (!blob) return;
-      const file = new File([blob], "auroraflix-week.png", { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: t("recap.subtitle") }).catch(() => {});
-      } else {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = file.name;
-        link.click();
-        window.setTimeout(() => URL.revokeObjectURL(url), 2000);
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
   const slide = slides[Math.min(index, slides.length - 1)];
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -600,14 +565,27 @@ function RecapStory({
         </div>
         <button
           type="button"
-          onClick={share}
-          disabled={isSharing}
+          onClick={() => setShareOpen(true)}
           className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 shadow-[0_8px_20px_-4px_rgba(255,255,255,0.4)] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
         >
-          {typeof navigator !== "undefined" && "share" in navigator ? <Share2 size={15} /> : <Download size={15} />}
+          <Share2 size={15} />
           {t("recap.share")}
         </button>
       </div>
+
+      {shareOpen && (
+        <RecapShareSheet
+          recap={recap}
+          range={range}
+          timeText={timeText}
+          genres={genres.map((g) => g.label)}
+          images={recap.titles
+            .slice(0, 3)
+            .map((title) => posterOf(title))
+            .filter((src): src is string => Boolean(src))}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
   );
 }
