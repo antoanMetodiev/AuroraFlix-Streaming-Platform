@@ -1,4 +1,3 @@
-import { ViewTransition } from "react";
 import type { Metadata } from "next";
 import { Geist_Mono, Manrope, Noto_Serif_Display } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -119,14 +118,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 details banner) can ever paint over the fixed header. Overlays
                 that must cover the header portal to <body> instead. */}
             <div className="relative isolate flex flex-1 flex-col">
-              {/* Page transitions: every navigation is a React transition, so
-                  this fades/slides the outgoing page out and the new one in
-                  (globals.css .page-transition), while the header and the
-                  footer below stay put. The wrapper keeps the flex column the
-                  page roots rely on (they are flex-1). */}
-              <ViewTransition default="page-transition">
-                <div className="flex flex-1 flex-col">{children}</div>
-              </ViewTransition>
+              {children}
               {/* Shared by every page, under whatever the page rendered: the
                   "watch online" intro + genre links, then the footer. Page
                   roots are flex-1, so a short page still pins these to the
