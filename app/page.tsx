@@ -12,6 +12,7 @@ import {
 import type { TrendingShowcaseItem } from "@/components/home/trending-showcase";
 import { getMovieSlug } from "@/lib/tmdb";
 import { HomeBackdrop } from "@/components/home/home-backdrop";
+import { RecapPill } from "@/components/recap/recap-pill";
 import { SeasonalEffects } from "@/components/home/seasonal-effects";
 import { SeasonalSection } from "@/components/home/seasonal-section";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
@@ -164,6 +165,8 @@ export default function Home({ searchParams }: { searchParams: Promise<{ season?
 			<div aria-hidden className="pointer-events-none relative -z-[1] -mb-40 h-40 bg-gradient-to-b from-black to-transparent" />
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
+
+			<RecapPill />
 
 			<Reveal>
 				<LazyContinueWatchingSection />

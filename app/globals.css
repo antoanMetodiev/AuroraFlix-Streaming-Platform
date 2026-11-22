@@ -655,3 +655,16 @@ html[data-cinema-mode] [data-site-chrome]:hover {
     display: none;
   }
 }
+
+/* Weekly recap story progress bar (components/recap/weekly-recap-view.tsx). */
+@keyframes recap-bar {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.animate-recap-bar {
+  animation: recap-bar linear forwards;
+}
