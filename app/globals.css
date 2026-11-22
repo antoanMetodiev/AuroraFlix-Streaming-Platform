@@ -668,3 +668,43 @@ html[data-cinema-mode] [data-site-chrome]:hover {
 .animate-recap-bar {
   animation: recap-bar linear forwards;
 }
+
+/*
+ * Page transitions (app/layout.tsx's <ViewTransition default="page-transition">):
+ * the old page fades out and lifts a touch, the new one fades in from a little
+ * lower, slightly blurred. Everything outside it (the root snapshot: header,
+ * tab bar) swaps instantly, so the chrome never flickers.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(.page-transition) {
+  animation: 180ms ease-in both page-out;
+}
+::view-transition-new(.page-transition) {
+  animation: 340ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both page-in;
+}
+::view-transition-group(.page-transition) {
+  animation-duration: 430ms;
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-transition),
+  ::view-transition-new(.page-transition),
+  ::view-transition-group(.page-transition) {
+    animation: none;
+  }
+}
