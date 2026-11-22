@@ -3,6 +3,7 @@
 import { CinemaRecordCard } from "@/components/movies/cinema-record-card";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { useTranslation } from "@/lib/i18n/locale-context";
+import { getMovieId } from "@/lib/tmdb";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -19,11 +20,14 @@ export function CinemaRecordGrid({
   records,
   type,
   recordTypes,
+  trendingRanks,
 }: {
   records: (Movie | Series)[];
   type: "movie" | "series";
   /** Per-record types for a mixed movies + series grid (same order as records); falls back to type. */
   recordTypes?: ("movie" | "series")[];
+  /** Today's trending position by TMDB id (lib/trending-ranks.ts) — the "№3 днес" badge. */
+  trendingRanks?: Record<string, number>;
 }) {
   const { t } = useTranslation();
   const { ref, inView } = useInViewOnce<HTMLElement>(0.05);
@@ -55,7 +59,12 @@ export function CinemaRecordGrid({
           className={`relative ${inView ? "animate-card-in" : "opacity-0"} hover:z-40`}
           style={inView ? { animationDelay: `${Math.min(index, MAX_STAGGERED) * STAGGER_STEP_MS}ms` } : undefined}
         >
-          <CinemaRecordCard record={record} type={recordTypes?.[index] ?? type} eager={index < EAGER_POSTERS} />
+          <CinemaRecordCard
+            record={record}
+            type={recordTypes?.[index] ?? type}
+            eager={index < EAGER_POSTERS}
+            trendingRank={trendingRanks?.[(recordTypes?.[index] ?? type) === "movie" ? getMovieId(record) : record.tmdbId ?? ""]}
+          />
         </div>
       ))}
     </section>

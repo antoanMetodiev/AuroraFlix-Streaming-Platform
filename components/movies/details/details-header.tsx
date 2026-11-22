@@ -10,6 +10,8 @@ import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchli
 import { LikeButton } from "@/components/movies/details/like-button";
 import { WatchNowButton } from "@/components/movies/details/watch-now-button";
 import { ProgressiveBackdrop } from "@/components/movies/details/progressive-backdrop";
+import { PosterLandingTarget } from "@/components/movies/details/poster-landing-target";
+import { TitleAccent } from "@/components/movies/details/title-accent";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -25,6 +27,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
 
   return (
     <div className="relative w-full">
+      <TitleAccent posterURL={tmdbImage(record.posterImgURL, "w300")} />
       {/* Cinematic banner — starts at the very top of the screen, under the
           floating header (the page is lifted 4rem in cinema-record-details-page),
           so it's 4rem taller to keep the same visible height. */}
@@ -34,6 +37,8 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
         {/* Only a light shade at the top, so the photo shows around the floating header. */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent via-25% to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+        {/* A wash of the title's own colour (TitleAccent) rising from the bottom-left. */}
+        <div aria-hidden className="accent-banner-wash absolute inset-0" />
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8">
           <div className="mx-auto max-w-[100rem]">
@@ -57,7 +62,7 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
                 <Link
                   key={genre}
                   href={`/${listType}/genres/${encodeURIComponent(genre)}`}
-                  className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-md transition-colors duration-300 hover:border-white/30 hover:bg-black/60 hover:text-white sm:text-sm"
+                  className="accent-chip rounded-full border bg-black/40 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-md transition-colors duration-300 hover:bg-black/60 hover:text-white sm:text-sm"
                 >
                   {genreLabel(genre, locale)}
                 </Link>
@@ -79,9 +84,9 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
         <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-[1] h-80 bg-gradient-to-b from-background via-background/70 to-transparent" />
         <div className="mx-auto flex max-w-[100rem] flex-col gap-6 px-4 pt-8 pb-10 sm:flex-row sm:px-6 sm:pb-16 lg:px-8">
           {poster && (
-            <div className="relative z-10 aspect-2/3 w-32 shrink-0 self-start overflow-hidden rounded-xl shadow-[0_0_24px_-4px_rgba(255,255,255,0.3)] ring-2 ring-black/40 sm:w-44 lg:w-52">
+            <PosterLandingTarget className="accent-poster-glow relative z-10 aspect-2/3 w-32 shrink-0 self-start overflow-hidden rounded-xl ring-2 ring-black/40 sm:w-44 lg:w-52">
               <FadeInImage src={poster} alt={record.title} sizes="208px" className="object-cover" priority />
-            </div>
+            </PosterLandingTarget>
           )}
 
           <div className="flex flex-1 flex-col items-start gap-3 sm:pt-2">

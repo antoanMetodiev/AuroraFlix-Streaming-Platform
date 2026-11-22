@@ -51,6 +51,8 @@ export function BlurredPageBackdrop({ path, src: imageSrc }: { path?: string | n
       <span className="absolute inset-0 bg-black/55" />
       {/* The "shadow": a vignette darkening the edges toward the page's black. */}
       <span className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.9)_100%)]" />
+      {/* The details page's title colour (TitleAccent), faintly; transparent everywhere else. */}
+      <span className="accent-page-tint absolute inset-0" />
     </div>
   );
 }

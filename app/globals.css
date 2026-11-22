@@ -508,3 +508,60 @@ p {
 html[data-player-big-view] [data-site-chrome] {
   display: none;
 }
+
+/*
+ * Per-title accent (TitleAccent, details pages): the poster's own colour.
+ * Registered so a change fades instead of snapping. --title-accent starts as
+ * white — the site's usual accent — so everything using it looks exactly as
+ * before until a colour is picked, and on every other page. --title-tint
+ * starts transparent, for the washes that should only exist with a colour.
+ */
+@property --title-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+@property --title-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+html {
+  transition:
+    --title-accent 900ms ease,
+    --title-tint 900ms ease;
+}
+.accent-poster-glow {
+  box-shadow: 0 0 28px -4px color-mix(in srgb, var(--title-accent) 45%, transparent);
+}
+.accent-cta-glow {
+  box-shadow: 0 6px 28px -6px color-mix(in srgb, var(--title-accent) 65%, transparent);
+}
+.accent-cta-glow:hover {
+  box-shadow: 0 10px 38px -6px color-mix(in srgb, var(--title-accent) 85%, transparent);
+}
+.accent-chip {
+  border-color: color-mix(in srgb, var(--title-accent) 22%, transparent);
+}
+.accent-chip:hover {
+  border-color: color-mix(in srgb, var(--title-accent) 45%, transparent);
+}
+.accent-bar {
+  background: var(--title-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--title-accent) 50%, transparent);
+}
+.accent-nav-line {
+  background: color-mix(in srgb, var(--title-accent) 75%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--title-accent) 55%, transparent);
+}
+.accent-banner-wash {
+  background: radial-gradient(ellipse 70% 60% at 15% 100%, color-mix(in srgb, var(--title-tint) 28%, transparent), transparent 70%);
+}
+.accent-page-tint {
+  background: radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in srgb, var(--title-tint) 14%, transparent), transparent 75%);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+}

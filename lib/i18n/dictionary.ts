@@ -274,6 +274,7 @@ export const dictionary = {
   "player.bgSubtitles": { en: "Bulgarian subtitles", bg: "Български субтитри" },
   "player.noAds": { en: "No ads", bg: "Без реклами" },
   "player.bgAudio": { en: "BG audio", bg: "БГ аудио" },
+  "card.trendingRank": { en: "#{rank} today", bg: "№{rank} днес" },
   "player.noAdsDetail": {
     en: "No pop-ups and no redirects to other sites — just the movie.",
     bg: "Без изскачащи прозорци и пренасочвания към други сайтове — само филмът.",

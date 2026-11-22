@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Film, Play, Tv, Volume2 } from "lucide-react";
+import { Film, Flame, Play, Tv, Volume2 } from "lucide-react";
+import { launchPoster } from "@/lib/poster-launch";
 import { tmdbImage, getMovieSlug, getMovieId } from "@/lib/tmdb";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
@@ -26,11 +27,14 @@ export function CinemaRecordCard({
   record,
   type,
   eager = false,
+  trendingRank,
 }: {
   record: Movie | Series;
   type: "movie" | "series";
   /** Load the poster right away — for the first row; the rest load as they near the screen. */
   eager?: boolean;
+  /** Today's trending position, if it's in the top list — shown as a "№3 днес" badge. */
+  trendingRank?: number;
 }) {
   const { t, locale } = useTranslation();
   const hoverCapable = useHoverCapable();
@@ -70,6 +74,7 @@ export function CinemaRecordCard({
   const galleryTimeoutRef = useRef<number | null>(null);
   const galleryIntervalRef = useRef<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const posterFrameRef = useRef<HTMLDivElement>(null);
 
   const clearGalleryTimers = () => {
     if (galleryTimeoutRef.current) window.clearTimeout(galleryTimeoutRef.current);
@@ -157,11 +162,12 @@ export function CinemaRecordCard({
     <div ref={wrapperRef} className="group/tile relative hover:z-40" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <Link
         href={href}
+        onClick={(event) => launchPoster(event, posterFrameRef.current, poster, href)}
         // A soft light glow rather than a dark drop shadow: the lists are plain
         // black, where a black shadow wouldn't show.
         className="group relative block w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-[0_10px_32px_-8px_rgba(255,255,255,0.14),0_1px_0_rgba(255,255,255,0.04)_inset] transition-[translate,box-shadow] duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_18px_44px_-8px_rgba(255,255,255,0.22),0_1px_0_rgba(255,255,255,0.04)_inset]"
       >
-        <div className="relative aspect-2/3 w-full overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:ring-white/25 group-hover:shadow-[0_30px_60px_-18px_rgba(0,0,0,0.75)]">
+        <div ref={posterFrameRef} className="relative aspect-2/3 w-full overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:ring-white/25 group-hover:shadow-[0_30px_60px_-18px_rgba(0,0,0,0.75)]">
           {poster && (
             <Image
               src={poster}
@@ -179,12 +185,21 @@ export function CinemaRecordCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black from-0% via-black/75 via-35% to-transparent to-70% transition-opacity duration-500" />
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
 
-          {"hasBgAudio" in record && record.hasBgAudio && (
-            <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full border border-sky-400/35 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold text-white shadow-[0_0_10px_rgba(56,189,248,0.25)] sm:top-2.5 sm:left-2.5 sm:px-2 sm:py-1 sm:text-xs">
-              <Volume2 size={11} className="shrink-0 text-sky-400 sm:size-3" />
-              {t("player.bgAudio")}
-            </div>
-          )}
+          {/* Top-left badges, stacked: today's trending position, then BG audio. */}
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1 sm:top-2.5 sm:left-2.5">
+            {trendingRank !== undefined && (
+              <div className="flex items-center gap-1 rounded-full border border-amber-300/40 bg-gradient-to-r from-amber-500/90 to-rose-500/90 px-1.5 py-0.5 text-[0.625rem] font-bold text-white tabular-nums shadow-[0_0_12px_rgba(251,146,60,0.45)] sm:px-2 sm:py-1 sm:text-xs">
+                <Flame size={11} className="shrink-0 fill-current sm:size-3" />
+                {t("card.trendingRank", { rank: trendingRank })}
+              </div>
+            )}
+            {"hasBgAudio" in record && record.hasBgAudio && (
+              <div className="flex items-center gap-1 rounded-full border border-sky-400/35 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold text-white shadow-[0_0_10px_rgba(56,189,248,0.25)] sm:px-2 sm:py-1 sm:text-xs">
+                <Volume2 size={11} className="shrink-0 text-sky-400 sm:size-3" />
+                {t("player.bgAudio")}
+              </div>
+            )}
+          </div>
 
           {rating !== null && (
             <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full tabular-nums border border-white/15 bg-black/75 px-1.5 py-0.5 text-[0.625rem] font-bold sm:top-2.5 sm:right-2.5 sm:px-2 sm:py-1 sm:text-xs">

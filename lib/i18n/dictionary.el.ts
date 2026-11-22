@@ -181,6 +181,7 @@ export const elDictionary = {
   "player.bgSubtitles": "Βουλγαρικοί υπότιτλοι",
   "player.noAds": "Χωρίς διαφημίσεις",
   "player.bgAudio": "Βουλγαρικός ήχος",
+  "card.trendingRank": "#{rank} σήμερα",
   "player.noAdsDetail": "Χωρίς pop-ups και ανακατευθύνσεις σε άλλα sites — μόνο η ταινία.",
   "player.manualSubsTitle": "Ενεργοποίησε τους βουλγαρικούς υπότιτλους",
   "player.autoSwitched": "Ο Player {from} δεν φόρτωσε αυτόν τον τίτλο — έγινε αλλαγή στον Player {to}.",

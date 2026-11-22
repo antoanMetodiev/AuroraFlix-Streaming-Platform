@@ -16,6 +16,7 @@ import {
   searchSeries,
   type SortOption,
 } from "@/lib/api";
+import { getTrendingRanks } from "@/lib/trending-ranks";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -106,6 +107,9 @@ async function CinemaRecordResults({
 }) {
   let records: (Movie | Series)[];
   let totalPages: number;
+  // Started first, awaited last: the same cached trending calls the homepage
+  // makes, so it doesn't hold the results up.
+  const trendingRanks = getTrendingRanks(type);
 
   if (searchTitle) {
     // The search endpoint returns every match in one call, so pagination is
@@ -150,7 +154,7 @@ async function CinemaRecordResults({
       {searchTitle && records.length === 0 && page === 1 ? (
         <AutoOrderNotice type={type} query={searchTitle} />
       ) : (
-        <CinemaRecordGrid records={records} type={type} />
+        <CinemaRecordGrid records={records} type={type} trendingRanks={await trendingRanks} />
       )}
       <PaginationControls currentPage={page} totalPages={totalPages} basePath={basePath} extraQuery={filterQuery.toString()} />
     </>

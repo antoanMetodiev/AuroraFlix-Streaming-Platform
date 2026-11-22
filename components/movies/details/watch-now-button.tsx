@@ -22,7 +22,7 @@ export function WatchNowButton({ type }: { type: "movie" | "series" }) {
         event.preventDefault();
         slowScrollTo(target);
       }}
-      className="group relative inline-flex h-11 items-center gap-2.5 overflow-hidden rounded-full bg-white pr-5 pl-2 text-sm font-semibold text-neutral-900 shadow-[0_6px_28px_-6px_rgba(255,255,255,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_36px_-6px_rgba(255,255,255,0.8)] sm:text-base"
+      className="accent-cta-glow group relative inline-flex h-11 items-center gap-2.5 overflow-hidden rounded-full bg-white pr-5 pl-2 text-sm font-semibold text-neutral-900 transition-all duration-300 hover:-translate-y-0.5 sm:text-base"
     >
       {/* Light sweep across the pill on hover. */}
       <span

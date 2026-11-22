@@ -87,7 +87,7 @@ export function SectionNav() {
         <span aria-hidden className="absolute top-6 right-4 bottom-6 w-px bg-white/12" />
         <span
           aria-hidden
-          className="absolute top-6 right-4 w-px bg-white/70 shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-[height] duration-500"
+          className="accent-nav-line absolute top-6 right-4 w-px transition-[height] duration-500"
           style={{ height: `calc((100% - 3rem) * ${stops.length > 1 ? activeIndex / (stops.length - 1) : 0})` }}
         />
 
