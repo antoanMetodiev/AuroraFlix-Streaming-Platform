@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { CalendarDays, Cake, Clapperboard, Flame, MapPin, Maximize2, Search, Sparkles, Tv, X } from "lucide-react";
@@ -15,7 +15,7 @@ import { getActorClient, getActorLatestWorksClient, requestMoreMoviesForActor } 
 import { tmdbImage } from "@/lib/tmdb";
 import { calculateAge, formatReleaseDate, releaseDateValue } from "@/lib/dates";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import type { Actor } from "@/types/actor";
+import type { Actor, ActorLatestWork } from "@/types/actor";
 
 const FALLBACK_ACTOR_IMAGE =
   "https://res.cloudinary.com/dxkloyfs1/image/upload/v1760304531/funny-surreal-dog-oil-painting-funny-surreal-pet-animal-dog-classic-oil-painting-bulldog-upper-class-aristocrat-121874909_q0dxgq.webp";
@@ -41,10 +41,47 @@ function normalize(text: string) {
   return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
 }
 
-export function ActorDetailsView({ id }: { id: string }) {
+/** The filmography cards: newest first, titles without a release date last. */
+function toWorkItems(latestWorks: ActorLatestWork[]): WorkCardItem[] {
+  return latestWorks
+    .slice()
+    .sort((a, b) => releaseDateValue(b.releaseDate) - releaseDateValue(a.releaseDate))
+    .map((work) => ({
+      key: `${work.TYPE}:${work.tmdbId ?? work.posterURL}`,
+      title: work.title ?? work.name_in_real_life,
+      posterURL: work.posterURL,
+      tmdbRating: work.tmdbRating,
+      type: work.TYPE,
+      videoURL: work.videoURL,
+      tmdbId: work.tmdbId,
+      originalTitle: work.originalTitle,
+      releaseDate: work.releaseDate,
+    }));
+}
+
+/**
+ * `initialActor` / `initialWorks` come from the server for /actors/{imdbId}
+ * (app/actors/[id]/page.tsx), so the page is complete in the HTML. Without
+ * them (/actors/{uuid}) the actor is read from sessionStorage after mount.
+ */
+export function ActorDetailsView({
+  id,
+  initialActor,
+  initialWorks,
+}: {
+  id: string;
+  initialActor?: Actor;
+  initialWorks?: ActorLatestWork[];
+}) {
   const { t, locale } = useTranslation();
-  const [pending, setPending] = useState<{ actor: Actor | null; backgroundPath?: string | null } | undefined>(undefined);
-  const [works, setWorks] = useState<WorkCardItem[] | null>(null);
+  const [pending, setPending] = useState<{ actor: Actor | null; backgroundPath?: string | null } | undefined>(
+    initialActor ? { actor: initialActor, backgroundPath: null } : undefined
+  );
+  const [works, setWorks] = useState<WorkCardItem[] | null>(initialWorks ? toWorkItems(initialWorks) : null);
+  // The server already fetched the actor (in this locale) and the works —
+  // the effects below skip their first fetch while that still holds.
+  const serverLocaleRef = useRef<string | null>(initialActor ? locale : null);
+  const serverWorksRef = useRef(Boolean(initialWorks));
   const [filter, setFilter] = useState<Filter>("all");
   const [showLightbox, setShowLightbox] = useState(false);
   const [bioExpanded, setBioExpanded] = useState(false);
@@ -55,8 +92,16 @@ export function ActorDetailsView({ id }: { id: string }) {
     // sessionStorage only exists client-side, so this can't be computed during
     // render (would mismatch the server-rendered HTML) — it has to land in an effect.
     const saved = consumePendingActor(id);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (initialActor) {
+      // Server data stays; only the backdrop of the title the cast was opened
+      // from is taken over (a direct visit has none — the page just has no backdrop).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved?.backgroundImgUrl) setPending((current) => (current ? { ...current, backgroundPath: saved.backgroundImgUrl } : current));
+      return;
+    }
     setPending({ actor: saved?.actor ?? null, backgroundPath: saved?.backgroundImgUrl });
+    // initialActor is fixed for a given id (it comes from the same request).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // The saved copy is in whatever language the site was in when the cast was
@@ -65,6 +110,8 @@ export function ActorDetailsView({ id }: { id: string }) {
   const imdbId = actor?.imdbId;
   useEffect(() => {
     if (!imdbId) return;
+    if (serverLocaleRef.current === locale) return;
+    serverLocaleRef.current = null;
     let cancelled = false;
     getActorClient(imdbId).then((fresh) => {
       if (cancelled || !fresh) return;
@@ -77,25 +124,11 @@ export function ActorDetailsView({ id }: { id: string }) {
 
   useEffect(() => {
     if (!actor?.imdbId) return;
-    getActorLatestWorksClient(actor.imdbId).then((latestWorks) => {
-      setWorks(
-        latestWorks
-          // Newest first; titles without a release date go last.
-          .slice()
-          .sort((a, b) => releaseDateValue(b.releaseDate) - releaseDateValue(a.releaseDate))
-          .map((work) => ({
-          key: `${work.TYPE}:${work.tmdbId ?? work.posterURL}`,
-          title: work.title ?? work.name_in_real_life,
-          posterURL: work.posterURL,
-          tmdbRating: work.tmdbRating,
-          type: work.TYPE,
-          videoURL: work.videoURL,
-          tmdbId: work.tmdbId,
-          originalTitle: work.originalTitle,
-          releaseDate: work.releaseDate,
-        }))
-      );
-    });
+    if (serverWorksRef.current) {
+      serverWorksRef.current = false;
+      return;
+    }
+    getActorLatestWorksClient(actor.imdbId).then((latestWorks) => setWorks(toWorkItems(latestWorks)));
   }, [actor?.imdbId]);
 
   const counts = useMemo(() => {

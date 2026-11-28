@@ -13,6 +13,8 @@ export type Actor = {
   gender?: string | null;
   popularity?: string | null;
   nameInRealLife: string;
+  /** The untranslated name ("Tom Rhys Harries") when the request asked for a ?lang. */
+  originalName?: string | null;
 };
 
 export type ActorLatestWork = {

@@ -1,6 +1,6 @@
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
-import type { ActorLatestWork } from "@/types/actor";
+import type { Actor, ActorLatestWork } from "@/types/actor";
 import type { RecordFacts } from "@/types/facts";
 import { API_BASE_URL } from "@/lib/config";
 import { cookies } from "next/headers";
@@ -245,6 +245,12 @@ export async function getMovieDetails(movieId: string): Promise<Movie | null> {
 export async function getSeriesDetails(id: string): Promise<Series | null> {
   if (!id) return null;
   return getJson<Series>("/get-series-details", { id });
+}
+
+/** One actor by IMDb id ("nm…"), in the request's language; null when unknown or on failure. */
+export async function getActor(imdbId: string): Promise<Actor | null> {
+  if (!imdbId) return null;
+  return getJson<Actor>(`/actor/${encodeURIComponent(imdbId)}`);
 }
 
 export async function getActorLatestWorks(imdbId: string): Promise<ActorLatestWork[]> {

@@ -62,10 +62,27 @@ const COPY = {
   },
 } as const satisfies Record<Locale, { title: string; paragraphs: readonly string[]; moviesHeading: string; seriesHeading: string }>;
 
+/**
+ * A single title's page — /movies/{slug}, /series/{id} (not their genres/ or
+ * search/ listings) and /actors/{id}. The intro is left off those: repeated on
+ * every one of thousands of details pages, its ~150 words and 38 genre links
+ * outweighed the page's own content (a ~40-word plot), so Google saw them as
+ * near-duplicates ("crawled — currently not indexed").
+ */
+function isSingleTitlePage(pathname: string) {
+  return /^\/(movies|series)\/(?!genres(\/|$)|search(\/|$))[^/]+\/?$/.test(pathname) || pathname.startsWith("/actors/");
+}
+
 export function SeoIntro() {
   const { locale } = useLocale();
+  const pathname = usePathname();
   const copy = COPY[locale];
-  const Title = usePathname() === "/" ? "h1" : "h2";
+  const Title = pathname === "/" ? "h1" : "h2";
+
+  // The root layout's fade into the footer (-mt-48 h-48) sits right above
+  // this — an empty block of the same height keeps it over blank space
+  // instead of over the bottom of the page's own content.
+  if (isSingleTitlePage(pathname)) return <div aria-hidden className="h-48" />;
 
   function genreLinkLabel(genre: string, type: "movie" | "series") {
     if (locale === "bg") return genreHeading(genre, type);

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin } from "lucide-react";
 import { tmdbImage } from "@/lib/tmdb";
@@ -48,9 +49,13 @@ export function CastSection({ cast, backgroundImgUrl }: { cast: Actor[]; backgro
           <ActorCard
             key={actor.id}
             actor={actor}
+            // With an IMDb id the actor page is server-rendered and indexable,
+            // so the card is a real link Google can follow. Without one it can
+            // only be opened from here (lib/actor-session.ts) — a button, as before.
+            href={actor.imdbId ? `/actors/${encodeURIComponent(actor.imdbId)}` : undefined}
             onOpen={() => {
               setPendingActor(actor, backgroundImgUrl);
-              router.push(`/actors/${actor.id}`);
+              if (!actor.imdbId) router.push(`/actors/${actor.id}`);
             }}
           />
         ))}
@@ -73,18 +78,14 @@ function shortPlace(place?: string | null) {
  * of the biography and a "view profile" cue. On touch screens there's no
  * hover — a tap simply opens the actor page, same as before.
  */
-function ActorCard({ actor, onOpen }: { actor: Actor; onOpen: () => void }) {
+function ActorCard({ actor, href, onOpen }: { actor: Actor; href?: string; onOpen: () => void }) {
   const { t } = useTranslation();
   const image = actor.imageURL ? tmdbImage(actor.imageURL, "w342") : FALLBACK_ACTOR_IMAGE;
   const age = calculateAge(actor.birthday);
   const place = shortPlace(actor.placeOfBirth);
 
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group/actor relative w-[9.5rem] shrink-0 snap-start rounded-2xl text-left outline-none sm:w-[11rem]"
-    >
+  const className = "group/actor relative block w-[9.5rem] shrink-0 snap-start rounded-2xl text-left outline-none sm:w-[11rem]";
+  const content = (
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-500 ease-out group-hover/actor:-translate-y-1.5 group-hover/actor:shadow-[0_18px_40px_-12px_rgba(255,255,255,0.35)] group-hover/actor:ring-white/35 group-focus-visible/actor:-translate-y-1.5 group-focus-visible/actor:ring-2 group-focus-visible/actor:ring-white">
         {image && (
           <FadeInImage
@@ -129,6 +130,17 @@ function ActorCard({ actor, onOpen }: { actor: Actor; onOpen: () => void }) {
           </div>
         </div>
       </div>
+  );
+
+  // prefetch={false}: a cast row is up to ~20 cards — no prefetching them all on
+  // sight. draggable={false}: the row is drag-to-scroll; a native link drag would hijack it.
+  return href ? (
+    <Link href={href} prefetch={false} draggable={false} onClick={onOpen} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <button type="button" onClick={onOpen} className={className}>
+      {content}
     </button>
   );
 }

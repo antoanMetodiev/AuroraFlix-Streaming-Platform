@@ -17,6 +17,8 @@
 import type { Metadata } from "next";
 import { API_BASE_URL } from "@/lib/config";
 import { tmdbImage } from "@/lib/tmdb";
+import { parseGenres } from "@/lib/genres";
+import { GENRE_TRANSLATIONS } from "@/lib/i18n/dictionary";
 
 export const SITE_URL =process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const SITE_NAME = "AuroraFlix";
@@ -131,14 +133,13 @@ export function recordDescription(
 
 /**
  * The genres string the backend returns ("Action, Drama" or similar) as a
- * list for schema.org.
+ * list for schema.org — cleaned like the details header does it (some series
+ * rows store `"Drama".`) and in Bulgarian, the language the page is indexed
+ * in. A genre without a translation keeps its English name.
  */
 export function genreList(genres?: string | null): string[] | undefined {
-  const list = genres
-    ?.split(/[,|/]/)
-    .map((genre) => genre.trim())
-    .filter(Boolean);
-  return list && list.length > 0 ? list : undefined;
+  const list = [...new Set(parseGenres(genres).map((genre) => GENRE_TRANSLATIONS[genre]?.bg ?? genre))];
+  return list.length > 0 ? list : undefined;
 }
 
 /**
@@ -265,7 +266,8 @@ export function recordJsonLd(record: SeoRecord, type: "movie" | "series", path: 
     image: tmdbImage(record.posterImgURL, "w500") ?? undefined,
     datePublished: record.releaseDate || undefined,
     genre: genreList(record.genres),
-    inLanguage: "en",
+    // No inLanguage: it was hard-coded "en", wrong for every French, Korean,
+    // Turkish… title, and the record doesn't carry its original language.
     subtitleLanguage: "bg",
     actor: actors.length > 0 ? actors.map((name) => ({ "@type": "Person", name })) : undefined,
     numberOfSeasons: type === "series" && seasons.size > 0 ? seasons.size : undefined,
@@ -276,6 +278,93 @@ export function recordJsonLd(record: SeoRecord, type: "movie" | "series", path: 
     // No aggregateRating: tmdbRating is TMDB's score, not one our own users
     // gave, and Google treats rating markup without real ratings behind it
     // as misleading structured data.
+  };
+}
+
+type SeoActor = {
+  nameInRealLife: string;
+  originalName?: string | null;
+  biography?: string | null;
+  imageURL?: string | null;
+  birthday?: string | null;
+  placeOfBirth?: string | null;
+  imdbId?: string | null;
+  instagramUsername?: string | null;
+  twitterUsername?: string | null;
+  facebookUsername?: string | null;
+};
+type SeoWork = { title?: string | null; TYPE?: string | null };
+
+/**
+ * Whether an actor page is worth indexing: one with a single title and no
+ * biography is near-empty, and thousands of those would only drag the rest
+ * of the site down ("crawled — not indexed"). Those stay `noindex, follow`.
+ */
+export function actorIsIndexable(actor: SeoActor, works: SeoWork[]): boolean {
+  return works.length >= 2 || (works.length >= 1 && Boolean(actor.biography?.trim()));
+}
+
+/** "Том Рийс Харис (Tom Rhys Harries)" — both spellings, so either search matches. */
+function actorDisplayName(actor: SeoActor): string {
+  const name = actor.nameInRealLife.trim();
+  const original = actor.originalName?.trim();
+  return original && original !== name ? `${name} (${original})` : name;
+}
+
+/** generateMetadata for /actors/{imdbId}. */
+export function actorMetadata(actor: SeoActor, works: SeoWork[], path: string): Metadata {
+  const name = actorDisplayName(actor);
+  const title = `${name} — филми и сериали онлайн с БГ субтитри`;
+  const titles = works
+    .map((work) => work.title?.trim())
+    .filter((workTitle): workTitle is string => Boolean(workTitle))
+    .slice(0, 4);
+  const lead = `Гледай филми и сериали с ${actor.nameInRealLife.trim()} онлайн с БГ субтитри безплатно${
+    titles.length > 0 ? `: ${titles.join(", ")}` : ""
+  }.`;
+  const bio = actor.biography?.trim();
+  const room = 300 - lead.length - 1;
+  const description = bio && room > 40 ? `${lead} ${bio.length > room ? `${bio.slice(0, room - 1).trimEnd()}…` : bio}` : lead;
+  const image = tmdbImage(actor.imageURL, "w500");
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: actorIsIndexable(actor, works) ? undefined : { index: false, follow: true },
+    openGraph: {
+      type: "profile",
+      locale: "bg_BG",
+      url: path,
+      title,
+      description,
+      images: image ? [{ url: image, alt: actor.nameInRealLife }] : undefined,
+    },
+    twitter: { card: "summary", title, description, images: image ? [image] : undefined },
+  };
+}
+
+/** schema.org Person for /actors/{imdbId}. */
+export function actorJsonLd(actor: SeoActor, path: string) {
+  const sameAs = [
+    actor.imdbId ? `https://www.imdb.com/name/${actor.imdbId}/` : null,
+    actor.instagramUsername ? `https://www.instagram.com/${actor.instagramUsername}` : null,
+    actor.twitterUsername ? `https://x.com/${actor.twitterUsername}` : null,
+    actor.facebookUsername ? `https://www.facebook.com/${actor.facebookUsername}` : null,
+  ].filter((url): url is string => url !== null);
+  const original = actor.originalName?.trim();
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: actor.nameInRealLife.trim(),
+    alternateName: original && original !== actor.nameInRealLife.trim() ? original : undefined,
+    url: `${SITE_URL}${path}`,
+    image: tmdbImage(actor.imageURL, "w500") ?? undefined,
+    description: actor.biography?.trim() || undefined,
+    birthDate: actor.birthday && /^\d{4}-\d{2}-\d{2}$/.test(actor.birthday) ? actor.birthday : undefined,
+    birthPlace: actor.placeOfBirth?.trim() ? { "@type": "Place", name: actor.placeOfBirth.trim() } : undefined,
+    sameAs: sameAs.length > 0 ? sameAs : undefined,
   };
 }
 
