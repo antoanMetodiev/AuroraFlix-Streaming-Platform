@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Parallax } from "@/components/ui/parallax";
 import { formatReleaseDate } from "@/lib/dates";
 import Image from "next/image";
 import Link from "next/link";
@@ -307,10 +306,10 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
       }}
       className="bg-grain relative isolate -mt-16 h-[85vh] min-h-[624px] w-full overflow-hidden bg-black sm:h-[100dvh]"
     >
-      {/* Sinks a little slower than the page on scroll, for depth. */}
-      <Parallax className="absolute inset-0" speed={0.35}>
+      {/* Scrolls with the page — the parallax drift it used to have read as the picture sliding down. */}
+      <div className="absolute inset-0 overflow-hidden">
         <HeroBackground key={record.id} record={record} onEnded={goToNext} onProgress={progress.set} />
-      </Parallax>
+      </div>
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/85 sm:via-black/10 sm:to-transparent" />
 

@@ -10,7 +10,6 @@ import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchli
 import { LikeButton } from "@/components/movies/details/like-button";
 import { WatchNowButton } from "@/components/movies/details/watch-now-button";
 import { ProgressiveBackdrop } from "@/components/movies/details/progressive-backdrop";
-import { Parallax } from "@/components/ui/parallax";
 import { TitleAccent } from "@/components/movies/details/title-accent";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
@@ -33,9 +32,9 @@ export async function DetailsHeader({ record, type }: { record: Movie | Series; 
           so it's 4rem taller to keep the same visible height. */}
       <div className="relative h-[calc(46vh+4rem)] min-h-[384px] w-full sm:h-[calc(56vh+4rem)] lg:h-[calc(64vh+4rem)]">
         {record.backgroundImg_URL && (
-          <Parallax className="absolute inset-0" speed={0.3}>
+          <div className="absolute inset-0 overflow-hidden">
             <ProgressiveBackdrop path={record.backgroundImg_URL} />
-          </Parallax>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/10" />
         {/* Only a light shade at the top, so the photo shows around the floating header. */}
