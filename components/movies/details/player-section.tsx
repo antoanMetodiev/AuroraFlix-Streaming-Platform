@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { preconnect } from "react-dom";
-import { AudioLines, Captions, History, Lamp, LampDesk, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { AudioLines, Captions, History, MonitorPlay, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
@@ -855,22 +855,6 @@ export const PlayerSection = forwardRef<
   const [isBigView, setIsBigView] =
     useState(false);
 
-  // Cinema mode: the rest of the page (and the site chrome) dims down so
-  // only the player and its glow stay lit. Esc or a click on the dark turns
-  // the lights back on.
-  const [isCinema, setIsCinema] = useState(false);
-  useEffect(() => {
-    if (!isCinema) return;
-    const root = document.documentElement;
-    root.setAttribute("data-cinema-mode", "");
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setIsCinema(false);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      root.removeAttribute("data-cinema-mode");
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [isCinema]);
-
   const containerRef =
     useRef<HTMLDivElement>(null);
 
@@ -1295,20 +1279,12 @@ export const PlayerSection = forwardRef<
 
   return (
     <div ref={forwardedRef}>
-      {/* Not inside the section: its translate would make this fixed layer
-          only as big as the section. Same stacking context (the details
-          page root), below the section's z-[70] while cinema mode is on. */}
-      <div
-        aria-hidden
-        onClick={() => setIsCinema(false)}
-        className={`fixed inset-0 z-[60] bg-black/90 transition-opacity duration-700 ${isCinema ? "opacity-100" : "pointer-events-none opacity-0"}`}
-      />
       <section
         ref={ref}
         // While in the big view the section carries no `translate` at all:
         // any transform on an ancestor becomes the containing block for
         // `position: fixed`, which would shrink the big view to this section.
-        className={`mx-auto flex max-w-[80rem] flex-col items-center px-4 py-16 transition-all duration-700 sm:px-6 sm:py-20 ${isCinema ? "relative z-[70] " : ""}${
+        className={`mx-auto flex max-w-[80rem] flex-col items-center px-4 py-16 transition-all duration-700 sm:px-6 sm:py-20 ${
           isBigView
             ? "opacity-100"
             : inView
@@ -1560,11 +1536,11 @@ export const PlayerSection = forwardRef<
               {/* Ambient light: the picture's own colours spilling softly
                   around the frame (and the title's accent, TitleAccent).
                   Static — the embeds are cross-origin, so their live frames
-                  can't be read — but stronger in cinema mode. */}
+                  can't be read. */}
               {!isBigView && poster && (
                 <div
                   aria-hidden
-                  className={`pointer-events-none absolute -inset-x-[5%] -inset-y-[10%] hidden transition-opacity duration-700 [transform:translateZ(0)] sm:block ${isCinema ? "opacity-90" : "opacity-55"}`}
+                  className={`pointer-events-none absolute -inset-x-[5%] -inset-y-[10%] hidden transition-opacity duration-700 [transform:translateZ(0)] sm:block opacity-55`}
                 >
                   <div className="absolute inset-[8%] [filter:blur(64px)_saturate(1.5)]">
                     <FadeInImage src={poster} alt="" loading="lazy" sizes="40vw" className="object-cover" />
@@ -1650,20 +1626,6 @@ export const PlayerSection = forwardRef<
             </div>
           );
         })()}
-
-        {videoUrl && (
-          <div className="mt-4 flex w-full justify-end sm:max-w-[80rem]">
-            <button
-              type="button"
-              onClick={() => setIsCinema((on) => !on)}
-              aria-pressed={isCinema}
-              className="flex cursor-pointer items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:bg-white/15 hover:text-white sm:text-sm"
-            >
-              {isCinema ? <Lamp size={15} /> : <LampDesk size={15} />}
-              {t(isCinema ? "player.cinemaModeExit" : "player.cinemaMode")}
-            </button>
-          </div>
-        )}
 
         {videoUrl && (
           <AdblockPrompt />
