@@ -6,6 +6,8 @@ import { CinemaRecordCard } from "@/components/movies/cinema-record-card";
 import { useInViewOnce } from "@/lib/use-in-view-once";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { getMovieId } from "@/lib/tmdb";
+import { useAdminSubtitleBadges } from "@/lib/use-admin";
+import type { SeriesSourceCounts } from "@/lib/subtitle-source";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -23,6 +25,7 @@ export function CinemaRecordGrid({
   type,
   recordTypes,
   trendingRanks,
+  adminSources,
 }: {
   records: (Movie | Series)[];
   type: "movie" | "series";
@@ -30,9 +33,15 @@ export function CinemaRecordGrid({
   recordTypes?: ("movie" | "series")[];
   /** Today's trending position by TMDB id (lib/trending-ranks.ts) — the "№3 днес" badge. */
   trendingRanks?: Record<string, number>;
+  /** Admin list: the subtitle sources already known (else fetched for the admin). */
+  adminSources?: Record<string, string | SeriesSourceCounts>;
 }) {
   const { t } = useTranslation();
   const { ref, inView } = useInViewOnce<HTMLElement>(0.05);
+  const idOf = (record: Movie | Series, recordType: "movie" | "series") => (recordType === "movie" ? getMovieId(record) : (record.tmdbId ?? ""));
+  // Admin only (nothing is fetched for anyone else): where each title's
+  // subtitles came from. Single-type grids only — the ids are per service.
+  const adminBadges = useAdminSubtitleBadges(type, recordTypes ? [] : records.map((record) => idOf(record, type)).filter(Boolean), adminSources);
 
   if (records.length === 0) {
     return (
@@ -80,7 +89,8 @@ export function CinemaRecordGrid({
             record={record}
             type={recordTypes?.[index] ?? type}
             eager={index < EAGER_POSTERS}
-            trendingRank={trendingRanks?.[(recordTypes?.[index] ?? type) === "movie" ? getMovieId(record) : record.tmdbId ?? ""]}
+            trendingRank={trendingRanks?.[idOf(record, recordTypes?.[index] ?? type)]}
+            adminBadge={adminBadges[idOf(record, recordTypes?.[index] ?? type)]}
           />
         </div>
       ))}

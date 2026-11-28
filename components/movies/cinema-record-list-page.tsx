@@ -17,6 +17,8 @@ import {
   type SortOption,
 } from "@/lib/api";
 import { getTrendingRanks } from "@/lib/trending-ranks";
+import { AdminSubtitleResults } from "@/components/movies/admin-subtitle-results";
+import type { SubtitleSourceFilter } from "@/lib/subtitle-source";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -32,8 +34,11 @@ export function CinemaRecordListPage({
   bgAudio,
   searchTitle,
   page,
+  subs,
 }: {
   type: "movie" | "series";
+  /** Admin only (the list checks): titles whose subtitles are of this kind. */
+  subs?: SubtitleSourceFilter;
   genre?: string;
   year?: string;
   actor?: string;
@@ -61,7 +66,7 @@ export function CinemaRecordListPage({
       <article className="relative flex flex-1 flex-col">
         <div className="flex-1">
           {/* Title search stays its own separate, unfiltered flow — no discover filters shown there. */}
-          {!searchTitle && <DiscoverFilters type={listType} genre={genre} year={year} actor={actor} network={network} sort={sort} bgAudio={bgAudio} />}
+          {!searchTitle && <DiscoverFilters type={listType} genre={genre} year={year} actor={actor} network={network} sort={sort} bgAudio={bgAudio} subs={subs} />}
 
           {/*
            * Keyed by every param that changes the result set, so React treats a
@@ -70,12 +75,16 @@ export function CinemaRecordListPage({
            * The header and filters above are outside this boundary, so they
            * never disappear or flash — only the results area clears to a spinner.
            */}
+          {subs ? (
+            <AdminSubtitleResults type={type} kind={subs} page={currentPage} />
+          ) : (
           <Suspense
             key={`${type}-${genre ?? ""}-${year ?? ""}-${actor ?? ""}-${network ?? ""}-${sort ?? ""}-${bgAudio ? "bg" : ""}-${searchTitle ?? ""}-${currentPage}`}
             fallback={<Loader className="min-h-[40vh]" />}
           >
             <CinemaRecordResults type={type} genre={genre} year={year} actor={actor} network={network} sort={sort} bgAudio={bgAudio} searchTitle={searchTitle} page={currentPage} />
           </Suspense>
+          )}
         </div>
 
 

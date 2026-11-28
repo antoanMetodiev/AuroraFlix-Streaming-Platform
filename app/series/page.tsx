@@ -16,9 +16,9 @@ export async function generateMetadata({
 export default async function SeriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genre?: string; year?: string; actor?: string; network?: string; sort?: string; page?: string }>;
+  searchParams: Promise<{ genre?: string; year?: string; actor?: string; network?: string; sort?: string; page?: string; subs?: string }>;
 }) {
-  const { genre, year, actor, network, sort, page } = await searchParams;
+  const { genre, year, actor, network, sort, page, subs } = await searchParams;
   return (
     <CinemaRecordListPage
       type="series"
@@ -28,6 +28,7 @@ export default async function SeriesPage({
       network={isTopNetwork(network) ? network : undefined}
       sort={sort as SortOption | undefined}
       page={Number(page) || 1}
+      subs={subs === "machine" || subs === "provider" || subs === "cam" ? subs : undefined}
     />
   );
 }

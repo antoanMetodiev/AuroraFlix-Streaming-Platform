@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { AudioLines, SlidersHorizontal, Tv, User, X } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { ModernSelect } from "@/components/ui/modern-select";
+import { useIsAdmin } from "@/lib/use-admin";
+import type { SubtitleSourceFilter } from "@/lib/subtitle-source";
 import { Spinner } from "@/components/ui/loader";
 import { FadeInImage } from "@/components/ui/fade-in-image";
 import { suggestActors } from "@/lib/api-public";
@@ -45,8 +47,11 @@ export function DiscoverFilters({
   sort,
   bgAudio,
   network,
+  subs,
 }: {
   type: "movies" | "series";
+  /** Admin only: list the titles whose subtitles are of this kind (?subs=). */
+  subs?: SubtitleSourceFilter;
   genre?: string;
   year?: string;
   actor?: string;
@@ -58,6 +63,7 @@ export function DiscoverFilters({
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const isAdmin = useIsAdmin();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actorDraft, setActorDraft] = useState(actor ?? "");
@@ -170,6 +176,21 @@ export function DiscoverFilters({
 
   const controls = (
     <>
+      {/* Admin only: titles by where their subtitles came from. A separate
+          list (the other filters don't apply to it), so it starts afresh. */}
+      {isAdmin && (
+        <ModernSelect
+          value={subs ?? ""}
+          options={[
+            { value: "", label: "🛠 Субтитри: всички" },
+            { value: "machine", label: "🛠 Само машинен превод" },
+            { value: "provider", label: "🛠 Само от доставчици" },
+            { value: "cam", label: "🛠 Само CAM превод" },
+          ]}
+          onChange={(value) => router.push(value ? `/${type}?subs=${value}` : `/${type}`)}
+          className="w-full lg:w-auto"
+        />
+      )}
       <ModernSelect
         value={genre ?? ""}
         options={genreOptions}

@@ -15,9 +15,9 @@ export async function generateMetadata({
 export default async function MoviesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genre?: string; year?: string; actor?: string; sort?: string; audio?: string; page?: string }>;
+  searchParams: Promise<{ genre?: string; year?: string; actor?: string; sort?: string; audio?: string; page?: string; subs?: string }>;
 }) {
-  const { genre, year, actor, sort, audio, page } = await searchParams;
+  const { genre, year, actor, sort, audio, page, subs } = await searchParams;
   return (
     <CinemaRecordListPage
       type="movie"
@@ -27,6 +27,7 @@ export default async function MoviesPage({
       sort={sort as SortOption | undefined}
       bgAudio={audio === "bg"}
       page={Number(page) || 1}
+      subs={subs === "machine" || subs === "provider" || subs === "cam" ? subs : undefined}
     />
   );
 }

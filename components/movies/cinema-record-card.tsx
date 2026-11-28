@@ -11,6 +11,7 @@ import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { genreLabel } from "@/lib/i18n/translate";
 import { formatReleaseDate } from "@/lib/dates";
+import type { AdminBadge } from "@/lib/use-admin";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
@@ -27,6 +28,7 @@ export function CinemaRecordCard({
   type,
   eager = false,
   trendingRank,
+  adminBadge,
 }: {
   record: Movie | Series;
   type: "movie" | "series";
@@ -34,6 +36,8 @@ export function CinemaRecordCard({
   eager?: boolean;
   /** Today's trending position, if it's in the top list — shown as a "№3 днес" badge. */
   trendingRank?: number;
+  /** Admin only: where the subtitles came from. */
+  adminBadge?: AdminBadge;
 }) {
   const { t, locale } = useTranslation();
   const hoverCapable = useHoverCapable();
@@ -181,6 +185,22 @@ export function CinemaRecordCard({
               clear by two thirds — so the title reads on any poster. */}
           <div className="absolute inset-0 bg-gradient-to-t from-black from-0% via-black/75 via-35% to-transparent to-70% transition-opacity duration-500" />
           <div className="absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/50 transition-opacity duration-500 group-hover:opacity-100" />
+
+          {/* Admin only: where the subtitles came from, across the bottom of the poster's top. */}
+          {adminBadge && (
+            <div
+              title={adminBadge.title}
+              className={`absolute right-2 bottom-[42%] left-2 z-[3] truncate rounded-md border px-1.5 py-0.5 text-center text-[0.625rem] font-bold text-white shadow-lg sm:text-[0.6875rem] ${
+                adminBadge.kind === "machine"
+                  ? "border-violet-300/50 bg-violet-600/90"
+                  : adminBadge.kind === "cam"
+                    ? "border-orange-300/50 bg-orange-600/90"
+                    : "border-emerald-300/50 bg-emerald-700/90"
+              }`}
+            >
+              🛠 {adminBadge.short}
+            </div>
+          )}
 
           {/* Top-left badges, stacked: today's trending position, then BG audio. */}
           <div className="absolute top-2 left-2 flex flex-col items-start gap-1 sm:top-2.5 sm:left-2.5">

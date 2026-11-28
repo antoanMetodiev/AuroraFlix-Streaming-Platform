@@ -9,6 +9,7 @@ import { FadeInImage } from "@/components/ui/fade-in-image";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { AdblockPrompt } from "@/components/movies/details/adblock-prompt";
+import { AdminSubtitleNote } from "@/components/movies/details/admin-subtitle-note";
 import { SubtitleOverlay } from "@/components/movies/details/subtitle-overlay";
 import { useWatchingPresence } from "@/lib/use-watching-presence";
 import { useEstimatedProgressRecorder, useWatchProgressRecorder } from "@/lib/use-watch-progress-recorder";
@@ -1319,6 +1320,16 @@ export const PlayerSection = forwardRef<
          * <ModernSelect> and stayed stuck on player 1 even when it didn't
          * work for them. With three options there's room to show them all.
          */}
+        {/* Admin only: where this movie's / episode's subtitle came from. */}
+        {vidsrcRef && (
+          <AdminSubtitleNote
+            kind={vidsrcRef.kind}
+            tmdbId={vidsrcRef.tmdbId}
+            season={vidsrcRef.kind === "tv" ? vidsrcRef.season : undefined}
+            episode={vidsrcRef.kind === "tv" ? vidsrcRef.episode : undefined}
+          />
+        )}
+
         {videoUrl && vidsrcRef && playerOrder.length > 1 && (
           // Up to 6 players: title on the left, buttons on the right. More
           // (up to 8: 2 БГ аудио + 6 embeds) don't fit next to the title, so
