@@ -1,19 +1,22 @@
 "use client";
 
-import { FriendsPanel } from "@/components/friends/friends-panel";
+import { useState } from "react";
+import { FRIENDS_TAB_META, FriendsPanel, type FriendsTab } from "@/components/friends/friends-panel";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 // Full-page wrapper around FriendsPanel — reachable by direct URL/bookmark.
 // The primary entry point day-to-day is the compact FriendsModal from the nav.
 export function FriendsView() {
   const { t } = useTranslation();
+  // The heading follows the open tab (Search / Requests / Friends).
+  const [tab, setTab] = useState<FriendsTab>("search");
 
   return (
     <div className="relative flex-1 w-full">
       <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-10 sm:px-6">
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t("friends.title")}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t(FRIENDS_TAB_META[tab].labelKey)}</h1>
         <div className="mt-6">
-          <FriendsPanel />
+          <FriendsPanel onTabChange={setTab} />
         </div>
       </div>
 

@@ -18,7 +18,15 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Movie } from "@/types/movie";
 import type { Series } from "@/types/series";
 
-type Tab = "requests" | "friends" | "search";
+export type FriendsTab = "requests" | "friends" | "search";
+type Tab = FriendsTab;
+
+/** Each tab's name and icon — the panel's own tab bar and its hosts' headings use the same. */
+export const FRIENDS_TAB_META = {
+  search: { labelKey: "friends.tabSearch", icon: Search },
+  requests: { labelKey: "friends.tabRequests", icon: Inbox },
+  friends: { labelKey: "friends.tabFriends", icon: Users },
+} as const;
 
 type ProfileTarget = { clerkId: string; displayName: string | null; profileImageURL: string | null };
 
@@ -26,7 +34,14 @@ type ProfileTarget = { clerkId: string; displayName: string | null; profileImage
 // friends list, search) instead of everything stacked in one scroll. No
 // page/modal chrome of its own, so both /friends (full page) and
 // FriendsModal (compact popup) can render the same logic.
-export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
+export function FriendsPanel({
+  onNavigate,
+  onTabChange,
+}: {
+  onNavigate?: () => void;
+  /** Lets the host (FriendsModal, FriendsView) title itself after the open tab. */
+  onTabChange?: (tab: FriendsTab) => void;
+} = {}) {
   const { t } = useTranslation();
   const { friends, incoming, outgoing, watching, isLoading, accept, cancelOrDecline, send, remove } = useFriends();
   const [tab, setTab] = useState<Tab>("search");
@@ -110,11 +125,14 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
     }
   };
 
-  const tabs: { key: Tab; label: string; icon: typeof Search; badge: number }[] = [
-    { key: "search", label: t("friends.tabSearch"), icon: Search, badge: 0 },
-    { key: "requests", label: t("friends.tabRequests"), icon: Inbox, badge: incoming.length },
-    { key: "friends", label: t("friends.tabFriends"), icon: Users, badge: 0 },
-  ];
+  const tabs: { key: Tab; label: string; icon: typeof Search; badge: number }[] = (["search", "requests", "friends"] as const).map(
+    (key) => ({
+      key,
+      label: t(FRIENDS_TAB_META[key].labelKey),
+      icon: FRIENDS_TAB_META[key].icon,
+      badge: key === "requests" ? incoming.length : 0,
+    })
+  );
 
   return (
     <div className="flex flex-col">
@@ -123,7 +141,10 @@ export function FriendsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
           <button
             key={key}
             type="button"
-            onClick={() => setTab(key)}
+            onClick={() => {
+              setTab(key);
+              onTabChange?.(key);
+            }}
             className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
               tab === key ? "bg-white text-neutral-900 shadow-[0_4px_16px_-4px_rgba(255,255,255,0.4)]" : "text-foreground/55 hover:bg-foreground/10 hover:text-foreground"
             }`}

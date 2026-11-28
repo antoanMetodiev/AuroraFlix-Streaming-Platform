@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Users } from "lucide-react";
-import { FriendsPanel } from "@/components/friends/friends-panel";
+import { X } from "lucide-react";
+import { FRIENDS_TAB_META, FriendsPanel, type FriendsTab } from "@/components/friends/friends-panel";
 import { useTranslation } from "@/lib/i18n/locale-context";
 
 // Rendered via a portal straight onto document.body — SiteHeader's <header>
@@ -17,6 +17,9 @@ import { useTranslation } from "@/lib/i18n/locale-context";
 // header's own z-40 and every dropdown's z-40/z-50 so this always sits on top.
 export function FriendsModal({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
+  // The heading follows the open tab (Search / Requests / Friends).
+  const [tab, setTab] = useState<FriendsTab>("search");
+  const { labelKey, icon: TabIcon } = FRIENDS_TAB_META[tab];
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -42,9 +45,9 @@ export function FriendsModal({ onClose }: { onClose: () => void }) {
         <div className="relative flex shrink-0 items-center justify-between border-b border-white/10 px-7 py-7">
           <div className="flex items-center gap-4">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-              <Users size={20} />
+              <TabIcon size={20} />
             </span>
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{t("friends.title")}</h2>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{t(labelKey)}</h2>
           </div>
           <button
             type="button"
@@ -57,7 +60,7 @@ export function FriendsModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8">
-          <FriendsPanel onNavigate={onClose} />
+          <FriendsPanel onNavigate={onClose} onTabChange={setTab} />
         </div>
       </div>
     </div>,
