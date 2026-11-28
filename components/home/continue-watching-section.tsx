@@ -56,6 +56,9 @@ function ContinueCard({ entry, title, image, href }: CardProps) {
               src={image}
               alt=""
               draggable={false}
+              // Up to 20 cards in a sideways-scrolling row: only the ones on
+              // screen should load (eager loaded all 20 at once).
+              loading="lazy"
               sizes="(min-width: 640px) 400px, 300px"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -118,6 +121,15 @@ function ContinueCard({ entry, title, image, href }: CardProps) {
   );
 }
 
+/**
+ * The saved image is whatever the player showed — often a w1280 (~240 KB) or
+ * /original/ TMDB backdrop. A 400px card needs no more than w780.
+ */
+function cardImage(image: string | null | undefined): string | null {
+  if (!image) return null;
+  return image.replace(/\/t\/p\/(w1280|original)\//, "/t/p/w780/");
+}
+
 export function ContinueWatchingSection() {
   const { t } = useTranslation();
   const progress = useWatchProgress();
@@ -138,7 +150,7 @@ export function ContinueWatchingSection() {
       {
         entry,
         title,
-        image: entry.image ?? tmdbImage(current?.posterImgURL, "w780"),
+        image: cardImage(entry.image) ?? tmdbImage(current?.posterImgURL, "w780"),
         href:
           entry.kind === "movie"
             ? `/movies/${getMovieSlug({ title, originalTitle: current?.originalTitle, tmdbId: entry.tmdbId })}#watch`

@@ -1,7 +1,7 @@
 /**
  * Seasonal themes: switched on by date, no config. Each one gets light
- * particles on the homepage (SeasonalEffects) and a themed row of titles
- * (SeasonalSection). `?season=<name>` previews any of them (or `none`).
+ * particles on the homepage (SeasonalEffects), with an on/off switch
+ * (SeasonalToggle). `?season=<name>` previews any of them (or `none`).
  */
 export type Season = "winter" | "halloween" | "valentine";
 

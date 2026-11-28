@@ -14,7 +14,7 @@ import { getMovieSlug } from "@/lib/tmdb";
 import { HomeBackdrop } from "@/components/home/home-backdrop";
 import { RecapPill } from "@/components/recap/recap-pill";
 import { SeasonalEffects } from "@/components/home/seasonal-effects";
-import { SeasonalSection } from "@/components/home/seasonal-section";
+import { SeasonalToggle } from "@/components/home/seasonal-toggle";
 import { getTrendingMovies, getTrendingSeries } from "@/lib/api";
 import { marqueeMovies, marqueeSeries } from "@/lib/data/home-marquee";
 import type { HeroItem } from "@/components/home/hero-item";
@@ -132,12 +132,7 @@ async function TrendingBackdrop() {
 	return <HomeBackdrop posters={posters} />;
 }
 
-async function SeasonalRow({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
-	const { season } = await searchParams;
-	return <SeasonalSection override={season} />;
-}
-
-export default function Home({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+export default function Home() {
 	// Nothing awaited here: the header and page frame go out at once, and the
 	// trending-backed sections stream in behind their own Suspense boundaries.
 	return (
@@ -166,7 +161,17 @@ export default function Home({ searchParams }: { searchParams: Promise<{ season?
 
 			{/* PAYMENTS DISABLED: <LazyPricingSection /> */}
 
-			<RecapPill />
+			{/* "Your week" in the middle; the seasonal effects switch on the right of the same row. */}
+			<div className="mx-auto grid w-full max-w-[100rem] grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 pt-6 sm:px-6">
+				<span aria-hidden />
+				{/* A fixed middle slot, so the switch stays right even when there's no recap yet. */}
+				<div className="flex justify-center">
+					<RecapPill />
+				</div>
+				<div className="flex justify-end">
+					<SeasonalToggle />
+				</div>
+			</div>
 
 			<Reveal>
 				<LazyContinueWatchingSection />
@@ -181,10 +186,6 @@ export default function Home({ searchParams }: { searchParams: Promise<{ season?
 				<TrendingShowcaseSection />
 			</Suspense>
 
-			{/* The season's themed row (lib/seasons.ts) — nothing outside a season. */}
-			<Suspense fallback={null}>
-				<SeasonalRow searchParams={searchParams} />
-			</Suspense>
 			<SeasonalEffects />
 
 			<LazyTrendingSection movies={marqueeMovies} series={marqueeSeries} />
