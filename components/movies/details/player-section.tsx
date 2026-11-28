@@ -730,11 +730,13 @@ export const PlayerSection = forwardRef<
     readonly ProviderId[]
   >(
     () => {
+      // VidFast (2) and VidSpark (6) are no longer offered (removed
+      // 2026-11-28 at the owner's request); their code paths stay, unused.
       const embeds: ProviderId[] = hasOwnSubtitles
         ? VIDLINK_ENABLED
-          ? [5, 1, 4, 2, 3, 6]
-          : [5, 1, 2, 3, 6]
-        : [1, 2, 3, 6];
+          ? [5, 1, 4, 3]
+          : [5, 1, 3]
+        : [1, 3];
       const bgAudioPlayers: ProviderId[] = [
         ...(currentBgAudio?.embedUrl ? [BG_AUDIO_PLAYER] : []),
         ...(currentBgAudio?.filmi2kEmbedUrl ? [BG_AUDIO_PLAYER_2] : []),
