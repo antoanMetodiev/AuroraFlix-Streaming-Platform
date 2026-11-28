@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 // PAYMENTS DISABLED: Crown (the Pricing links' icon) is back with them.
 import { /* Crown, */ Download, Menu, X } from "lucide-react";
+import dynamic from "next/dynamic";
 // IOS DISABLED: FaApple (the iPhone icon) is back with it.
 import { FaAndroid, /* FaApple, */ FaLinkedin } from "react-icons/fa";
 import { NavLinks } from "@/components/layout/nav-links";
@@ -14,9 +15,14 @@ import { AuthNav } from "@/components/layout/auth-nav";
 import { FriendsNavButton } from "@/components/friends/friends-nav-button";
 import { NotificationsBell } from "@/components/friends/notifications-bell";
 // ASSISTANT DISABLED: import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
-import { AndroidInstallDialog } from "@/components/layout/android-install-dialog";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { NAV_ICON_BUTTON, NAV_PANEL } from "@/components/layout/nav-styles";
+
+// Only opened from the Android button — loaded on that click.
+const AndroidInstallDialog = dynamic(
+  () => import("@/components/layout/android-install-dialog").then((mod) => mod.AndroidInstallDialog),
+  { ssr: false }
+);
 
 // The Android app (sideloaded — not on Google Play); see mobile-front-end/.
 const ANDROID_APK_URL = "/downloads/auroraflix.apk";

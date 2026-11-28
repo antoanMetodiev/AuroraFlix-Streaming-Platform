@@ -5,7 +5,12 @@ import { NAV_BADGE, NAV_ICON_BUTTON } from "@/components/layout/nav-styles";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Users } from "lucide-react";
-import { FriendsModal } from "@/components/friends/friends-modal";
+import dynamic from "next/dynamic";
+
+// In the header on every page, but only opened on a click — so the friends
+// panel (and the profile modal / playlists it pulls in) loads then, not with
+// every page.
+const FriendsModal = dynamic(() => import("@/components/friends/friends-modal").then((mod) => mod.FriendsModal), { ssr: false });
 import { useFriends } from "@/lib/use-friends";
 import { useTranslation } from "@/lib/i18n/locale-context";
 

@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Bell } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { UserProfileModal } from "@/components/friends/user-profile-modal";
+import dynamic from "next/dynamic";
+
+// Opened from a notification only — loaded on that click, not with every page.
+const UserProfileModal = dynamic(() => import("@/components/friends/user-profile-modal").then((mod) => mod.UserProfileModal), { ssr: false });
 import { consumeNotifications, getNotificationCount, type FriendNotification } from "@/lib/friends";
 import { subscribeFriendsEvent } from "@/lib/friends-events";
 import { useTranslation } from "@/lib/i18n/locale-context";
