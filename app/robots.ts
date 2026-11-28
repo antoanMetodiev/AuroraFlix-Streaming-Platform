@@ -15,7 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/account", "/sign-in", "/sign-up", "/friends", "/watchlist", "/playlists"],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/actors/sitemap.xml`],
     host: SITE_URL,
   };
 }

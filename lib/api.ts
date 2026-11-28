@@ -247,6 +247,17 @@ export async function getSeriesDetails(id: string): Promise<Series | null> {
   return getJson<Series>("/get-series-details", { id });
 }
 
+/**
+ * IMDb ids of the actors worth a sitemap entry (2+ titles across movies and
+ * series), best-known first — see the gateway's GET /actors/sitemap-ids.
+ * Kept in the edge cache: it scans both actors tables, and Google re-reads
+ * a sitemap far less often than every 6 hours anyway.
+ */
+export async function getSitemapActorIds(): Promise<string[]> {
+  const data = await getJson<unknown>("/actors/sitemap-ids", undefined, { localized: false, cacheTtl: 6 * 60 * 60 });
+  return unwrapList<string>(data).filter((id) => typeof id === "string" && /^nm\d+$/.test(id));
+}
+
 /** One actor by IMDb id ("nm…"), in the request's language; null when unknown or on failure. */
 export async function getActor(imdbId: string): Promise<Actor | null> {
   if (!imdbId) return null;
