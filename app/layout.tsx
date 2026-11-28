@@ -115,7 +115,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* Only this language's copy goes to the browser (see Messages). */}
         <LocaleProvider initialLocale={initialLocale} messages={getMessages(initialLocale)}>
           {/* Clerk (sign-in, account) loads only for signed-in visitors and the auth pages — see AuthRoot. */}
-          <AuthRoot signedIn={hasClerkSession((await cookies()).getAll())}>
+          <AuthRoot
+            signedIn={hasClerkSession((await cookies()).getAll())}
+            publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          >
             <ScrollToTopOnNavigate />
             <SiteHeader />
             {/* isolate: everything a page renders shares one stacking layer, so

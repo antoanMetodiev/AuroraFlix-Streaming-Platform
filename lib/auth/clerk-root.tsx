@@ -20,9 +20,9 @@ function ClerkBridge({ children }: { children: ReactNode }) {
  * Everything Clerk, in one module that lib/auth/auth-root.tsx loads only when
  * it's needed — never imported statically anywhere else.
  */
-export default function ClerkRoot({ children }: { children: ReactNode }) {
+export default function ClerkRoot({ publishableKey, children }: { publishableKey?: string; children: ReactNode }) {
   return (
-    <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+    <ClerkLocalizedProvider publishableKey={publishableKey}>
       <ClerkBridge>{children}</ClerkBridge>
     </ClerkLocalizedProvider>
   );

@@ -26,7 +26,21 @@ function isAuthPage(pathname: string) {
  * provider, which remounts the page — that only happens on the way into
  * /sign-in or /sign-up, which is a page change anyway.
  */
-export function AuthRoot({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
+export function AuthRoot({
+  signedIn,
+  publishableKey,
+  children,
+}: {
+  signedIn: boolean;
+  /**
+   * From the server, at request time (wrangler.jsonc vars) — never read
+   * process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in client code: that is
+   * inlined at build time, and the Workers build doesn't have it, so the
+   * browser got no key and Clerk never loaded.
+   */
+  publishableKey?: string;
+  children: ReactNode;
+}) {
   const pathname = usePathname();
   const [withClerk, setWithClerk] = useState(signedIn || isAuthPage(pathname));
   // Adjusting state during render (no effect, no extra paint): a client-side
@@ -39,5 +53,5 @@ export function AuthRoot({ signedIn, children }: { signedIn: boolean; children: 
       {children}
     </>
   );
-  return withClerk ? <ClerkRoot>{content}</ClerkRoot> : content;
+  return withClerk ? <ClerkRoot publishableKey={publishableKey}>{content}</ClerkRoot> : content;
 }
