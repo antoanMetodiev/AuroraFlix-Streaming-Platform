@@ -9,7 +9,6 @@ import { RecapShareSheet } from "@/components/recap/recap-share-sheet";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
-import { genreLabel } from "@/lib/i18n/translate";
 import { getMovieSlug, tmdbImage } from "@/lib/tmdb";
 import { readWatchLog } from "@/lib/watch-log";
 import { useWatchProgress, useWatchProgressReady } from "@/lib/watch-progress";
@@ -151,7 +150,7 @@ function RecapStory({
   previews: Map<string, Preview>;
   range: string;
 }) {
-  const { t, locale } = useTranslation();
+  const { t, locale, genre: genreName } = useTranslation();
   const [index, setIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -183,7 +182,7 @@ function RecapStory({
     return [...weight.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4)
-      .map(([genre, w]) => ({ genre, label: genreLabel(genre, locale), share: sum ? Math.round((w / sum) * 100) : 0 }));
+      .map(([genre, w]) => ({ genre, label: genreName(genre), share: sum ? Math.round((w / sum) * 100) : 0 }));
   })();
 
   const top = recap.titles[0];

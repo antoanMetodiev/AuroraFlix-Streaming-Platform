@@ -1,8 +1,7 @@
 "use client";
 
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { genreLabel } from "@/lib/i18n/translate";
-import { genreHeading } from "@/lib/seo";
+import { genreHeading } from "@/lib/genre-seo";
 
 export function ListPageHeading({
   type,
@@ -13,7 +12,7 @@ export function ListPageHeading({
   genre?: string;
   searchTitle?: string;
 }) {
-  const { t, locale } = useTranslation();
+  const { t, locale, genre: genreName } = useTranslation();
 
   const typeLabel = type === "movie" ? t("nav.movies") : t("nav.series");
   // In Bulgarian, the same search phrases the page's <title> targets (see
@@ -28,10 +27,10 @@ export function ListPageHeading({
           : "Онлайн сериали"
       : genre
         ? locale === "en"
-          ? `${genreLabel(genre, locale)} ${typeLabel}`
+          ? `${genreName(genre)} ${typeLabel}`
           : // Greek / Spanish genre names are adjectives or nouns that don't
             // simply prefix the type ("Películas de acción") — keep it neutral.
-            `${typeLabel}: ${genreLabel(genre, locale)}`
+            `${typeLabel}: ${genreName(genre)}`
         : typeLabel;
 
   return (

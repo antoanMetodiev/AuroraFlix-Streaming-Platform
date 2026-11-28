@@ -12,7 +12,6 @@ import { LikeButton } from "@/components/movies/details/like-button";
 import { RatingRing } from "@/components/ui/rating-ring";
 import { getMovieSlug, tmdbImage } from "@/lib/tmdb";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { genreLabel } from "@/lib/i18n/translate";
 import type { Series } from "@/types/series";
 import type { Movie } from "@/types/movie";
 
@@ -191,7 +190,7 @@ function TrailerRail({
 }
 
 export function HeroSection({ items }: { items: HeroItem[] }) {
-  const { t, locale } = useTranslation();
+  const { t, locale, genre: genreName } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   // 0–1, how far the current title's time in the hero has got — fills its rail card.
   const [progress] = useState(createProgressStore);
@@ -358,7 +357,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
                 href={`${genreBase}/${encodeURIComponent(genre)}`}
                 className="rounded-md bg-black/65 px-2 py-1 hover:bg-black/85 hover:text-white"
               >
-                {genreLabel(genre, locale)}
+                {genreName(genre)}
               </Link>
             ))}
             {record.releaseDate && <span className="rounded-md bg-black/65 px-2 py-1">{formatReleaseDate(record.releaseDate, locale)}</span>}

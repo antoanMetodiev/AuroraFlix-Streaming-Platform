@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocale } from "@/lib/i18n/locale-context";
+import { useTranslation } from "@/lib/i18n/locale-context";
 import type { Locale } from "@/lib/i18n/dictionary";
-import { genreLabel } from "@/lib/i18n/translate";
 import { ALL_GENRES } from "@/lib/genres";
-import { genreHeading } from "@/lib/seo";
+import { genreHeading } from "@/lib/genre-seo";
 
 /**
  * Shown above the footer on every page (root layout). On the homepage the
@@ -74,7 +73,7 @@ function isSingleTitlePage(pathname: string) {
 }
 
 export function SeoIntro() {
-  const { locale } = useLocale();
+  const { locale, genre: genreName } = useTranslation();
   const pathname = usePathname();
   const copy = COPY[locale];
   const Title = pathname === "/" ? "h1" : "h2";
@@ -86,9 +85,9 @@ export function SeoIntro() {
 
   function genreLinkLabel(genre: string, type: "movie" | "series") {
     if (locale === "bg") return genreHeading(genre, type);
-    if (locale === "en") return `${genreLabel(genre, locale)} ${type === "movie" ? "movies" : "series"}`;
+    if (locale === "en") return `${genreName(genre)} ${type === "movie" ? "movies" : "series"}`;
     // Under a "Movies by genre" / "Series by genre" heading, the genre alone reads fine.
-    return genreLabel(genre, locale);
+    return genreName(genre);
   }
 
   return (

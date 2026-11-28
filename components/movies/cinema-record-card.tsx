@@ -9,7 +9,6 @@ import { FadeInImage } from "@/components/ui/fade-in-image";
 import { getRatingColor } from "@/components/ui/rating-ring";
 import { getMoviePreview, getSeriesPreview } from "@/lib/api-public";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { genreLabel } from "@/lib/i18n/translate";
 import { formatReleaseDate } from "@/lib/dates";
 import type { AdminBadge } from "@/lib/use-admin";
 import type { Movie } from "@/types/movie";
@@ -39,7 +38,7 @@ export function CinemaRecordCard({
   /** Admin only: where the subtitles came from. */
   adminBadge?: AdminBadge;
 }) {
-  const { t, locale } = useTranslation();
+  const { t, locale, genre: genreName } = useTranslation();
   const hoverCapable = useHoverCapable();
   const href = type === "series" ? `/series/${(record as Series).tmdbId}` : `/movies/${getMovieSlug(record as Movie)}`;
   // w500: the tile is ~150–250 CSS px wide, so this stays sharp even at a
@@ -262,7 +261,7 @@ export function CinemaRecordCard({
                     key={genre}
                     className="rounded-full border border-white/15 bg-black/55 px-1.5 py-px text-[0.5625rem] font-medium whitespace-nowrap text-white/75 sm:px-2 sm:text-[0.625rem]"
                   >
-                    {genreLabel(genre, locale)}
+                    {genreName(genre)}
                   </span>
                 ))}
               </div>
@@ -322,7 +321,7 @@ export function CinemaRecordCard({
               ) : (
                 genres.map((genre) => (
                   <span key={genre} className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-[0.625rem] font-medium text-foreground/70">
-                    {genreLabel(genre, locale)}
+                    {genreName(genre)}
                   </span>
                 ))
               )}

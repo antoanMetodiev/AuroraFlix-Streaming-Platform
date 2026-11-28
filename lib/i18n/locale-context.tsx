@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Locale, TranslationKey } from "./dictionary";
-import { translate } from "./translate";
+import type { Messages } from "./messages/types";
 import { LOCALE_COOKIE_NAME } from "./locale-cookie";
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
@@ -10,6 +10,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 type LocaleContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
+  messages: Messages;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -32,7 +33,19 @@ function saveLocaleCookie(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
 }
 
-export function LocaleProvider({ children, initialLocale }: { children: ReactNode; initialLocale: Locale }) {
+/**
+ * `messages`: the visitor's language only, built on the server by the root
+ * layout (lib/i18n/messages/get-messages.ts) — see Messages for why.
+ */
+export function LocaleProvider({
+  children,
+  initialLocale,
+  messages,
+}: {
+  children: ReactNode;
+  initialLocale: Locale;
+  messages: Messages;
+}) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   // Switching language reloads the page: the server renders it again in the
@@ -53,7 +66,7 @@ export function LocaleProvider({ children, initialLocale }: { children: ReactNod
     if (!document.cookie.includes(`${LOCALE_COOKIE_NAME}=`)) saveLocaleCookie(initialLocale);
   }, [initialLocale]);
 
-  return <LocaleContext.Provider value={{ locale, setLocale }}>{children}</LocaleContext.Provider>;
+  return <LocaleContext.Provider value={{ locale, setLocale, messages }}>{children}</LocaleContext.Provider>;
 }
 
 export function useLocale() {
@@ -63,11 +76,11 @@ export function useLocale() {
 }
 
 export function useTranslation() {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, messages } = useLocale();
 
   const t = useCallback(
     (key: TranslationKey, vars?: Record<string, string | number>) => {
-      let text = translate(key, locale);
+      let text = messages.strings[key] ?? key;
       if (vars) {
         for (const [name, value] of Object.entries(vars)) {
           text = text.replace(`{${name}}`, String(value));
@@ -75,8 +88,11 @@ export function useTranslation() {
       }
       return text;
     },
-    [locale]
+    [messages]
   );
 
-  return { t, locale, setLocale };
+  /** A genre name (the backend's English one, e.g. "Action") in this language. */
+  const genre = useCallback((name: string) => messages.genres[name] ?? name, [messages]);
+
+  return { t, genre, locale, setLocale };
 }

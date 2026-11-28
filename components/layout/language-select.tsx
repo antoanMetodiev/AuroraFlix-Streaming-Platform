@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/locale-context";
-import { LOCALES, type Locale } from "@/lib/i18n/dictionary";
+import type { Locale } from "@/lib/i18n/dictionary";
+import { LOCALES } from "@/lib/i18n/locales";
 
 /** Each language's own name for itself — what a speaker looks for in a list. */
 const NATIVE_NAMES: Record<Locale, string> = {

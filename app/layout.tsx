@@ -6,6 +6,7 @@ import { SeoIntro } from "@/components/home/seo-intro";
 import { Reveal } from "@/components/ui/reveal";
 import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navigate";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
+import { getMessages } from "@/lib/i18n/messages/get-messages";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
@@ -109,7 +110,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon='{"token": "20c70f629ffc4885ba3e883126be7ad8"}'
         />
-        <LocaleProvider initialLocale={initialLocale}>
+        {/* Only this language's copy goes to the browser (see Messages). */}
+        <LocaleProvider initialLocale={initialLocale} messages={getMessages(initialLocale)}>
           <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ScrollToTopOnNavigate />
             <SiteHeader />
