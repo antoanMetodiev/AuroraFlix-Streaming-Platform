@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * The floating glass "island" the header lives in. Client-only for the scroll
@@ -10,15 +11,30 @@ import { useEffect, useState } from "react";
  */
 export function HeaderIsland({ children }: { children: React.ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
+  const [sentinelHost, setSentinelHost] = useState<HTMLElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
+  // No scroll listener: reading window.scrollY on every scroll event forced
+  // the browser to finish any pending style/layout work right there — on a
+  // freshly loaded details page that was 300–400 ms frames on the first
+  // scroll. An IntersectionObserver on a 1px marker 12px down the document
+  // says the same thing ("scrolled past the very top") off the main path.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the portal target only exists in the browser
+    setSentinelHost(document.body);
   }, []);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(([entry]) => setScrolled(!entry.isIntersecting));
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sentinelHost]);
 
   return (
+    <>
+    {sentinelHost &&
+      createPortal(<div ref={sentinelRef} aria-hidden className="pointer-events-none absolute top-[12px] left-0 h-px w-px" />, sentinelHost)}
     <header
       data-site-chrome
       data-scrolled={scrolled}
@@ -39,5 +55,6 @@ export function HeaderIsland({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     </header>
+    </>
   );
 }

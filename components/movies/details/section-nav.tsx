@@ -55,9 +55,18 @@ export function SectionNav() {
     readStops();
     update();
 
+    // Sections stream in late, so the list is re-read when the page changes —
+    // but coalesced: while the page is still loading and hydrating, the DOM
+    // changes hundreds of times, and measuring every section on each one
+    // (offsetHeight, getBoundingClientRect) was a big part of the jank on
+    // the first scroll.
+    let rescan = 0;
     const observer = new MutationObserver(() => {
-      readStops();
-      update();
+      window.clearTimeout(rescan);
+      rescan = window.setTimeout(() => {
+        readStops();
+        update();
+      }, 300);
     });
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("scroll", update, { passive: true });
@@ -65,6 +74,7 @@ export function SectionNav() {
 
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(rescan);
       observer.disconnect();
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);

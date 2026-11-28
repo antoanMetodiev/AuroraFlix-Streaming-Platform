@@ -21,7 +21,9 @@ export function EpisodeCard({
   const percent = progress && !progress.finished ? progressPercent(progress) : null;
   const description =
     episode.description && episode.description.length > 219 ? `${episode.description.slice(0, 219)}..` : episode.description;
-  const poster = tmdbImage(episode.posterImgURL, "w1280");
+  // w780: the card is at most a third of the page wide on desktop — w1280
+  // (~200 KB each) made a season's worth of stills a multi-MB, janky decode.
+  const poster = tmdbImage(episode.posterImgURL, "w780");
 
   return (
     <button
@@ -34,6 +36,8 @@ export function EpisodeCard({
           <FadeInImage
             src={poster}
             alt=""
+            // A season can be 20+ episodes: only the ones near the screen load.
+            loading="lazy"
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover group-hover:scale-105"
           />
