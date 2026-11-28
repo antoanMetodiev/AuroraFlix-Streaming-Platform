@@ -146,6 +146,11 @@ export function WorkCarousel({
                   <FadeInImage
                     src={tmdbImage(item.posterURL, "w500") ?? ""}
                     alt={item.title}
+                    // Lazy: these rows (seasonal, last viewed, an actor's
+                    // titles) sit below the fold, and eager here meant every
+                    // poster of the row preloaded at high priority — ~2 MB on
+                    // the homepage, racing the hero image.
+                    loading="lazy"
                     sizes="240px"
                     className="object-cover"
                   />

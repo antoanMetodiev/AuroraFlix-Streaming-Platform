@@ -6,7 +6,7 @@ import { formatReleaseDate } from "@/lib/dates";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { HeroBackground } from "@/components/home/hero-background";
+import { HERO_IMAGE_SIZES, HeroBackground, heroImage } from "@/components/home/hero-background";
 import type { HeroItem } from "@/components/home/hero-item";
 import { AddToWatchlistButton } from "@/components/movies/details/add-to-watchlist-button";
 import { LikeButton } from "@/components/movies/details/like-button";
@@ -194,7 +194,7 @@ function TrailerRail({
 export function HeroSection({ items }: { items: HeroItem[] }) {
   const { t, locale } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  // 0–1, how far the current title's slideshow has got — fills its rail card.
+  // 0–1, how far the current title's time in the hero has got — fills its rail card.
   const [progress] = useState(createProgressStore);
   const sectionRef = useRef<HTMLElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -219,6 +219,22 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
     },
     [items.length, progress]
   );
+
+  // Warms the next title's backdrop a few seconds into the current one, so
+  // the switch fades in a picture that's already there — one image at a
+  // time, and never while the page itself is still loading.
+  useEffect(() => {
+    if (items.length < 2) return;
+    const nextImage = heroImage(items[(currentIndex + 1) % items.length].record);
+    if (!nextImage) return;
+    const timer = window.setTimeout(() => {
+      const loader = new window.Image();
+      loader.sizes = HERO_IMAGE_SIZES;
+      loader.srcset = nextImage.srcSet;
+      loader.src = nextImage.src;
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [currentIndex, items]);
 
   const goToPrevious = useCallback(() => goTo((prev) => prev - 1), [goTo]);
   const goToNext = useCallback(() => goTo((prev) => prev + 1), [goTo]);
@@ -293,7 +309,7 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
     >
       {/* Sinks a little slower than the page on scroll, for depth. */}
       <Parallax className="absolute inset-0" speed={0.35}>
-        <HeroBackground key={record.id} record={record} type={type} onEnded={goToNext} onProgress={progress.set} />
+        <HeroBackground key={record.id} record={record} onEnded={goToNext} onProgress={progress.set} />
       </Parallax>
 
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/10 to-transparent sm:bg-linear-to-t sm:from-black/85 sm:via-black/10 sm:to-transparent" />
@@ -305,10 +321,13 @@ export function HeroSection({ items }: { items: HeroItem[] }) {
             {record.logoURL ? (
               <div className="relative mb-3 h-16 w-[140px] sm:h-20 sm:w-[180px] lg:h-24 lg:w-[210px]">
                 <Image
-                  src={record.logoURL}
+                  // TMDB logos come as /original/ — a 210px slot needs no more
+                  // than w500 (~4x fewer bytes). Eager but not preloaded: the
+                  // backdrop is the one that should go first.
+                  src={record.logoURL.replace("/t/p/original/", "/t/p/w500/")}
                   alt={record.title}
                   fill
-                  priority
+                  loading="eager"
                   sizes="210px"
                   className="object-contain object-left"
                 />
