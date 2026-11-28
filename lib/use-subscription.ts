@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 
 export type SubscriptionStatus =
   | "NONE"

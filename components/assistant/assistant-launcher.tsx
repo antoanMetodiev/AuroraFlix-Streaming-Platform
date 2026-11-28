@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { Sparkles } from "lucide-react";
 import { AssistantPanel } from "@/components/assistant/assistant-panel";
 import { useTranslation } from "@/lib/i18n/locale-context";

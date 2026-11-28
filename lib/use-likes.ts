@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { type AddLikeResult, type LikedItem, getLikes, addLike, removeLike } from "@/lib/likes";
 
 /**

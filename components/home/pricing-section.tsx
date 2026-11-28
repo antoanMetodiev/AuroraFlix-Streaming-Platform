@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
-import { SignUpButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { SectionHeading } from "@/components/movies/details/section-heading";
 import { useTranslation } from "@/lib/i18n/locale-context";
 import { useCurrentUser } from "@/lib/use-current-user";
@@ -60,7 +62,7 @@ const CTA_INERT_CLASSNAME = "cursor-default border border-foreground/15 bg-foreg
 
 export function PricingSection() {
   const { t } = useTranslation();
-  const { isLoaded, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const { user } = useCurrentUser();
   const isPro = user?.subscriptionType === "PRO_USER";
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -158,11 +160,11 @@ export function PricingSection() {
                   // Not signed in: open Clerk's sign-up modal first. They land back
                   // on this page and can click again once they have an account —
                   // no "resume checkout automatically" flow, deliberately kept simple.
-                  <SignUpButton mode="modal">
-                    <button type="button" disabled={!isLoaded} className={`${CTA_CLASSNAME} ${CTA_HIGHLIGHTED_CLASSNAME}`}>
-                      {t(plan.ctaKey)}
-                    </button>
-                  </SignUpButton>
+                  // A link to Clerk's sign-up page, not its modal button: Clerk
+                  // isn't loaded for signed-out visitors (see lib/auth).
+                  <Link href="/sign-up?redirect_url=%2F" className={`${CTA_CLASSNAME} ${CTA_HIGHLIGHTED_CLASSNAME}`}>
+                    {t(plan.ctaKey)}
+                  </Link>
                 )
               ) : (
                 <button type="button" disabled className={`${CTA_CLASSNAME} ${CTA_INERT_CLASSNAME}`}>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { Loader } from "@/components/ui/loader";
 import { useSubscription } from "@/lib/use-subscription";
 import { useTranslation } from "@/lib/i18n/locale-context";

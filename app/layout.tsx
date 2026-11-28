@@ -8,7 +8,9 @@ import { ScrollToTopOnNavigate } from "@/components/layout/scroll-to-top-on-navi
 import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { getMessages } from "@/lib/i18n/messages/get-messages";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
-import { ClerkLocalizedProvider } from "@/components/providers/clerk-localized-provider";
+import { AuthRoot } from "@/lib/auth/auth-root";
+import { hasClerkSession } from "@/lib/auth/session-cookie";
+import { cookies } from "next/headers";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME, SITE_URL, jsonLdHtml } from "@/lib/seo";
 import "./globals.css";
 
@@ -112,7 +114,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
         {/* Only this language's copy goes to the browser (see Messages). */}
         <LocaleProvider initialLocale={initialLocale} messages={getMessages(initialLocale)}>
-          <ClerkLocalizedProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          {/* Clerk (sign-in, account) loads only for signed-in visitors and the auth pages — see AuthRoot. */}
+          <AuthRoot signedIn={hasClerkSession((await cookies()).getAll())}>
             <ScrollToTopOnNavigate />
             <SiteHeader />
             {/* isolate: everything a page renders shares one stacking layer, so
@@ -135,7 +138,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <div aria-hidden className="pointer-events-none relative z-[1] -mt-48 h-48 bg-gradient-to-b from-transparent to-background" />
               <Footer />
             </div>
-          </ClerkLocalizedProvider>
+          </AuthRoot>
         </LocaleProvider>
       </body>
     </html>

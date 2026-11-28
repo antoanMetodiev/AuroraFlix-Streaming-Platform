@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { createPlaylist, deletePlaylist, getPlaylists, updatePlaylist, type Playlist } from "@/lib/playlists";
 
 // My own playlists — create/rename/toggle-visibility/delete. Item

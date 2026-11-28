@@ -5,7 +5,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { enUS } from "@clerk/localizations";
 import { ClerkLoadKick } from "@/components/providers/clerk-load-kick";
-import { WatchProgressAccount } from "@/components/providers/watch-progress-account";
 
 // Always English, regardless of the site's own EN/BG toggle — bgBG's
 // delete-account confirmation step never unblocks its confirm button no
@@ -41,7 +40,6 @@ export function ClerkLocalizedProvider({ children, publishableKey }: { children:
       }}
     >
       <ClerkLoadKick />
-      <WatchProgressAccount />
       {children}
     </ClerkProvider>
   );

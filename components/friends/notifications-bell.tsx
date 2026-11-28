@@ -3,7 +3,7 @@
 import { NAV_BADGE, NAV_ICON_BUTTON, NAV_PANEL } from "@/components/layout/nav-styles";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { Bell } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { Film, Heart, ListVideo, Lock, Tv, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader } from "@/components/ui/loader";

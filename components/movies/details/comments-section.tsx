@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { MessageCircle, Pencil, Send, Trash2, X } from "lucide-react";
 import { CommentReactionsBar } from "@/components/movies/details/comment-reactions-bar";
 import { SectionHeading } from "@/components/movies/details/section-heading";

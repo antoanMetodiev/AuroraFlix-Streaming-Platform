@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth";
 import { describeSeriesSources, describeSubtitleSource, type SeriesSourceCounts, type SubtitleKind } from "@/lib/subtitle-source";
 
 /**
